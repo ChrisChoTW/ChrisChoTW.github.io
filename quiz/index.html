@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>練習2</title>
+  <style>
+    #app {
+      font-size: 1.25em;
+    }
+    button{
+      font-size: 1.5em;
+    }
+    label{
+      display: block;
+    }
+    .quest{
+      margin-bottom: 1em;
+      padding-bottom: 1em;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+
+    <h1>簡單的心理測驗遊戲</h1>
+
+    <hr>
+
+    <div v-if="!start">
+      新增問題
+      <div  v-for="cus in cusquestions.slice(cusQpos,cusQpos+1)">
+        自訂問題 {{cusQpos + 1}}.：<input v-model="cus.quest">
+
+        <p v-for="option in cus.options">
+          自訂答案：<input size="5" v-model="option.ans">
+          分數：<select v-model="option.value"><option v-for="n in 10" :value="n">{{ n }}</option></select>
+        </p>
+        <button @click="addOption()" style="font-size:12px;">新增選項</button>
+        <button @click="removeOption()" style="font-size:12px;">移除選項</button>
+        <button @click="addComplete()" style="font-size:12px;">新增問題完成</button>
+        <button @click="start = true" style="font-size:12px;">正式開始</button>
+
+      </div>
+    </div>
+    <hr>
+
+
+
+    <div v-if="start">
+      <div class="quest" v-for="(q, index) in chunkQuestion">
+          <h3>第{{ nowQuestion + 1 }}題: {{ q.quest }}</h3>
+          <label v-for="(answer, index) in q.options">
+            <input type="radio" :value="answer.value" v-model="q.selected">
+            {{ index + 1 }}. {{ answer.ans }}
+          </label>
+      </div>
+
+      <button @click="changePage(-1)" :disabled="nowQuestion === 0">上一題</button>
+      <button @click="changePage(1)" :disabled="nowQuestion === questions.length - 1">下一題</button>
+      <button @click="settlement">看結果</button>
+      <button @click="reset">重置</button>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.js"></script>
+  <script>
+  // 一個簡單的心理測驗遊戲
+
+  // 目標：讓題目一次只顯示一題，並新增按鈕，使用者可以切換「上一題」、「下一題」
+  // - 在切換題目時加入檢查，若使用者未選擇則跳出提醒
+
+  // 延伸問題：遊戲開始前可否讓使用者自行設定題目與分數？
+
+  var vm = new Vue({
+    el: '#app',
+    data: {
+      cusQpos:0,
+      cusquestions:[{"quest":""
+              ,"options":[
+                {"ans":"","value":""}
+              ],
+              selected:null
+      }
+      ],
+      start:false,
+      questions: [
+        {
+          quest: '如果你是童話故事中，想吃掉三隻小豬的大野狼，你認為使用哪一種方法可以容易吃掉他們？',
+          options: [
+            { ans: '用煙把小豬燻到昏倒',         value: 1 },
+            { ans: '從煙囪或其他入口偷偷爬進屋',  value: 2 },
+            { ans: '用槌子把門破壞闖入屋內',      value: 3 },
+            { ans: '模仿豬媽媽的聲音騙小豬開門',  value: 4 },
+          ],
+          selected: null,
+        },
+        {
+          quest: '剪刀、石頭、布，你第一直覺會出哪一個？',
+          options: [
+            { ans: '剪刀', value: 3 },
+            { ans: '石頭', value: 2 },
+            { ans: '布',   value: 1 },
+          ],
+          selected: null
+        },
+        {
+          quest: '下列四項運動項目中，假設你要開始嘗試的話，你最想要做哪一項？',
+          options: [
+            { ans: '潛水',   value: 3 },
+            { ans: '滑翔翼', value: 4 },
+            { ans: '滑水',   value: 2 },
+            { ans: '長途徒步旅行', value: 1 },
+          ],
+          selected: null,
+        }
+      ],
+      nowQuestion:0,
+      countOfQuestion:1
+    },
+    computed: {
+      total: function(){
+        var sum = 0;
+        this.questions.forEach(function(v){
+          sum += Number(v.selected);
+        });
+        return sum;
+      },
+      chunkQuestion:function(){
+        return this.questions.slice(this.nowQuestion, this.nowQuestion + this.countOfQuestion);
+      }
+    },
+    methods: {
+      settlement: function(){
+
+        if (this.checkSelected(this.questions) === false){
+          alert("您仍有未填寫的題目");
+          return false;
+        }
+
+        alert('總分: ' + this.total);
+      },
+      reset: function(){
+        this.questions.forEach(function(v){
+          v.selected = null;
+        });
+        this.nowQuestion = 0;
+      },
+      changePage(move){
+        var _this = this;
+
+        if (this.checkSelected(this.chunkQuestion) == false){
+            alert("請選擇您的答案");
+            return false;
+        }
+
+        this.nowQuestion += move;
+      },
+      checkSelected:function(questions){
+        for (var i = 0 ; i < questions.length ; i++){
+          if (questions[i].selected === null){
+            return false;
+          }
+        }
+      },
+      addComplete:function(){
+
+        var quest = this.cusquestions[this.cusQpos];
+        if (!quest.quest){
+          alert("請輸入問題");
+
+          return false;
+        }
+        for (var i = 0 ; i < quest.options.length ; i++){
+          if (quest.options[i].ans == "" || quest.options[i].value == ""){
+            alert("請輸入答案");
+
+            return false;
+          }
+        }
+
+        this.cusquestions.push({"quest":"","options":[{"ans":"","value":""}],"selected":null});
+
+        this.questions.unshift(this.cusquestions[this.cusQpos]);
+
+        this.cusQpos +=1;
+      },
+      addOption:function(){
+        this.cusquestions[this.cusQpos].options.push({ ans: "",   value: "" });
+      },
+      removeOption:function(){
+        this.cusquestions[this.cusQpos].options.pop();
+      }
+    },
+  });
+  </script>
+</body>
+</html>
