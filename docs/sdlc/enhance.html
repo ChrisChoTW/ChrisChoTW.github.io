@@ -81,6 +81,80 @@
             align-items: center;
             justify-content: space-between;
         }
+        .element-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+        }
+        .help-icon {
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .help-icon:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        /* 術語 Tooltip 樣式 */
+        .term-tooltip {
+            position: fixed;
+            background: white;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            font-size: 0.9em;
+        }
+        .term-tooltip.show {
+            display: block;
+        }
+        .tooltip-term {
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        .tooltip-definition {
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .tooltip-responsibilities {
+            font-size: 0.85em;
+            color: #0066cc;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 8px;
+        }
+        .tooltip-responsibilities::before {
+            content: "💼 ";
+        }
+        .tooltip-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            color: #666;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .tooltip-close:hover {
+            color: #333;
+        }
         .element:hover {
             background: #bbdefb;
         }
@@ -214,6 +288,120 @@
             align-items: center;
             gap: 5px;
         }
+        
+        /* 術語表 Modal 樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        .modal-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .glossary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .glossary-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .glossary-section-title {
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .glossary-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 4px solid #2563eb;
+        }
+        .glossary-item.hidden {
+            display: none;
+        }
+        .glossary-term {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .glossary-definition {
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .glossary-responsibilities {
+            font-size: 0.9em;
+            color: #0066cc;
+        }
+        .glossary-responsibilities::before {
+            content: "💼 主要職責：";
+            font-weight: bold;
+        }
+        .word-count-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            float: right;
+        }
     </style>
 </head>
 <body>
@@ -260,12 +448,58 @@
         </div>
         
         <div class="controls">
+            <button onclick="openGlossary()">📚 術語表</button>
             <button onclick="resetAll()">重置所有</button>
             <button onclick="showAllImpacts()">顯示所有影響</button>
             <button onclick="showCriticalOnly()">只顯示致命項目</button>
         </div>
 
         <div id="phases"></div>
+    </div>
+
+    <!-- 術語 Tooltip -->
+    <div id="termTooltip" class="term-tooltip">
+        <span class="tooltip-close" onclick="hideTooltip()">&times;</span>
+        <div class="tooltip-term" id="tooltipTerm"></div>
+        <div class="tooltip-definition" id="tooltipDefinition"></div>
+        <div class="tooltip-responsibilities" id="tooltipResponsibilities"></div>
+    </div>
+
+    <!-- 術語表 Modal -->
+    <div id="glossaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">📚 SDLC 術語表</div>
+                <span class="close" onclick="closeGlossary()">&times;</span>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" class="search-box" id="searchBox" placeholder="搜尋術語..." onkeyup="searchGlossary()" style="flex: 1;">
+                <select id="categoryFilter" onchange="filterGlossary()" style="padding: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 1em;">
+                    <option value="all">全部類別</option>
+                    <option value="participants">👥 參與者</option>
+                    <option value="documents">📄 文件</option>
+                </select>
+                <select id="phaseFilter" onchange="filterGlossary()" style="padding: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 1em;">
+                    <option value="all">全部階段</option>
+                    <option value="req">🎯 需求分析</option>
+                    <option value="ana">🔍 系統分析</option>
+                    <option value="des">📐 系統設計</option>
+                    <option value="imp">💻 開發實作</option>
+                    <option value="test">✅測試驗收</option>
+                    <option value="rel">🚀 上線維運</option>
+                </select>
+            </div>
+            <div class="glossary-grid">
+                <div class="glossary-section">
+                    <div class="glossary-section-title">👥 參與者 (Participants)</div>
+                    <div id="participantsGlossary"></div>
+                </div>
+                <div class="glossary-section">
+                    <div class="glossary-section-title">📄 文件 (Documents)</div>
+                    <div id="documentsGlossary"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -836,7 +1070,10 @@
                 <div class="${className}" 
                      onclick="toggleItem('${item.id}')"
                      data-id="${item.id}">
-                    <span class="element-name">${item.name}</span>
+                    <div class="element-content">
+                        <span class="element-name">${item.name}</span>
+                        <span class="help-icon" onclick="event.stopPropagation(); showTooltip(event, '${item.name}')" title="查看術語定義">?</span>
+                    </div>
                     <span class="severity-badge ${severityClass}">${getSeverityText(item.severity)}</span>
                 </div>
             `;
@@ -990,8 +1227,225 @@
             renderPhases();
         }
 
+        // 術語表功能
+        let glossaryData = {};
+
+        function loadGlossaryData() {
+            fetch('definition.json')
+                .then(response => response.json())
+                .then(data => {
+                    glossaryData = data.glossary;
+                    initializeGlossary();
+                })
+                .catch(error => {
+                    console.log('載入術語表失敗，使用預設資料');
+                    // 如果載入失敗，可以設定一些預設的術語資料
+                    initializeGlossary();
+                });
+        }
+
+        function initializeGlossary() {
+            const participantsContainer = document.getElementById('participantsGlossary');
+            const documentsContainer = document.getElementById('documentsGlossary');
+            
+            if (glossaryData.participants) {
+                Object.entries(glossaryData.participants).forEach(([key, item]) => {
+                    const phase = key.split('-')[0]; // 提取階段標記 (req, ana, des, etc.)
+                    const glossaryItem = createGlossaryItem(item, 'participants', phase);
+                    participantsContainer.appendChild(glossaryItem);
+                });
+            }
+            
+            if (glossaryData.documents) {
+                Object.entries(glossaryData.documents).forEach(([key, item]) => {
+                    const phase = key.split('-')[0]; // 提取階段標記
+                    const glossaryItem = createGlossaryItem(item, 'documents', phase);
+                    documentsContainer.appendChild(glossaryItem);
+                });
+            }
+        }
+
+        function createGlossaryItem(item, category, phase) {
+            const div = document.createElement('div');
+            div.className = 'glossary-item';
+            div.setAttribute('data-category', category);
+            div.setAttribute('data-phase', phase);
+            
+            const phaseNames = {
+                'req': '需求分析',
+                'ana': '系統分析',
+                'des': '系統設計',
+                'imp': '開發實作',
+                'test': '測試驗收',
+                'rel': '上線維運'
+            };
+            
+            div.innerHTML = `
+                <div class="glossary-term">
+                    ${item.term}
+                    <span class="word-count-badge">${item.wordCount} 字</span>
+                    <span style="background: #f0f8ff; color: #1976d2; padding: 2px 6px; border-radius: 3px; font-size: 0.7em; margin-left: 5px;">
+                        ${phaseNames[phase] || phase}
+                    </span>
+                </div>
+                <div class="glossary-definition">${item.definition}</div>
+                ${item.keyResponsibilities ? `
+                    <div class="glossary-responsibilities">
+                        ${item.keyResponsibilities.join('、')}
+                    </div>
+                ` : ''}
+                ${item.keyComponents ? `
+                    <div class="glossary-responsibilities">
+                        ${item.keyComponents.join('、')}
+                    </div>
+                ` : ''}
+            `;
+            return div;
+        }
+
+        function openGlossary() {
+            document.getElementById('glossaryModal').classList.add('show');
+            document.getElementById('searchBox').focus();
+        }
+
+        function closeGlossary() {
+            document.getElementById('glossaryModal').classList.remove('show');
+            // 重置篩選器
+            document.getElementById('searchBox').value = '';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('phaseFilter').value = 'all';
+            filterGlossary(); // 重置顯示
+        }
+
+        function searchGlossary() {
+            filterGlossary(); // 使用統一的篩選功能
+        }
+        
+        function filterGlossary() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const phaseFilter = document.getElementById('phaseFilter').value;
+            const glossaryItems = document.querySelectorAll('.glossary-item');
+            
+            glossaryItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                const category = item.getAttribute('data-category');
+                const phase = item.getAttribute('data-phase');
+                
+                let showItem = true;
+                
+                // 文字搜尋篩選
+                if (searchTerm !== '' && !text.includes(searchTerm)) {
+                    showItem = false;
+                }
+                
+                // 類別篩選
+                if (categoryFilter !== 'all' && category !== categoryFilter) {
+                    showItem = false;
+                }
+                
+                // 階段篩選
+                if (phaseFilter !== 'all' && phase !== phaseFilter) {
+                    showItem = false;
+                }
+                
+                if (showItem) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        // Tooltip 功能
+        function showTooltip(event, termName) {
+            const tooltip = document.getElementById('termTooltip');
+            const termData = findTermData(termName);
+            
+            if (!termData) {
+                return;
+            }
+            
+            // 填入資料
+            document.getElementById('tooltipTerm').textContent = termData.term;
+            document.getElementById('tooltipDefinition').textContent = termData.definition;
+            
+            const responsibilitiesDiv = document.getElementById('tooltipResponsibilities');
+            if (termData.keyResponsibilities) {
+                responsibilitiesDiv.textContent = termData.keyResponsibilities.join('、');
+                responsibilitiesDiv.style.display = 'block';
+            } else if (termData.keyComponents) {
+                responsibilitiesDiv.textContent = termData.keyComponents.join('、');
+                responsibilitiesDiv.style.display = 'block';
+            } else {
+                responsibilitiesDiv.style.display = 'none';
+            }
+            
+            // 計算位置（置中顯示）
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const tooltipWidth = 400; // max-width
+            const tooltipHeight = 200; // 估計高度
+            
+            let left = (viewportWidth - tooltipWidth) / 2;
+            let top = (viewportHeight - tooltipHeight) / 2;
+            
+            // 確保不會超出視窗範圍
+            left = Math.max(10, Math.min(left, viewportWidth - tooltipWidth - 10));
+            top = Math.max(10, Math.min(top, viewportHeight - tooltipHeight - 10));
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.classList.add('show');
+        }
+        
+        function hideTooltip() {
+            document.getElementById('termTooltip').classList.remove('show');
+        }
+        
+        function findTermData(termName) {
+            // 在參與者中搜尋
+            if (glossaryData.participants) {
+                for (const item of Object.values(glossaryData.participants)) {
+                    if (item.term.includes(termName) || termName.includes(item.term.split(' ')[0])) {
+                        return item;
+                    }
+                }
+            }
+            
+            // 在文件中搜尋
+            if (glossaryData.documents) {
+                for (const item of Object.values(glossaryData.documents)) {
+                    if (item.term.includes(termName) || termName.includes(item.term.split(' ')[0])) {
+                        return item;
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        // 點擊文件其他地方隱藏 tooltip
+        document.addEventListener('click', function(event) {
+            const tooltip = document.getElementById('termTooltip');
+            const helpIcon = event.target.classList.contains('help-icon');
+            
+            if (!helpIcon && !tooltip.contains(event.target)) {
+                hideTooltip();
+            }
+        });
+
+        // 點擊 Modal 外部關閉
+        window.onclick = function(event) {
+            const modal = document.getElementById('glossaryModal');
+            if (event.target === modal) {
+                closeGlossary();
+            }
+        }
+
         // 初始化
         renderPhases();
+        loadGlossaryData();
     </script>
 </body>
 </html>
