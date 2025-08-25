@@ -448,6 +448,7 @@
         </div>
         
         <div class="controls">
+            <button onclick="goHome()">🏠 返回首頁</button>
             <button onclick="openGlossary()">📚 術語表</button>
             <button onclick="resetAll()">重置所有</button>
             <button onclick="showAllImpacts()">顯示所有影響</button>
@@ -1227,6 +1228,10 @@
             renderPhases();
         }
 
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
         // 術語表功能
         let glossaryData = {};
 
@@ -1443,7 +1448,85 @@
             }
         }
 
+        // Base64 解碼函數
+        function decodeBase64(str) {
+            try {
+                return JSON.parse(decodeURIComponent(atob(str)));
+            } catch (error) {
+                console.error('Base64 解碼失敗:', error);
+                return null;
+            }
+        }
+
+        // 處理來自首頁的參數
+        function handleURLParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+            const legacyMissingItems = urlParams.get('missingItems');
+            const legacyMode = urlParams.get('mode');
+            
+            let sourceData = null;
+            
+            // 優先處理新版 base64 編碼參數
+            if (dataParam) {
+                sourceData = decodeBase64(dataParam);
+            }
+            // 向後相容舊版參數格式
+            else if (legacyMissingItems && legacyMode === 'questionnaire') {
+                try {
+                    sourceData = {
+                        missingItems: JSON.parse(legacyMissingItems),
+                        mode: 'questionnaire'
+                    };
+                } catch (error) {
+                    console.error('解析舊版參數失敗:', error);
+                }
+            }
+            
+            if (sourceData && sourceData.mode === 'questionnaire') {
+                // 自動標記缺失項目
+                if (sourceData.missingItems && Array.isArray(sourceData.missingItems)) {
+                    sourceData.missingItems.forEach(itemId => {
+                        removedItems.add(itemId);
+                    });
+                }
+                
+                // 更新頁面標題，包含公司名稱
+                if (sourceData.companyName) {
+                    const title = document.querySelector('h1');
+                    title.textContent = `🔧 ${sourceData.companyName} - SDLC 階段缺失影響分析工具 (增強版)`;
+                }
+                
+                // 顯示來源資訊
+                const container = document.querySelector('.container');
+                const sourceInfo = document.createElement('div');
+                sourceInfo.style.cssText = `
+                    background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+                    padding: 15px 20px;
+                    margin: 20px 0;
+                    border-radius: 8px;
+                    border-left: 4px solid #0369a1;
+                    font-size: 0.9em;
+                `;
+                
+                let infoContent = '<strong>📝 智能問答結果</strong><br>';
+                if (sourceData.companyName) {
+                    infoContent += `來自 ${sourceData.companyName} 的評估結果，`;
+                }
+                infoContent += `系統自動識別出 ${sourceData.missingItems ? sourceData.missingItems.length : 0} 個可能缺失的項目。<br>`;
+                infoContent += '這些項目已在下方標記為紅色，您可以點擊查看詳細的影響分析。';
+                
+                if (sourceData.timestamp) {
+                    infoContent += `<br><small style="color: #6b7280;">生成時間：${new Date(sourceData.timestamp).toLocaleString('zh-TW')}</small>`;
+                }
+                
+                sourceInfo.innerHTML = infoContent;
+                container.insertBefore(sourceInfo, container.children[1]);
+            }
+        }
+
         // 初始化
+        handleURLParameters();
         renderPhases();
         loadGlossaryData();
     </script>
