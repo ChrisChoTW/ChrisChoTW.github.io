@@ -288,12 +288,6 @@
             margin-top: 10px;
         }
         
-        .navigation-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-        
         .nav-button {
             padding: 12px 24px;
             border: 2px solid #2563eb;
@@ -308,20 +302,6 @@
         .nav-button:hover:not(:disabled) {
             background: #2563eb;
             color: white;
-        }
-        
-        .nav-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .nav-button.primary {
-            background: #2563eb;
-            color: white;
-        }
-        
-        .nav-button.primary:hover {
-            background: #1d4ed8;
         }
         
         .results-container {
@@ -423,11 +403,6 @@
             .answer-options {
                 flex-direction: column;
             }
-            
-            .navigation-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
         }
     </style>
 </head>
@@ -455,7 +430,7 @@
             <!-- 模式選擇 -->
             <div id="modeSelection" class="mode-selection-container">
                 <div class="mode-selection">
-                    <div class="mode-card" onclick="selectMode('free')">
+                    <div class="mode-card" onclick="startAnalysis('free')">
                         <span class="mode-icon">🎨</span>
                         <div class="mode-title">自由探索模式</div>
                         <div class="mode-description">
@@ -464,7 +439,7 @@
                         </div>
                     </div>
                     
-                    <div class="mode-card" onclick="selectMode('questionnaire')">
+                    <div class="mode-card" onclick="startAnalysis('questionnaire')">
                         <span class="mode-icon">📝</span>
                         <div class="mode-title">智能問答模式</div>
                         <div class="mode-description">
@@ -472,12 +447,6 @@
                             專案現狀並產生客製化的風險評估報告
                         </div>
                     </div>
-                </div>
-                
-                <div class="action-section">
-                    <button id="startButton" class="start-button" onclick="startAnalysis()" disabled>
-                        選擇模式後開始分析
-                    </button>
                 </div>
             </div>
             
@@ -490,11 +459,6 @@
                 
                 <div id="questionCard" class="question-card">
                     <!-- 問題將動態載入 -->
-                </div>
-                
-                <div class="navigation-buttons">
-                    <button id="prevButton" class="nav-button" onclick="previousQuestion()" disabled>上一題</button>
-                    <button id="nextButton" class="nav-button primary" onclick="nextQuestion()" disabled>下一題</button>
                 </div>
             </div>
             
@@ -713,34 +677,14 @@
             }
         ];
 
-        // 模式選擇
-        function selectMode(mode) {
+        // 開始分析 (直接傳入模式)
+        function startAnalysis(mode) {
             selectedMode = mode;
             
-            // 更新視覺狀態
-            document.querySelectorAll('.mode-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            event.target.closest('.mode-card').classList.add('selected');
-            
-            // 更新按鈕
-            const startButton = document.getElementById('startButton');
             if (mode === 'free') {
-                startButton.textContent = '🎨 進入自由探索模式';
-                startButton.disabled = false;
-            } else if (mode === 'questionnaire') {
-                startButton.textContent = '📝 開始智能問答';
-                startButton.disabled = false;
-            }
-        }
-
-        // 開始分析
-        function startAnalysis() {
-            if (selectedMode === 'free') {
                 // 直接跳轉到現有的分析工具
                 window.location.href = 'enhance.html';
-            } else if (selectedMode === 'questionnaire') {
+            } else if (mode === 'questionnaire') {
                 // 開始問答模式
                 showQuestionnaire();
             }
@@ -791,9 +735,6 @@
             
             // 更新進度條
             updateProgress();
-            
-            // 更新導航按鈕
-            updateNavigationButtons();
         }
 
         // 選擇答案
@@ -808,8 +749,16 @@
             
             event.target.classList.add('selected');
             
-            // 更新導航按鈕
-            updateNavigationButtons();
+            // 短暫延遲後自動進入下一題
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    showCurrentQuestion();
+                } else {
+                    // 最後一題，完成分析
+                    analyzeAnswers();
+                }
+            }, 200); // 0.2秒延遲讓用戶看到選擇
         }
 
         // 更新進度條
@@ -820,41 +769,6 @@
                 `第 ${currentQuestion + 1} 題，共 ${questions.length} 題`;
         }
 
-        // 更新導航按鈕
-        function updateNavigationButtons() {
-            const prevButton = document.getElementById('prevButton');
-            const nextButton = document.getElementById('nextButton');
-            
-            prevButton.disabled = currentQuestion === 0;
-            
-            if (currentQuestion === questions.length - 1) {
-                // 最後一題
-                nextButton.textContent = '完成分析';
-                nextButton.disabled = !answers[questions[currentQuestion].id];
-            } else {
-                nextButton.textContent = '下一題';
-                nextButton.disabled = !answers[questions[currentQuestion].id];
-            }
-        }
-
-        // 上一題
-        function previousQuestion() {
-            if (currentQuestion > 0) {
-                currentQuestion--;
-                showCurrentQuestion();
-            }
-        }
-
-        // 下一題或完成
-        function nextQuestion() {
-            if (currentQuestion < questions.length - 1) {
-                currentQuestion++;
-                showCurrentQuestion();
-            } else {
-                // 完成問答，進行分析
-                analyzeAnswers();
-            }
-        }
 
         // 分析答案並產生結果
         function analyzeAnswers() {
