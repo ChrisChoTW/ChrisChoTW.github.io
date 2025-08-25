@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLC 階段缺失影響分析</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        .stats-bar {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .phase-container {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .phase-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 15px;
+        }
+        .elements-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .category {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .category-title {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .element {
+            background: #e3f2fd;
+            padding: 8px 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .element:hover {
+            background: #bbdefb;
+        }
+        .element.removed {
+            background: #ffebee;
+            color: #999;
+        }
+        .element.removed .element-name {
+            text-decoration: line-through;
+        }
+        .element.chain-removed {
+            background: #fff3cd;
+            border: 1px dashed #ff9800;
+        }
+        .severity-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .severity-critical { background: #f44336; color: white; }
+        .severity-high { background: #ff9800; color: white; }
+        .severity-medium { background: #ffc107; color: #333; }
+        .severity-low { background: #4caf50; color: white; }
+        
+        .impact-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .impact-section.show {
+            display: block;
+        }
+        .impact-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .impact-item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 4px solid #ff9800;
+        }
+        .impact-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .impact-name {
+            font-weight: bold;
+            flex: 1;
+        }
+        .impact-tags {
+            display: flex;
+            gap: 5px;
+        }
+        .impact-tag {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75em;
+        }
+        .time-immediate { background: #ffebee; color: #c62828; }
+        .time-short { background: #fff3e0; color: #e65100; }
+        .time-long { background: #e8f5e9; color: #2e7d32; }
+        
+        .scope-tech { background: #e3f2fd; color: #1565c0; }
+        .scope-business { background: #f3e5f5; color: #6a1b9a; }
+        .scope-user { background: #fce4ec; color: #c2185b; }
+        .scope-cost { background: #e0f2f1; color: #00695c; }
+        
+        .impact-description {
+            color: #721c24;
+            margin: 5px 0;
+        }
+        .mitigation-box {
+            background: #e8f5e9;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .mitigation-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 3px;
+        }
+        .chain-effect {
+            background: #fff8e1;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .chain-title {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 3px;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #2563eb;
+            color: white;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 SDLC 階段缺失影響分析工具 (增強版)</h1>
+        <p>點擊任何元素來移除它，查看缺少該項目會產生的影響、嚴重度、時間範圍及補救措施</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <span class="severity-badge severity-critical">致命</span>
+                <span>不可接受的風險</span>
+            </div>
+            <div class="legend-item">
+                <span class="severity-badge severity-high">高</span>
+                <span>嚴重影響</span>
+            </div>
+            <div class="legend-item">
+                <span class="severity-badge severity-medium">中</span>
+                <span>中度影響</span>
+            </div>
+            <div class="legend-item">
+                <span class="severity-badge severity-low">低</span>
+                <span>可管理</span>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-label">已移除項目</div>
+                <div class="stat-value" id="removed-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">連鎖影響項目</div>
+                <div class="stat-value" id="chain-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">風險等級</div>
+                <div class="stat-value" id="risk-level">正常</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">致命風險數</div>
+                <div class="stat-value" id="critical-count" style="color: #f44336;">0</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="resetAll()">重置所有</button>
+            <button onclick="showAllImpacts()">顯示所有影響</button>
+            <button onclick="showCriticalOnly()">只顯示致命項目</button>
+        </div>
+
+        <div id="phases"></div>
+    </div>
+
+    <script>
+        const sdlcData = {
+            "requirement": {
+                title: "🎯 需求分析 (Requirement Analysis)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "req-p1", 
+                            name: "PM 產品經理", 
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["business", "cost"],
+                            impact: "產品方向缺乏統籌，功能優先級混亂",
+                            mitigation: "由技術主管暫代，但需增加 30% 溝通成本",
+                            dependencies: ["req-d1"]
+                        },
+                        { 
+                            id: "req-p2", 
+                            name: "Stakeholders 利害關係人", 
+                            severity: "critical",
+                            timeframe: "long",
+                            scope: ["business", "user"],
+                            impact: "真實需求被忽略，產品方向偏差",
+                            mitigation: "透過市場調研部分替代，但準確度降低 40%",
+                            dependencies: ["req-d1", "req-d2"]
+                        },
+                        { 
+                            id: "req-p3", 
+                            name: "客戶代表", 
+                            severity: "high",
+                            timeframe: "short",
+                            scope: ["user", "business"],
+                            impact: "最終用戶需求不明，驗收標準模糊",
+                            mitigation: "建立用戶訪談機制，延長需求階段 2 週",
+                            dependencies: ["req-d3"]
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "req-d1", 
+                            name: "PRD (Product Requirement Doc)", 
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["tech", "business", "cost"],
+                            impact: "團隊對目標理解不一致，後續大量返工",
+                            mitigation: "以敏捷 User Story 替代，但需要更頻繁的溝通會議",
+                            dependencies: ["ana-d1", "des-d1"]
+                        },
+                        { 
+                            id: "req-d2", 
+                            name: "需求規格書", 
+                            severity: "high",
+                            timeframe: "short",
+                            scope: ["business", "cost"],
+                            impact: "功能範圍不清，scope creep 風險高",
+                            mitigation: "採用迭代式需求確認，每 Sprint 重新評估",
+                            dependencies: ["ana-d1"]
+                        },
+                        { 
+                            id: "req-d3", 
+                            name: "User Stories", 
+                            severity: "medium",
+                            timeframe: "immediate",
+                            scope: ["user", "tech"],
+                            impact: "開發缺乏用戶視角，功能不符使用情境",
+                            mitigation: "開發團隊直接訪談用戶，但效率降低 20%",
+                            dependencies: []
+                        }
+                    ]
+                }
+            },
+            "analysis": {
+                title: "🔍 系統分析 (System Analysis)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "ana-p1", 
+                            name: "系統分析師",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "業務邏輯與技術實現脫節",
+                            mitigation: "架構師兼任，但分析深度不足",
+                            dependencies: ["ana-d1", "ana-d2"]
+                        },
+                        { 
+                            id: "ana-p2", 
+                            name: "架構師",
+                            severity: "critical",
+                            timeframe: "long",
+                            scope: ["tech", "cost"],
+                            impact: "技術可行性沒被驗證，架構決策草率",
+                            mitigation: "外聘顧問評估，成本增加 $50K",
+                            dependencies: ["des-p1", "des-d1", "des-d2", "des-d3"]
+                        },
+                        { 
+                            id: "ana-p3", 
+                            name: "PM",
+                            severity: "medium",
+                            timeframe: "short",
+                            scope: ["business"],
+                            impact: "業務需求與技術規格銜接不良",
+                            mitigation: "增加業務分析師角色",
+                            dependencies: []
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "ana-d1", 
+                            name: "SRS (System Requirement Spec)",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "系統邊界模糊，工程師各自解讀",
+                            mitigation: "以詳細的 Acceptance Criteria 替代",
+                            dependencies: ["des-d1"]
+                        },
+                        { 
+                            id: "ana-d2", 
+                            name: "Use Case Diagram",
+                            severity: "medium",
+                            timeframe: "short",
+                            scope: ["tech", "user"],
+                            impact: "用戶操作流程不清，易遺漏異常處理",
+                            mitigation: "開發過程中逐步補充，但測試成本增加",
+                            dependencies: ["test-d1"]
+                        },
+                        { 
+                            id: "ana-d3", 
+                            name: "DFD / ERD",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech"],
+                            impact: "資料流程與關聯不明，數據庫設計混亂",
+                            mitigation: "使用 ORM 框架降低影響，但效能可能不佳",
+                            dependencies: ["des-d2"]
+                        }
+                    ]
+                }
+            },
+            "design": {
+                title: "📐 系統設計 (System Design)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "des-p1", 
+                            name: "架構師",
+                            severity: "critical",
+                            timeframe: "long",
+                            scope: ["tech", "cost"],
+                            impact: "缺少全局視野，系統架構零散",
+                            mitigation: "團隊集體決策，但決策時間延長 3 倍",
+                            dependencies: ["des-d1", "des-d2", "des-d3"]
+                        },
+                        { 
+                            id: "des-p2", 
+                            name: "Tech Lead",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "技術決策無人把關，選型錯誤風險高",
+                            mitigation: "參考業界最佳實踐，但創新性降低",
+                            dependencies: ["imp-p3"]
+                        },
+                        { 
+                            id: "des-p3", 
+                            name: "資深工程師",
+                            severity: "medium",
+                            timeframe: "short",
+                            scope: ["tech"],
+                            impact: "細節設計品質不足，實作困難度增加",
+                            mitigation: "Code Review 機制加強，但開發速度降低 15%",
+                            dependencies: []
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "des-d1", 
+                            name: "SDD (System Design Doc)",
+                            severity: "high",
+                            timeframe: "long",
+                            scope: ["tech", "cost"],
+                            impact: "知識只存在人腦，團隊接手困難",
+                            mitigation: "建立 Wiki 逐步補充，但資訊零散",
+                            dependencies: ["imp-d3"]
+                        },
+                        { 
+                            id: "des-d2", 
+                            name: "DB Schema",
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["tech", "cost"],
+                            impact: "資料庫設計隨意，後期效能瓶頸",
+                            mitigation: "使用 NoSQL 降低 Schema 要求，但查詢複雜度增加",
+                            dependencies: []
+                        },
+                        { 
+                            id: "des-d3", 
+                            name: "API Spec",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "前後端協作困難，整合測試問題多",
+                            mitigation: "使用 GraphQL 減少溝通成本，但學習曲線陡峭",
+                            dependencies: ["imp-d3"]
+                        }
+                    ]
+                }
+            },
+            "implementation": {
+                title: "💻 開發實作 (Implementation)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "imp-p1", 
+                            name: "前端工程師",
+                            severity: "medium",
+                            timeframe: "immediate",
+                            scope: ["user"],
+                            impact: "用戶介面品質不佳，使用體驗差",
+                            mitigation: "使用 UI 框架模板，但缺乏差異化",
+                            dependencies: []
+                        },
+                        { 
+                            id: "imp-p2", 
+                            name: "後端工程師",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "業務邏輯實現不完整，系統穩定性差",
+                            mitigation: "使用 Low-Code 平台，但擴展性受限",
+                            dependencies: []
+                        },
+                        { 
+                            id: "imp-p3", 
+                            name: "Tech Lead",
+                            severity: "high",
+                            timeframe: "short",
+                            scope: ["tech", "cost"],
+                            impact: "Code Style 與架構分歧，程式碼品質不一",
+                            mitigation: "強制 Linter 和自動化 Code Review",
+                            dependencies: []
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "imp-d1", 
+                            name: "Source Code",
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["tech", "business", "user", "cost"],
+                            impact: "無程式碼就無產品（這個不能缺）",
+                            mitigation: "無法補救",
+                            dependencies: []
+                        },
+                        { 
+                            id: "imp-d2", 
+                            name: "Unit Test",
+                            severity: "high",
+                            timeframe: "short",
+                            scope: ["tech", "cost"],
+                            impact: "無法保證基本品質，bug 容易擴散",
+                            mitigation: "加強 QA 測試，但發現問題成本增加 10 倍",
+                            dependencies: ["test-d1", "test-d2"]
+                        },
+                        { 
+                            id: "imp-d3", 
+                            name: "API Documentation",
+                            severity: "medium",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "前後端協作阻塞，開發效率下降",
+                            mitigation: "使用 Swagger 自動生成，但缺少業務說明",
+                            dependencies: []
+                        }
+                    ]
+                }
+            },
+            "testing": {
+                title: "✅ 測試驗收 (Testing & UAT)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "test-p1", 
+                            name: "QA Team",
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["tech", "user", "cost"],
+                            impact: "測試覆蓋率不足，大量 bug 留到生產環境",
+                            mitigation: "開發人員自測 + 用戶 Beta 測試",
+                            dependencies: ["test-d1", "test-d2"]
+                        },
+                        { 
+                            id: "test-p2", 
+                            name: "使用者代表",
+                            severity: "high",
+                            timeframe: "short",
+                            scope: ["user", "business"],
+                            impact: "產品不符合真實使用需求",
+                            mitigation: "A/B Testing 逐步調整，但上線風險增加",
+                            dependencies: ["test-d3"]
+                        },
+                        { 
+                            id: "test-p3", 
+                            name: "PM",
+                            severity: "medium",
+                            timeframe: "immediate",
+                            scope: ["business"],
+                            impact: "驗收標準不明，品質把關失效",
+                            mitigation: "使用客觀指標（如效能、錯誤率）",
+                            dependencies: []
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "test-d1", 
+                            name: "Test Plan",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "cost"],
+                            impact: "測試無系統性，遺漏重要測試案例",
+                            mitigation: "使用探索性測試，但覆蓋率無法保證",
+                            dependencies: []
+                        },
+                        { 
+                            id: "test-d2", 
+                            name: "Test Report",
+                            severity: "medium",
+                            timeframe: "short",
+                            scope: ["tech", "business"],
+                            impact: "問題追蹤困難，品質狀況不透明",
+                            mitigation: "使用自動化測試報告，但缺少分析",
+                            dependencies: []
+                        },
+                        { 
+                            id: "test-d3", 
+                            name: "UAT Sign-off",
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["business", "user"],
+                            impact: "客戶可能拒絕採用，即便功能齊全",
+                            mitigation: "分階段上線，但增加維護複雜度",
+                            dependencies: []
+                        }
+                    ]
+                }
+            },
+            "release": {
+                title: "🚀 上線與維運 (Release & Operation)",
+                participants: {
+                    title: "👥 參與者",
+                    items: [
+                        { 
+                            id: "rel-p1", 
+                            name: "DevOps",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "cost"],
+                            impact: "部署流程混亂，上線風險高",
+                            mitigation: "手動部署 + 詳細 Checklist，但耗時增加 3 倍",
+                            dependencies: ["rel-d3"]
+                        },
+                        { 
+                            id: "rel-p2", 
+                            name: "運維團隊",
+                            severity: "critical",
+                            timeframe: "immediate",
+                            scope: ["tech", "business", "user"],
+                            impact: "系統監控與故障處理能力不足",
+                            mitigation: "使用雲端託管服務，但成本增加 40%",
+                            dependencies: ["rel-d3"]
+                        },
+                        { 
+                            id: "rel-p3", 
+                            name: "PM / 客戶",
+                            severity: "medium",
+                            timeframe: "short",
+                            scope: ["business"],
+                            impact: "產品交付品質無人把關",
+                            mitigation: "建立客戶回饋機制，但反應時間延長",
+                            dependencies: []
+                        }
+                    ]
+                },
+                documents: {
+                    title: "📄 產出文件",
+                    items: [
+                        { 
+                            id: "rel-d1", 
+                            name: "Release Notes",
+                            severity: "low",
+                            timeframe: "short",
+                            scope: ["user", "business"],
+                            impact: "用戶不知道新功能與變更，採用率低",
+                            mitigation: "App 內通知或引導教學",
+                            dependencies: []
+                        },
+                        { 
+                            id: "rel-d2", 
+                            name: "User Manual",
+                            severity: "medium",
+                            timeframe: "long",
+                            scope: ["user", "cost"],
+                            impact: "用戶無法正確使用系統，支援成本增加",
+                            mitigation: "建立線上 FAQ 和教學影片",
+                            dependencies: []
+                        },
+                        { 
+                            id: "rel-d3", 
+                            name: "SOP / Runbook",
+                            severity: "high",
+                            timeframe: "immediate",
+                            scope: ["tech", "business"],
+                            impact: "運維團隊不清楚如何應對異常，停機時間長",
+                            mitigation: "建立緊急聯絡機制，但處理效率低",
+                            dependencies: []
+                        }
+                    ]
+                }
+            }
+        };
+
+        // 建立依賴關係映射
+        const reverseDependencies = {};
+        Object.values(sdlcData).forEach(phase => {
+            [...phase.participants.items, ...phase.documents.items].forEach(item => {
+                if (item.dependencies) {
+                    item.dependencies.forEach(depId => {
+                        if (!reverseDependencies[depId]) {
+                            reverseDependencies[depId] = [];
+                        }
+                        reverseDependencies[depId].push(item.id);
+                    });
+                }
+            });
+        });
+
+        let removedItems = new Set();
+        let chainRemovedItems = new Set();
+
+        function updateStats() {
+            document.getElementById('removed-count').textContent = removedItems.size;
+            document.getElementById('chain-count').textContent = chainRemovedItems.size;
+            
+            // 計算風險等級
+            let criticalCount = 0;
+            let highCount = 0;
+            
+            removedItems.forEach(itemId => {
+                const item = findItemById(itemId);
+                if (item) {
+                    if (item.severity === 'critical') criticalCount++;
+                    if (item.severity === 'high') highCount++;
+                }
+            });
+            
+            document.getElementById('critical-count').textContent = criticalCount;
+            
+            let riskLevel = '正常';
+            if (criticalCount >= 3) riskLevel = '🔴 極高風險';
+            else if (criticalCount >= 1) riskLevel = '🟠 高風險';
+            else if (highCount >= 3) riskLevel = '🟡 中風險';
+            else if (removedItems.size > 0) riskLevel = '🟢 低風險';
+            
+            document.getElementById('risk-level').textContent = riskLevel;
+        }
+
+        function findItemById(itemId) {
+            for (const phase of Object.values(sdlcData)) {
+                for (const item of [...phase.participants.items, ...phase.documents.items]) {
+                    if (item.id === itemId) return item;
+                }
+            }
+            return null;
+        }
+
+        function calculateChainEffects(itemId) {
+            const affected = new Set();
+            const queue = [itemId];
+            
+            while (queue.length > 0) {
+                const currentId = queue.shift();
+                const item = findItemById(currentId);
+                
+                if (item && item.dependencies) {
+                    item.dependencies.forEach(depId => {
+                        if (!removedItems.has(depId) && !affected.has(depId)) {
+                            affected.add(depId);
+                            queue.push(depId);
+                        }
+                    });
+                }
+            }
+            
+            return affected;
+        }
+
+        function renderPhases() {
+            const container = document.getElementById('phases');
+            container.innerHTML = '';
+            
+            // 重新計算連鎖影響
+            chainRemovedItems.clear();
+            removedItems.forEach(itemId => {
+                const chainEffects = calculateChainEffects(itemId);
+                chainEffects.forEach(id => chainRemovedItems.add(id));
+            });
+            
+            Object.keys(sdlcData).forEach(phaseKey => {
+                const phase = sdlcData[phaseKey];
+                const phaseDiv = document.createElement('div');
+                phaseDiv.className = 'phase-container';
+                phaseDiv.innerHTML = `
+                    <div class="phase-title">${phase.title}</div>
+                    <div class="elements-grid">
+                        <div class="category">
+                            <div class="category-title">${phase.participants.title}</div>
+                            ${phase.participants.items.map(item => renderElement(item)).join('')}
+                        </div>
+                        <div class="category">
+                            <div class="category-title">${phase.documents.title}</div>
+                            ${phase.documents.items.map(item => renderElement(item)).join('')}
+                        </div>
+                    </div>
+                    <div class="impact-section ${hasRemovedItems(phaseKey) ? 'show' : ''}" id="impact-${phaseKey}">
+                        <div class="impact-title">⚠️ 缺失影響分析：</div>
+                        ${getImpactsForPhase(phaseKey)}
+                    </div>
+                `;
+                container.appendChild(phaseDiv);
+            });
+            
+            updateStats();
+        }
+
+        function renderElement(item) {
+            const isRemoved = removedItems.has(item.id);
+            const isChainRemoved = chainRemovedItems.has(item.id);
+            const severityClass = `severity-${item.severity}`;
+            
+            let className = 'element';
+            if (isRemoved) className += ' removed';
+            else if (isChainRemoved) className += ' chain-removed';
+            
+            return `
+                <div class="${className}" 
+                     onclick="toggleItem('${item.id}')"
+                     data-id="${item.id}">
+                    <span class="element-name">${item.name}</span>
+                    <span class="severity-badge ${severityClass}">${getSeverityText(item.severity)}</span>
+                </div>
+            `;
+        }
+
+        function getSeverityText(severity) {
+            const map = {
+                'critical': '致命',
+                'high': '高',
+                'medium': '中',
+                'low': '低'
+            };
+            return map[severity] || severity;
+        }
+
+        function getTimeframeText(timeframe) {
+            const map = {
+                'immediate': '立即',
+                'short': '短期',
+                'long': '長期'
+            };
+            return map[timeframe] || timeframe;
+        }
+
+        function getScopeText(scope) {
+            const map = {
+                'tech': '技術',
+                'business': '業務',
+                'user': '用戶',
+                'cost': '成本'
+            };
+            return scope.map(s => map[s] || s).join(', ');
+        }
+
+        function toggleItem(itemId) {
+            if (removedItems.has(itemId)) {
+                removedItems.delete(itemId);
+            } else {
+                removedItems.add(itemId);
+            }
+            renderPhases();
+        }
+
+        function hasRemovedItems(phaseKey) {
+            const phase = sdlcData[phaseKey];
+            const allItems = [...phase.participants.items, ...phase.documents.items];
+            return allItems.some(item => removedItems.has(item.id) || chainRemovedItems.has(item.id));
+        }
+
+        function getImpactsForPhase(phaseKey) {
+            const phase = sdlcData[phaseKey];
+            const allItems = [...phase.participants.items, ...phase.documents.items];
+            const impacts = [];
+            
+            allItems.forEach(item => {
+                if (removedItems.has(item.id)) {
+                    const chainEffects = calculateChainEffects(item.id);
+                    impacts.push(renderImpactItem(item, chainEffects));
+                } else if (chainRemovedItems.has(item.id)) {
+                    // 顯示連鎖影響的項目
+                    const affectedBy = [];
+                    removedItems.forEach(removedId => {
+                        const removed = findItemById(removedId);
+                        if (removed && removed.dependencies && removed.dependencies.includes(item.id)) {
+                            affectedBy.push(removed.name);
+                        }
+                    });
+                    if (affectedBy.length > 0) {
+                        impacts.push(`
+                            <div class="impact-item" style="border-left-color: #ff9800;">
+                                <div class="impact-header">
+                                    <span class="impact-name">🔗 ${item.name} (連鎖影響)</span>
+                                </div>
+                                <div class="impact-description">
+                                    受到影響因為缺少：${affectedBy.join(', ')}
+                                </div>
+                            </div>
+                        `);
+                    }
+                }
+            });
+            
+            return impacts.join('');
+        }
+
+        function renderImpactItem(item, chainEffects) {
+            const severityColors = {
+                'critical': '#f44336',
+                'high': '#ff9800',
+                'medium': '#ffc107',
+                'low': '#4caf50'
+            };
+            
+            const chainAffected = Array.from(chainEffects).map(id => {
+                const affected = findItemById(id);
+                return affected ? affected.name : id;
+            });
+            
+            return `
+                <div class="impact-item" style="border-left-color: ${severityColors[item.severity]};">
+                    <div class="impact-header">
+                        <span class="impact-name">${item.name}</span>
+                        <div class="impact-tags">
+                            <span class="impact-tag time-${item.timeframe}">${getTimeframeText(item.timeframe)}</span>
+                            ${item.scope.map(s => `<span class="impact-tag scope-${s}">${s === 'tech' ? '技術' : s === 'business' ? '業務' : s === 'user' ? '用戶' : '成本'}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="impact-description">• ${item.impact}</div>
+                    ${item.mitigation ? `
+                        <div class="mitigation-box">
+                            <div class="mitigation-title">💡 補救措施：</div>
+                            ${item.mitigation}
+                        </div>
+                    ` : ''}
+                    ${chainAffected.length > 0 ? `
+                        <div class="chain-effect">
+                            <div class="chain-title">⚡ 連鎖影響：</div>
+                            將導致以下項目也受影響：${chainAffected.join(', ')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function resetAll() {
+            removedItems.clear();
+            chainRemovedItems.clear();
+            renderPhases();
+        }
+
+        function showAllImpacts() {
+            Object.keys(sdlcData).forEach(phaseKey => {
+                const phase = sdlcData[phaseKey];
+                const allItems = [...phase.participants.items, ...phase.documents.items];
+                allItems.forEach(item => removedItems.add(item.id));
+            });
+            renderPhases();
+        }
+
+        function showCriticalOnly() {
+            removedItems.clear();
+            Object.keys(sdlcData).forEach(phaseKey => {
+                const phase = sdlcData[phaseKey];
+                const allItems = [...phase.participants.items, ...phase.documents.items];
+                allItems.forEach(item => {
+                    if (item.severity === 'critical') {
+                        removedItems.add(item.id);
+                    }
+                });
+            });
+            renderPhases();
+        }
+
+        // 初始化
+        renderPhases();
+    </script>
+</body>
+</html>
