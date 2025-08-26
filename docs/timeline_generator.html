@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時間軸生成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: 100vh;
+        }
+
+        .editor-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        input[type="text"], input[type="color"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .phase-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+
+        .phase-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .events-container {
+            margin-top: 20px;
+        }
+
+        .event-item {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .event-controls {
+            display: grid;
+            grid-template-columns: 150px 1fr 1fr 40px;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 8px;
+            width: 40px;
+            height: 40px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-export {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Timeline Preview Styles */
+        .timeline-preview {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            max-width: 100%;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .timeline-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            font-weight: bold;
+            border: none;
+            padding: 0;
+        }
+
+        .timeline-header p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 2px;
+        }
+
+        .phase-divider {
+            margin: 30px 0 15px 0;
+            position: relative;
+        }
+
+        .phase-divider h3 {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            border: 2px solid;
+            position: relative;
+            margin: 0 0 0 5px;
+            z-index: 2;
+        }
+
+        .timeline-event {
+            margin: 15px 0;
+            position: relative;
+            display: block;
+            clear: both;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -22px;
+            top: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid white;
+            z-index: 1;
+        }
+
+        .timeline-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-left: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 3px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+        }
+
+        .event-date {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            color: #2c3e50;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .event-description {
+            color: #5a6c7d;
+            line-height: 1.4;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .preview-section {
+                position: static;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .event-controls {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .phase-header {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 編輯器區域 -->
+        <div class="editor-section">
+            <h1>🎨 時間軸生成工具</h1>
+            
+            <!-- 基本設定 -->
+            <h2>📋 基本設定</h2>
+            <div class="form-group">
+                <label for="timelineTitle">時間軸標題：</label>
+                <input type="text" id="timelineTitle" value="我的時間軸" placeholder="輸入時間軸標題">
+            </div>
+            <div class="form-group">
+                <label for="timelineSubtitle">副標題：</label>
+                <input type="text" id="timelineSubtitle" value="重要事件記錄" placeholder="輸入副標題">
+            </div>
+
+            <!-- 階段設定 -->
+            <h2>🎭 階段設定</h2>
+            <div id="phasesContainer">
+                <!-- 階段會動態生成 -->
+            </div>
+            <button class="btn btn-success" onclick="addPhase()">+ 新增階段</button>
+
+            <!-- 匯出與匯入按鈕 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                <button class="btn btn-export" onclick="exportJSON()" style="background: linear-gradient(45deg, #3498db, #2980b9);">💾 匯出 JSON</button>
+                <button class="btn btn-export" onclick="exportHTML()">📥 匯出完整 HTML</button>
+            </div>
+            
+            <!-- JSON 匯入區域 -->
+            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
+                <label for="jsonImport">📂 匯入 JSON 資料：</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="jsonImport" accept=".json" style="flex: 1; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
+                    <button class="btn btn-primary" onclick="importJSON()">匯入</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 預覽區域 -->
+        <div class="preview-section">
+            <h2>👀 即時預覽</h2>
+            <div id="timelinePreview">
+                <!-- 預覽內容會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let phases = [
+            {
+                name: '第一階段',
+                emoji: '🚀',
+                color: '#00c851',
+                events: [
+                    { date: '2024年1月', title: '專案啟動', description: '開始規劃整個專案的架構與目標。' }
+                ]
+            }
+        ];
+
+        function generatePhaseHTML() {
+            const container = document.getElementById('phasesContainer');
+            container.innerHTML = '';
+
+            phases.forEach((phase, phaseIndex) => {
+                const phaseDiv = document.createElement('div');
+                phaseDiv.className = 'phase-section';
+                phaseDiv.innerHTML = `
+                    <div class="phase-header">
+                        <div class="form-group">
+                            <label>階段名稱：</label>
+                            <input type="text" value="${phase.name}" onchange="updatePhase(${phaseIndex}, 'name', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Emoji：</label>
+                            <input type="text" value="${phase.emoji}" onchange="updatePhase(${phaseIndex}, 'emoji', this.value)" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label>顏色：</label>
+                            <input type="color" value="${phase.color}" onchange="updatePhase(${phaseIndex}, 'color', this.value)">
+                        </div>
+                    </div>
+                    <div class="events-container" id="events-${phaseIndex}">
+                        <h4>📅 該階段事件：</h4>
+                    </div>
+                    <button class="btn btn-primary" onclick="addEvent(${phaseIndex})">+ 新增事件</button>
+                    ${phases.length > 1 ? `<button class="btn btn-danger" onclick="removePhase(${phaseIndex})" style="margin-left: 10px;">🗑️</button>` : ''}
+                `;
+                container.appendChild(phaseDiv);
+
+                // 生成該階段的事件
+                generateEventsHTML(phaseIndex);
+            });
+        }
+
+        function generateEventsHTML(phaseIndex) {
+            const eventsContainer = document.getElementById(`events-${phaseIndex}`);
+            const eventsHTML = phases[phaseIndex].events.map((event, eventIndex) => `
+                <div class="event-item">
+                    <div class="event-controls">
+                        <div class="form-group">
+                            <label>時間：</label>
+                            <input type="text" value="${event.date}" onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'date', this.value)" placeholder="例：2024年1月">
+                        </div>
+                        <div class="form-group">
+                            <label>標題：</label>
+                            <input type="text" value="${event.title}" onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'title', this.value)" placeholder="事件標題">
+                        </div>
+                        <div class="form-group">
+                            <label>內容：</label>
+                            <textarea onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'description', this.value)" placeholder="詳細描述">${event.description}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger" onclick="removeEvent(${phaseIndex}, ${eventIndex})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            eventsContainer.innerHTML = `<h4>📅 該階段事件：</h4>` + eventsHTML;
+        }
+
+        function updatePhase(phaseIndex, field, value) {
+            phases[phaseIndex][field] = value;
+            updatePreview();
+        }
+
+        function updateEvent(phaseIndex, eventIndex, field, value) {
+            phases[phaseIndex].events[eventIndex][field] = value;
+            updatePreview();
+        }
+
+        function addPhase() {
+            phases.push({
+                name: `第${phases.length + 1}階段`,
+                emoji: '⭐',
+                color: '#f39c12',
+                events: [
+                    { date: '2024年', title: '新事件', description: '描述這個事件的詳細內容。' }
+                ]
+            });
+            generatePhaseHTML();
+            updatePreview();
+        }
+
+        function removePhase(phaseIndex) {
+            if (phases.length > 1) {
+                phases.splice(phaseIndex, 1);
+                generatePhaseHTML();
+                updatePreview();
+            }
+        }
+
+        function addEvent(phaseIndex) {
+            phases[phaseIndex].events.push({
+                date: '2024年',
+                title: '新事件',
+                description: '描述這個事件的詳細內容。'
+            });
+            generateEventsHTML(phaseIndex);
+            updatePreview();
+        }
+
+        function removeEvent(phaseIndex, eventIndex) {
+            if (phases[phaseIndex].events.length > 1) {
+                phases[phaseIndex].events.splice(eventIndex, 1);
+                generateEventsHTML(phaseIndex);
+                updatePreview();
+            }
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('timelineTitle').value;
+            const subtitle = document.getElementById('timelineSubtitle').value;
+            
+            // 生成漸變色
+            const colors = phases.map(phase => phase.color);
+            const gradient = colors.length > 1 ? 
+                `linear-gradient(180deg, ${colors.map((color, index) => `${color} ${(index * 100 / (colors.length - 1))}%`).join(', ')})` :
+                colors[0] || '#3498db';
+
+            let previewHTML = `
+                <div class="timeline-preview">
+                    <div class="timeline-header">
+                        <h2>${title}</h2>
+                        <p>${subtitle}</p>
+                    </div>
+                    <div class="timeline-container" style="--gradient: ${gradient}">
+            `;
+
+            // 添加樣式
+            previewHTML += `<style>
+                .timeline-container::before { background: ${gradient} !important; }
+            </style>`;
+
+            phases.forEach((phase, phaseIndex) => {
+                previewHTML += `
+                    <div class="phase-divider">
+                        <h3 style="border-color: ${phase.color}; color: ${phase.color};">${phase.emoji} ${phase.name}</h3>
+                    </div>
+                `;
+
+                phase.events.forEach(event => {
+                    previewHTML += `
+                        <div class="timeline-event">
+                            <div class="timeline-dot" style="background: ${phase.color};"></div>
+                            <div class="timeline-card" style="border-left-color: ${phase.color};">
+                                <div class="event-date">${event.date}</div>
+                                <div class="event-title">${event.title}</div>
+                                <div class="event-description">${event.description}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            previewHTML += `
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('timelinePreview').innerHTML = previewHTML;
+        }
+
+        function exportHTML() {
+            const title = document.getElementById('timelineTitle').value;
+            const subtitle = document.getElementById('timelineSubtitle').value;
+            
+            const colors = phases.map(phase => phase.color);
+            const gradient = colors.length > 1 ? 
+                `linear-gradient(180deg, ${colors.map((color, index) => `${color} ${(index * 100 / (colors.length - 1))}%`).join(', ')})` :
+                colors[0] || '#3498db';
+
+            let eventsHTML = '';
+            phases.forEach(phase => {
+                eventsHTML += `
+            <!-- ${phase.name} -->
+            <div class="phase-divider">
+                <h3 style="border-color: ${phase.color}; color: ${phase.color};">${phase.emoji} ${phase.name}</h3>
+            </div>
+                `;
+
+                phase.events.forEach(event => {
+                    eventsHTML += `
+            <div class="timeline-event">
+                <div class="timeline-dot" style="background: ${phase.color};"></div>
+                <div class="timeline-card" style="border-left-color: ${phase.color};">
+                    <div class="event-date">${event.date}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-description">${event.description}</div>
+                </div>
+            </div>
+                    `;
+                });
+            });
+
+            const fullHTML = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        .timeline-wrapper {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-sizing: border-box;
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .timeline-header h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .timeline-header p {
+            color: #6c757d;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: ${gradient};
+            border-radius: 2px;
+        }
+
+        .phase-divider {
+            margin: 40px 0 20px 0;
+            position: relative;
+        }
+
+        .phase-divider h3 {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            display: inline-block;
+            border: 2px solid;
+            margin: 0 0 0 5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-event {
+            margin: 20px 0;
+            position: relative;
+            display: block;
+            clear: both;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -22px;
+            top: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 3px solid white;
+            z-index: 1;
+        }
+
+        .timeline-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .timeline-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .event-date {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .event-title {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .event-description {
+            color: #5a6c7d;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .timeline-wrapper {
+                padding: 15px;
+                margin: 10px;
+            }
+
+            .timeline-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .timeline-container {
+                padding-left: 25px;
+            }
+
+            .timeline-container::before {
+                left: 12px;
+                width: 3px;
+            }
+
+            .timeline-dot {
+                left: -18px;
+                width: 10px;
+                height: 10px;
+                border-width: 2px;
+            }
+
+            .timeline-card {
+                margin-left: 10px;
+                padding: 15px;
+            }
+
+            .phase-divider h3 {
+                font-size: 0.9rem;
+                padding: 6px 12px;
+                margin-left: -12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timeline-wrapper {
+                padding: 10px;
+                margin: 5px;
+            }
+
+            .timeline-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .timeline-container {
+                padding-left: 20px;
+            }
+
+            .timeline-container::before {
+                left: 10px;
+                width: 2px;
+            }
+
+            .timeline-dot {
+                left: -15px;
+                width: 8px;
+                height: 8px;
+                border-width: 2px;
+            }
+
+            .timeline-card {
+                margin-left: 8px;
+                padding: 12px;
+            }
+
+            .event-title {
+                font-size: 1rem;
+            }
+
+            .event-description {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline-wrapper">
+        <div class="timeline-header">
+            <h2>${title}</h2>
+            <p>${subtitle}</p>
+        </div>
+
+        <div class="timeline-container">
+${eventsHTML}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // 下載 HTML 文件
+            const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}_timeline.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // JSON 匯出功能
+        function exportJSON() {
+            // 準備要匯出的資料
+            const exportData = {
+                title: document.getElementById('timelineTitle').value,
+                subtitle: document.getElementById('timelineSubtitle').value,
+                phases: phases
+            };
+            
+            // 轉換為 JSON 字串
+            const jsonString = JSON.stringify(exportData, null, 2);
+            
+            // 下載 JSON 檔案
+            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${exportData.title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}_timeline.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // JSON 匯入功能
+        function importJSON() {
+            const fileInput = document.getElementById('jsonImport');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('請先選擇一個 JSON 檔案');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // 解析 JSON 資料
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // 驗證資料格式
+                    if (!importedData.phases || !Array.isArray(importedData.phases)) {
+                        throw new Error('無效的 JSON 格式：缺少 phases 陣列');
+                    }
+                    
+                    // 更新標題和副標題
+                    if (importedData.title) {
+                        document.getElementById('timelineTitle').value = importedData.title;
+                    }
+                    
+                    if (importedData.subtitle) {
+                        document.getElementById('timelineSubtitle').value = importedData.subtitle;
+                    }
+                    
+                    // 更新階段資料
+                    phases = importedData.phases;
+                    
+                    // 重新生成 UI
+                    generatePhaseHTML();
+                    updatePreview();
+                    
+                    alert('JSON 資料匯入成功！');
+                } catch (error) {
+                    alert(`匯入失敗：${error.message}`);
+                    console.error('JSON 匯入錯誤:', error);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('讀取檔案時發生錯誤');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            generatePhaseHTML();
+            updatePreview();
+            
+            // 綁定標題變更事件
+            document.getElementById('timelineTitle').addEventListener('input', updatePreview);
+            document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
+        });
+    </script>
+</body>
+</html>
