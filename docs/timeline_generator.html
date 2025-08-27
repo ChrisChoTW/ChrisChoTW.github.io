@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>時間軸生成工具</title>
+    <!-- Intro.js CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
     <style>
         * {
             margin: 0;
@@ -51,6 +53,36 @@
             margin-bottom: 25px;
             font-size: 1.8rem;
             text-align: center;
+            position: relative;
+        }
+        
+        .guide-button {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .guide-button:hover {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+        
+        .guide-button svg {
+            width: 16px;
+            height: 16px;
         }
 
         h2 {
@@ -330,34 +362,42 @@
     <div class="container">
         <!-- 編輯器區域 -->
         <div class="editor-section">
-            <h1>🎨 時間軸生成工具</h1>
+            <h1 data-intro="歡迎使用時間軸生成工具！這個工具可以幫助您快速建立美觀的時間軸。" data-step="1">
+                🎨 時間軸生成工具
+                <button class="guide-button" onclick="startGuide()">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    功能導覽
+                </button>
+            </h1>
             
             <!-- 基本設定 -->
-            <h2>📋 基本設定</h2>
-            <div class="form-group">
+            <h2 data-intro="在這裡設定您的時間軸基本資訊" data-step="2">📋 基本設定</h2>
+            <div class="form-group" data-intro="輸入時間軸的主標題，這將顯示在最上方" data-step="3">
                 <label for="timelineTitle">時間軸標題：</label>
                 <input type="text" id="timelineTitle" value="我的時間軸" placeholder="輸入時間軸標題">
             </div>
-            <div class="form-group">
+            <div class="form-group" data-intro="副標題可以提供更多描述資訊" data-step="4">
                 <label for="timelineSubtitle">副標題：</label>
                 <input type="text" id="timelineSubtitle" value="重要事件記錄" placeholder="輸入副標題">
             </div>
 
             <!-- 階段設定 -->
-            <h2>🎭 階段設定</h2>
-            <div id="phasesContainer">
+            <h2 data-intro="時間軸可以有多個階段，每個階段包含多個事件" data-step="5">🎭 階段設定</h2>
+            <div id="phasesContainer" data-intro="在這裡管理所有的階段和事件。您可以設定階段名稱、顏色和 Emoji" data-step="6">
                 <!-- 階段會動態生成 -->
             </div>
-            <button class="btn btn-success" onclick="addPhase()">+ 新增階段</button>
+            <button class="btn btn-success" onclick="addPhase()" data-intro="點擊這裡新增更多階段" data-step="7">+ 新增階段</button>
 
             <!-- 匯出與匯入按鈕 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;" data-intro="完成編輯後，您可以匯出成 JSON 檔案保存，或匯出成獨立的 HTML 網頁" data-step="8">
                 <button class="btn btn-export" onclick="exportJSON()" style="background: linear-gradient(45deg, #3498db, #2980b9);">💾 匯出 JSON</button>
                 <button class="btn btn-export" onclick="exportHTML()">📥 匯出完整 HTML</button>
             </div>
             
             <!-- JSON 匯入區域 -->
-            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
+            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;" data-intro="您可以匯入之前儲存的 JSON 檔案來繼續編輯" data-step="9">
                 <label for="jsonImport">📂 匯入 JSON 資料：</label>
                 <div style="display: flex; gap: 10px;">
                     <input type="file" id="jsonImport" accept=".json" style="flex: 1; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
@@ -367,7 +407,7 @@
         </div>
 
         <!-- 預覽區域 -->
-        <div class="preview-section">
+        <div class="preview-section" data-intro="這裡會即時顯示您編輯的時間軸效果，所有修改都會立即反映在預覽中" data-step="10">
             <h2>👀 即時預覽</h2>
             <div id="timelinePreview">
                 <!-- 預覽內容會動態生成 -->
@@ -899,6 +939,34 @@ ${eventsHTML}
             document.getElementById('timelineTitle').addEventListener('input', updatePreview);
             document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
         });
+    </script>
+    <!-- Intro.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
+    <script>
+        // 初始化導覽功能
+        function startGuide() {
+            // 設定 intro.js
+            const intro = introJs();
+            
+            intro.setOptions({
+                // 設定選項
+                nextLabel: '下一步 →',
+                prevLabel: '← 上一步',
+                skipLabel: '跳過',
+                doneLabel: '完成',
+                tooltipPosition: 'auto',
+                exitOnOverlayClick: false,
+                showProgress: true,
+                showBullets: true,
+                scrollToElement: true,
+                scrollPadding: 30,
+                overlayOpacity: 0.7,
+                disableInteraction: false
+            });
+            
+            // 開始導覽
+            intro.start();
+        }
     </script>
 </body>
 </html>
