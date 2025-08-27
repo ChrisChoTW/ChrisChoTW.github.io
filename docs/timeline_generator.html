@@ -378,16 +378,16 @@
             </div>
             <button class="btn btn-success" onclick="addPhase()" data-intro="點擊這裡新增更多階段" data-step="7">+ 新增階段</button>
             
-            <button class="btn btn-ai-generate" onclick="showAIModal()">✨ AI 自動生成時間軸</button>
+            <button class="btn btn-ai-generate" onclick="showAIModal()" data-intro="想要快速開始？點擊這裡讓 AI 根據您的主題自動生成完整的時間軸！只需要輸入主題和 Google AI API 金鑰即可" data-step="8">✨ AI 自動生成時間軸</button>
 
             <!-- 匯出與匯入按鈕 -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;" data-intro="完成編輯後，您可以匯出成 JSON 檔案保存，或匯出成獨立的 HTML 網頁" data-step="8">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;" data-intro="完成編輯後，您可以匯出成 JSON 檔案保存，或匯出成獨立的 HTML 網頁" data-step="9">
                 <button class="btn btn-export" onclick="exportJSON()" style="background: #2c3e50;">💾 匯出 JSON</button>
                 <button class="btn btn-export" onclick="exportHTML()">📥 匯出完整 HTML</button>
             </div>
             
             <!-- JSON 匯入區域 -->
-            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;" data-intro="您可以匯入之前儲存的 JSON 檔案來繼續編輯" data-step="9">
+            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;" data-intro="您可以匯入之前儲存的 JSON 檔案來繼續編輯" data-step="10">
                 <label for="jsonImport">📂 匯入 JSON 資料：</label>
                 <div style="display: flex; gap: 10px;">
                     <input type="file" id="jsonImport" accept=".json" style="flex: 1; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
@@ -397,7 +397,7 @@
         </div>
 
         <!-- 預覽區域 -->
-        <div class="preview-section" data-intro="這裡會即時顯示您編輯的時間軸效果，所有修改都會立即反映在預覽中" data-step="10">
+        <div class="preview-section" data-intro="這裡會即時顯示您編輯的時間軸效果，所有修改都會立即反映在預覽中" data-step="11">
             <h2>👀 即時預覽</h2>
             <div id="timelinePreview">
                 <!-- 預覽內容會動態生成 -->
