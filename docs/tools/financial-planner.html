@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動態財務規劃工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+    <!-- PDF 生成相關庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Chart.js 圖表庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 全局錯誤處理 -->
+    <script>
+        // 全局錯誤捕獲
+        window.addEventListener('error', function(event) {
+            console.error('全局錯誤捕獲:', event.error);
+            
+            // 特別處理Chart.js相關錯誤
+            if (event.error && event.error.message && 
+                (event.error.message.includes('save') || 
+                 event.error.message.includes('canvas') || 
+                 event.error.message.includes('context') ||
+                 event.error.message.includes('Chart'))) {
+                console.warn('Chart.js 相關錯誤已被捕獲和壓制:', event.error.message);
+                event.preventDefault();
+                return true;
+            }
+            
+            // 對其他錯誤顯示用戶友好的提示
+            if (event.error && event.error.message && !event.error.message.includes('Script error')) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm';
+                errorMsg.innerHTML = `<strong>錯誤:</strong> ${event.error.message.substring(0, 100)}`;
+                document.body.appendChild(errorMsg);
+                setTimeout(() => {
+                    if (errorMsg.parentNode) {
+                        document.body.removeChild(errorMsg);
+                    }
+                }, 5000);
+            }
+        });
+        
+        // 處理未捕獲的Promise拒絕
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未處理的Promise拒絕:', event.reason);
+            
+            // 如果是Chart.js相關的錯誤，靜默處理
+            if (event.reason && event.reason.message && 
+                (event.reason.message.includes('save') || 
+                 event.reason.message.includes('canvas') || 
+                 event.reason.message.includes('context') ||
+                 event.reason.message.includes('Chart'))) {
+                console.warn('Chart.js Promise錯誤已被捕獲:', event.reason.message);
+                event.preventDefault();
+                return;
+            }
+        });
+        
+        // 檢測Chart.js載入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof Chart === 'undefined') {
+                    console.error('Chart.js 載入失敗');
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'fixed top-4 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    errorMsg.textContent = '⚠️ 圖表庫載入失敗，圖表功能可能無法正常運作';
+                    document.body.appendChild(errorMsg);
+                } else {
+                    console.log('Chart.js 載入成功，版本:', Chart.version);
+                }
+            }, 2000);
+        });
+    </script>
+    <style>
+        [v-cloak] { display: none; }
+        .icon { width: 1rem; height: 1rem; display: inline-block; }
+        
+        /* 列印樣式 */
+        @media print {
+            body {
+                margin: 0;
+                padding: 20px;
+            }
+            
+            /* 隱藏不需要列印的元素 */
+            .no-print,
+            button,
+            .introjs-hints {
+                display: none !important;
+            }
+            
+            /* 每個 tab 內容分頁 */
+            .page-break {
+                page-break-after: always;
+                break-after: always;
+            }
+            
+            /* 優化列印樣式 */
+            .bg-white {
+                box-shadow: none !important;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            h2 {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" v-cloak class="max-w-7xl mx-auto p-6">
+        
+        <!-- 標題區 -->
+        <div class="mb-8" data-intro="歡迎使用財務規劃工具！這個工具將幫您分析投資策略，預測達到財務自由的時間。" data-step="1">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                        </svg>
+                        動態財務規劃工具
+                    </h1>
+                    <p class="text-gray-600">多維度分析，動態計算複合成長的被動收入</p>
+                </div>
+                <div class="flex gap-2">
+                    <!-- JSON 匯出按鈕 -->
+                    <button @click="exportJSON" class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        匯出
+                    </button>
+                    
+                    <!-- JSON 匯入按鈕 -->
+                    <button @click="$refs.fileInput.click()" class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        匯入
+                    </button>
+                    <input ref="fileInput" type="file" accept=".json" @change="importJSON" style="display: none;">
+                    
+                    <!-- PDF/列印按鈕組 -->
+                    <div class="relative" @click.stop>
+                        <button @click="showPdfOptions = !showPdfOptions" class="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            輸出
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- 下拉選單 -->
+                        <div v-show="showPdfOptions" class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border z-50 min-w-40">
+                            <button @click="generateCanvasPDF(); showPdfOptions = false" 
+                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-gray-800">圖片版 PDF</span>
+                            </button>
+                            <button @click="printReport(); showPdfOptions = false" 
+                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                </svg>
+                                <span class="text-gray-800">瀏覽器列印</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 說明按鈕 -->
+                    <button @click="showHelp = !showHelp" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9,9h0a3,3,0,0,1,5.12,2.12h0A3,3,0,0,1,9,15"></path>
+                            <circle cx="12" cy="19.02" r=".02"></circle>
+                        </svg>
+                        說明
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 標籤導航 -->
+        <div class="mb-6">
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button v-for="tab in tabs" :key="tab.id"
+                            @click="activeTab = tab.id"
+                            :class="['flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                                    activeTab === tab.id ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100']">
+                        <svg v-if="tab.id === 'income'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <svg v-else-if="tab.id === 'investment'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
+                            <polyline points="17,6 23,6 23,12"></polyline>
+                        </svg>
+                        <svg v-else-if="tab.id === 'passiveIncome'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                        <svg v-else-if="tab.id === 'expenses'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        <svg v-else-if="tab.id === 'summary'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        {{ tab.name }}
+                    </button>
+                </div>
+                
+                <!-- 當前 Tab 的教學按鈕 -->
+                <div class="flex justify-center">
+                    <button @click="startTabTour(activeTab)" 
+                            class="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9,9h0a3,3,0,0,1,5.12,2.12h0A3,3,0,0,1,9,15"></path>
+                            <circle cx="12" cy="19.02" r=".02"></circle>
+                        </svg>
+                        {{ getTabName(activeTab) }}教學
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要內容區 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            
+            <!-- 說明區塊 -->
+            <div v-if="showHelp" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <h3 class="font-semibold text-blue-800">{{ currentTabHelp.title }}</h3>
+                </div>
+                <p class="text-blue-700 mb-3">{{ currentTabHelp.description }}</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-2">名詞說明</h4>
+                        <ul class="space-y-1 text-sm text-blue-700">
+                            <li v-for="term in currentTabHelp.terms" :key="term.term">
+                                <strong>{{ term.term }}：</strong>{{ term.definition }}
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-2">計算方式</h4>
+                        <p class="text-sm text-blue-700 mb-2">{{ currentTabHelp.calculation }}</p>
+                        <p class="text-xs text-blue-600 italic">💡 {{ currentTabHelp.note }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基本設定 Tab -->
+            <div v-if="activeTab === 'settings'" class="settings-tour">
+                <h2 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"
+                    data-intro="在這個頁面設定您的基本資料，包括年齡、退休規劃和財務目標。這些設定會影響整個財務規劃計算。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    基本設定
+                </h2>
+
+                <!-- 年齡與退休規劃區塊 -->
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6"
+                     data-intro="設定您的年齡資訊，用於計算退休時間線和長期財務規劃。" data-step="2">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        👤 年齡與退休規劃
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-blue-700 mb-2"
+                                   data-intro="輸入您目前的年齡，這會影響到退休倒數計算。" data-step="3">
+                                目前年齡
+                            </label>
+                            <input v-model.number="ageSettings.currentAge" type="number" min="18" max="80"
+                                   class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none text-lg font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-blue-700 mb-2"
+                                   data-intro="設定您預計的退休年齡，這會影響投資期間的長度。" data-step="4">
+                                預計退休年齡
+                            </label>
+                            <input v-model.number="ageSettings.retirementAge" type="number" min="50" max="85"
+                                   class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none text-lg font-semibold">
+                        </div>
+                        <div class="flex items-end">
+                            <div class="w-full p-3 bg-blue-100 rounded-lg text-center">
+                                <div class="text-sm text-blue-600">距離退休</div>
+                                <div class="text-2xl font-bold text-blue-800">{{ yearsToRetirement }}年</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 財務目標設定區塊 -->
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6"
+                     data-intro="設定您的財務自由目標，這是整個財務規劃的核心指標。" data-step="5">
+                    <h3 class="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        🎯 財務自由目標
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-2"
+                                   data-intro="設定您希望達到的每月被動收入金額。這是判斷是否達到財務自由的標準。" data-step="6">
+                                每月被動收入目標 (NT$)
+                            </label>
+                            <input v-model.number="target.monthlyPassiveIncome" type="number" min="1000" step="1000"
+                                   class="w-full p-3 border rounded-lg focus:border-green-500 outline-none text-lg font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-green-700 mb-2">目標說明</label>
+                            <input v-model="target.description" type="text" 
+                                   placeholder="例如：每月被動收入目標"
+                                   class="w-full p-3 border rounded-lg focus:border-green-500 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- 目標相關指標 -->
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <div class="text-sm text-green-600">4%法則所需資產</div>
+                            <div class="text-xl font-bold text-green-800">
+                                NT$ {{ (target.monthlyPassiveIncome * 12 / 0.04).toLocaleString() }}
+                            </div>
+                            <div class="text-xs text-green-500 mt-1">年收入 ÷ 4% = 所需總資產</div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <div class="text-sm text-blue-600">年度被動收入需求</div>
+                            <div class="text-xl font-bold text-blue-800">
+                                NT$ {{ (target.monthlyPassiveIncome * 12).toLocaleString() }}
+                            </div>
+                            <div class="text-xs text-blue-500 mt-1">月目標 × 12 = 年度需求</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <div class="text-sm text-purple-600">退休前累積時間</div>
+                            <div class="text-xl font-bold text-purple-800">{{ yearsToRetirement }}年</div>
+                            <div class="text-xs text-purple-500 mt-1">可用於累積資產的時間</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 導覽提示 -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-blue-800 mb-2">📋 設定完成後的下一步</h4>
+                    <div class="text-sm text-blue-700 space-y-1">
+                        <p>• <strong>一般收入</strong>：設定您的固定收入來源（薪資、補貼等）</p>
+                        <p>• <strong>投資部位</strong>：配置您的投資組合和預期報酬率</p>
+                        <p>• <strong>支出項目</strong>：記錄每月必要支出，包括房貸等固定支出</p>
+                        <p>• <strong>結論與預估</strong>：查看達到財務自由的預估時間</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 一般收入 Tab -->
+            <div v-if="activeTab === 'income'" class="income-tour">
+                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center gap-2" 
+                    data-intro="這裡顯示一般收入項目的標題。一般收入包括薪資、補貼等固定收入來源。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    一般收入項目
+                </h2>
+                
+                <div v-for="income in regularIncomes" :key="income.id" class="mb-4 p-3 border rounded-lg"
+                     data-intro="這是一個收入項目。您可以編輯收入名稱、金額和說明。每個項目都可以被刪除。" data-step="2">
+                    <div class="flex justify-between items-center mb-2">
+                        <input v-model="income.name" type="text" placeholder="收入名稱" 
+                               class="font-medium text-gray-800 bg-transparent border-b border-gray-300 focus:border-green-500 outline-none"
+                               data-intro="在這裡輸入收入來源的名稱，例如：薪資收入、房貸分擔等。" data-step="3">
+                        <button @click="removeRegularIncome(income.id)" class="text-red-500 hover:text-red-700"
+                                data-intro="點擊這個按鈕可以刪除這個收入項目。" data-step="4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <input v-model.number="income.amount" type="number" placeholder="金額" 
+                           class="w-full mb-2 p-2 border rounded focus:border-green-500 outline-none"
+                           data-intro="輸入每月的收入金額，只需要輸入數字即可。" data-step="5">
+                    <input v-model="income.description" type="text" placeholder="說明" 
+                           class="w-full p-2 border rounded focus:border-green-500 outline-none text-sm text-gray-600"
+                           data-intro="這裡可以添加關於這個收入來源的詳細說明或備註。" data-step="6">
+                </div>
+                
+                <button @click="addRegularIncome" 
+                        class="w-full mt-2 p-3 border-2 border-dashed border-green-300 rounded-lg text-green-600 hover:border-green-500 hover:bg-green-50 flex items-center justify-center gap-2"
+                        data-intro="點擊這個按鈕可以新增一個新的收入項目。您可以添加任意數量的收入來源。" data-step="7">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    新增一般收入
+                </button>
+                
+                <div class="mt-6 p-4 bg-green-50 rounded-lg"
+                     data-intro="這裡顯示所有一般收入項目的總計。這個金額會自動計算，並在後續的財務規劃中使用。" data-step="8">
+                    <p class="font-semibold text-green-800 text-lg">
+                        一般收入總計: NT$ {{ totalRegularIncome.toLocaleString() }}
+                    </p>
+                    <p class="text-sm text-green-600 mt-1">不包含投資被動收入，在其他 Tab 中計算</p>
+                </div>
+            </div>
+
+            <!-- 投資部位 Tab -->
+            <div v-if="activeTab === 'investment'" class="investment-tour">
+                <h2 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"
+                    data-intro="投資部位是財務規劃的核心！在這裡設定您的投資組合、每月投入金額和預期報酬率。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
+                        <polyline points="17,6 23,6 23,12"></polyline>
+                    </svg>
+                    投資部位設定
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div v-for="investment in investments" :key="investment.id" class="p-4 border rounded-lg"
+                         data-intro="這是一個投資部位。每個部位都可以設定不同的投資策略和報酬率。" data-step="2">
+                        <div class="flex justify-between items-center mb-3">
+                            <input v-model="investment.name" type="text" placeholder="投資名稱" 
+                                   class="font-medium text-gray-800 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
+                                   data-intro="輸入投資標的名稱，例如：高股息ETF、成長型基金等。" data-step="3">
+                            <button @click="removeInvestment(investment.id)" class="text-red-500 hover:text-red-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="text-xs text-gray-500">每月投入</label>
+                                <input v-model.number="investment.amount" type="number" placeholder="每月金額" 
+                                       class="w-full p-2 border rounded focus:border-blue-500 outline-none"
+                                       data-intro="輸入每月定期定額投入這個標的的金額。這個金額會用來計算未來的累積效應。" data-step="4">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">現在價值</label>
+                                <input v-model.number="investment.currentValue" type="number" placeholder="目前市值" 
+                                       class="w-full p-2 border rounded focus:border-blue-500 outline-none"
+                                       data-intro="輸入您目前持有這個投資標的的總市值。這個數值會作為未來被動收入計算的基礎。" data-step="5">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label class="text-xs text-gray-500">年化殖利率 (%)</label>
+                            <input v-model.number="investment.yieldRate" type="number" step="0.1" placeholder="殖利率" 
+                                   class="w-full p-2 border rounded focus:border-blue-500 outline-none"
+                                   data-intro="輸入這個投資標的的年化殖利率（%）。例如：7.2 表示每年配息 7.2%。如果設為 0 則表示這個投資不產生配息（如成長型基金）。" data-step="6">
+                        </div>
+                        
+                        <input v-model="investment.description" type="text" placeholder="說明" 
+                               class="w-full p-2 border rounded focus:border-blue-500 outline-none text-sm text-gray-600"
+                               data-intro="這裡可以添加關於這個投資標的的詳細說明，例如投資策略、目標等。" data-step="7">
+                    </div>
+                </div>
+                
+                <button @click="addInvestment" 
+                        class="w-full mt-4 p-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center gap-2"
+                        data-intro="點擊這個按鈕可以新增一個新的投資部位。您可以同時持有多個不同的投資標的。" data-step="8">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    新增投資部位
+                </button>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg"
+                     data-intro="這裡顯示您投資組合的整體概覽。包括每月投入總金額、目前持有總市值，以及會產生配息的部位總值。" data-step="9">
+                    <p class="font-semibold text-blue-800 text-lg">
+                        月投資總計: NT$ {{ totalInvestment.toLocaleString() }}
+                    </p>
+                    <div class="text-sm text-blue-600 mt-2">
+                        <p>目前投資市值: NT$ {{ totalInvestmentValue.toLocaleString() }}</p>
+                        <p>有殖利率部位: NT$ {{ totalYieldInvestmentValue.toLocaleString() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 被動收入成長 Tab -->
+            <div v-if="activeTab === 'passiveIncome'" class="passiveIncome-tour">
+                <h2 class="text-xl font-semibold text-purple-700 mb-4 flex items-center gap-2"
+                    data-intro="這是被動收入成長預測表，顯示您的投資在未來10年內將如何產生被動收入。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <line x1="12" y1="20" x2="12" y2="10"></line>
+                        <line x1="18" y1="20" x2="18" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="16"></line>
+                    </svg>
+                    被動收入成長預測（10年）
+                </h2>
+                
+                <div class="mb-6 p-4 bg-purple-50 rounded-lg"
+                     data-intro="這個區塊說明了被動收入的計算方式。系統會基於您的投資部位設定，考慮每月定期定額投入與複利效應來計算。" data-step="2">
+                    <p class="text-sm text-purple-600 mb-2">
+                        💡 基於你的投資部位，考慮每月定期定額投入與複利效應
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        計算邏輯：每年資產 = 前年資產 + 年投資額，年配息 = 資產總額 × 殖利率
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto"
+                     data-intro="這個表格顯示了未來10年的被動收入成長預測。綠色背景的年份表示已達到目標的被動收入。" data-step="3">
+                    <table class="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-purple-100">
+                                <th class="border border-gray-300 p-3 text-left"
+                                    data-intro="這一欄顯示年份，從目前（第0年）開始到退休年齡。" data-step="4">年份</th>
+                                <th class="border border-gray-300 p-3 text-center">年齡</th>
+                                <th class="border border-gray-300 p-3 text-center">財務階段</th>
+                                <th class="border border-gray-300 p-3 text-right"
+                                    data-intro="這一欄顯示累積的投資資產總值，包括原有持有加上每月繼續投入的金額。" data-step="5">累積資產</th>
+                                <th class="border border-gray-300 p-3 text-right"
+                                    data-intro="這一欄顯示每月可獲得的配息收入。這是您的被動收入目標的關鍵指標。" data-step="6">月配息</th>
+                                <th class="border border-gray-300 p-3 text-right">年配息</th>
+                                <th class="border border-gray-300 p-3 text-center"
+                                    data-intro="這一欄顯示是否已達到您設定的每月被動收入目標。綠色表示已達標，灰色表示尚未達標。" data-step="7">達標狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody data-intro="表格的每一列代表一個年份的財務狀態。您可以清楚地看到您的投資如何在時間中積累和成長。" data-step="8">
+                            <tr v-for="data in passiveIncomeGrowth" :key="data.year" 
+                                :class="data.monthlyDividend >= target.monthlyPassiveIncome ? 'bg-green-50' : ''">
+                                <td class="border border-gray-300 p-3">
+                                    {{ data.year === 0 ? '目前' : `第${data.year}年` }}
+                                </td>
+                                <td class="border border-gray-300 p-3 text-center font-semibold"
+                                    :class="data.isRetired ? 'text-purple-600 bg-purple-50' : ''">
+                                    {{ data.currentAge }}歲
+                                </td>
+                                <td class="border border-gray-300 p-3 text-center text-sm font-medium"
+                                    :class="{
+                                        'text-red-600 bg-red-50': data.phase === '房貸期間',
+                                        'text-green-600 bg-green-50': data.phase === '房貸已清',
+                                        'text-purple-600 bg-purple-100': data.phase === '退休後'
+                                    }">
+                                    {{ data.phase }}
+                                </td>
+                                <td class="border border-gray-300 p-3 text-right font-mono">
+                                    NT$ {{ Math.round(data.assets).toLocaleString() }}
+                                </td>
+                                <td class="border border-gray-300 p-3 text-right font-mono">
+                                    NT$ {{ Math.round(data.monthlyDividend).toLocaleString() }}
+                                </td>
+                                <td class="border border-gray-300 p-3 text-right font-mono">
+                                    NT$ {{ Math.round(data.annualDividend).toLocaleString() }}
+                                </td>
+                                <td class="border border-gray-300 p-3 text-center">
+                                    <span v-if="data.monthlyDividend >= target.monthlyPassiveIncome" 
+                                          class="bg-green-500 text-white px-2 py-1 rounded text-xs">✅ 達標</span>
+                                    <span v-else class="text-gray-400 text-xs">
+                                        {{ Math.round(target.monthlyPassiveIncome - data.monthlyDividend).toLocaleString() }} 元差距
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 支出項目 Tab -->
+            <div v-if="activeTab === 'expenses'" class="expenses-tour">
+                <h2 class="text-xl font-semibold text-red-700 mb-4 flex items-center gap-2"
+                    data-intro="在支出項目中，您可以詳細記錄所有每月固定支出，這將幫助計算真正的可投資餘額。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    支出項目
+                </h2>
+                
+                <div v-for="expense in expenses" :key="expense.id" class="mb-4 p-3 border rounded-lg"
+                     :class="expense.isMortgage ? 'border-orange-300 bg-orange-50' : ''"
+                     data-intro="這是一個支出項目。記錄所有每月固定支出，如房貸、生活費、保險等。" data-step="2">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <input v-model="expense.name" type="text" placeholder="支出名稱" 
+                                   class="font-medium text-gray-800 bg-transparent border-b border-gray-300 focus:border-red-500 outline-none"
+                                   data-intro="輸入支出項目的名稱，例如：房貸負擔、生活費用、保險費等。" data-step="3">
+                            <span v-if="expense.isMortgage" class="text-orange-600 text-xs bg-orange-100 px-2 py-1 rounded">
+                                🏠 房貸
+                            </span>
+                        </div>
+                        <button @click="removeExpense(expense.id)" class="text-red-500 hover:text-red-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <input v-model.number="expense.amount" type="number" placeholder="金額" 
+                           class="w-full mb-2 p-2 border rounded focus:border-red-500 outline-none"
+                           data-intro="輸入每月支出的金額。正確的支出記錄有助於精確計算可投資金額。" data-step="4">
+                    
+                    <input v-model="expense.description" type="text" placeholder="說明" 
+                           class="w-full p-2 border rounded focus:border-red-500 outline-none text-sm text-gray-600 mb-2">
+                    
+                    <!-- 房貸詳細資訊 -->
+                    <div v-if="expense.isMortgage && expense.mortgageData" class="mt-3 p-3 bg-orange-100 rounded-lg">
+                        <h4 class="text-sm font-semibold text-orange-800 mb-2">🏠 房貸詳細資訊</h4>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-orange-700">
+                            <div><strong>貸款本金：</strong>NT$ {{ (expense.mortgageData.principal / 10000).toLocaleString() }}萬</div>
+                            <div><strong>利率：</strong>{{ expense.mortgageData.rate }}%</div>
+                            <div><strong>總年期：</strong>{{ expense.mortgageData.years }}年</div>
+                            <div><strong>剩餘年期：</strong>{{ expense.mortgageData.remainingYears }}年</div>
+                        </div>
+                        <div class="mt-2 text-xs text-orange-600">
+                            <strong>剩餘本金：</strong>NT$ {{ calculateRemainingMortgage(expense.mortgageData).toLocaleString() }}元
+                        </div>
+                    </div>
+                </div>
+                
+                <button @click="addExpense" 
+                        class="w-full mt-2 p-3 border-2 border-dashed border-red-300 rounded-lg text-red-600 hover:border-red-500 hover:bg-red-50 flex items-center justify-center gap-2"
+                        data-intro="點擊這個按鈕新增更多支出項目。建議詳細記錄所有固定支出以獲得最準確的財務規劃。" data-step="5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    新增支出項目
+                </button>
+                
+                <div class="mt-6 p-4 bg-red-50 rounded-lg"
+                     data-intro="這裡顯示您所有支出項目的總計。這個數值將用於計算您的餘裕資金。" data-step="6">
+                    <p class="font-semibold text-red-800 text-lg">
+                        月支出總計: NT$ {{ totalExpenses.toLocaleString() }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- 結論與預估 Tab -->
+            <div v-if="activeTab === 'summary'" class="summary-tour">
+                <h2 class="text-xl font-semibold text-purple-700 mb-4 flex items-center gap-2"
+                    data-intro="結論與預估節面是財務規劃的總結，這裡會綜合所有資訊，告訴您何時能達成財務目標。" data-step="1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    結論與時間預估
+                </h2>
+
+                <!-- 目標設定 -->
+                <div class="mb-6 space-y-4">
+                    <!-- 年齡與退休狀態顯示 -->
+                    <div class="p-4 border rounded-lg bg-blue-50" data-intro="顯示您的年齡和退休規劃資訊。要修改這些設定，請前往「基本設定」頁籤。" data-step="2">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            👤 年齡與退休規劃
+                            <button @click="activeTab = 'settings'" class="ml-auto px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                前往修改
+                            </button>
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">目前年齡</div>
+                                <div class="text-2xl font-bold text-blue-800">{{ ageSettings.currentAge }}歲</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">退休年齡</div>
+                                <div class="text-2xl font-bold text-blue-800">{{ ageSettings.retirementAge }}歲</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">距離退休</div>
+                                <div class="text-2xl font-bold text-blue-800">{{ yearsToRetirement }}年</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border rounded-lg" data-intro="可以隨時調整目標金額，看看對達標時間的影響。" data-step="3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2"
+                               data-intro="這裡設定您的財務自由目標！輸入您希望每月達到的被動收入金額。" data-step="4">
+                            每月被動收入目標 (NT$)
+                        </label>
+                        <input v-model.number="target.monthlyPassiveIncome" type="number" 
+                               class="w-full p-3 border rounded-lg focus:border-purple-500 outline-none text-lg font-semibold"
+                               data-intro="調整這個數值會即時更新達標時間預測。試試調整不同數值，看看對達標時間的影響！" data-step="5">
+                    </div>
+                    
+                    <!-- 4% 法則計算 -->
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg"
+                         data-intro="4% 法則是經典的退休規劃方法，計算您需要多少總資產才能安全提領維持生活。" data-step="5">
+                        <h4 class="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            4% 法則計算
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-amber-700 mb-1">
+                                    <strong>所需總資產：</strong>NT$ {{ fourPercentRuleAssets.toLocaleString() }}
+                                </p>
+                                <p class="text-amber-600 text-xs">
+                                    = 年支出 {{ (target.monthlyPassiveIncome * 12).toLocaleString() }} ÷ 4%
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-amber-700 mb-1">
+                                    <strong>目前資產缺口：</strong>
+                                    <span :class="fourPercentGap >= 0 ? 'text-red-600' : 'text-green-600'">
+                                        NT$ {{ Math.abs(fourPercentGap).toLocaleString() }}
+                                        {{ fourPercentGap >= 0 ? '(不足)' : '(已達標)' }}
+                                    </span>
+                                </p>
+                                <p class="text-amber-600 text-xs">
+                                    目前投資市值：NT$ {{ totalInvestmentValue.toLocaleString() }}
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-amber-600 mt-2 italic">
+                            💡 4% 法則：每年從投資組合提領 4%，理論上可永續使用而不耗盡本金
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- 目前財務狀況 -->
+                    <div class="p-4 bg-blue-50 rounded-lg"
+                         data-intro="這個區塊顯示您目前的財務狀況總覽，包括收入、支出、投資和餘裕資金。" data-step="5">
+                        <h3 class="font-semibold text-blue-800 mb-3">目前財務狀況</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>一般收入:</span>
+                                <span class="font-semibold">NT$ {{ totalRegularIncome.toLocaleString() }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>被動收入:</span>
+                                <span class="font-semibold">NT$ {{ Math.round(currentPassiveIncome).toLocaleString() }}</span>
+                            </div>
+                            <hr />
+                            <div class="flex justify-between text-green-600">
+                                <span>總月收入:</span>
+                                <span class="font-semibold">NT$ {{ Math.round(totalCurrentIncome).toLocaleString() }}</span>
+                            </div>
+                            <div class="flex justify-between text-red-600">
+                                <span>總月支出:</span>
+                                <span class="font-semibold">NT$ {{ totalExpenses.toLocaleString() }}</span>
+                            </div>
+                            <div class="flex justify-between text-blue-600">
+                                <span>總月投資:</span>
+                                <span class="font-semibold">NT$ {{ totalInvestment.toLocaleString() }}</span>
+                            </div>
+                            <hr />
+                            <div class="flex justify-between"
+                                 data-intro="餘裕資金 = 總收入 - 總支出 - 總投資。正值表示您還有餘裕可增加投資，負值則表示可能需要調整收支結構。" data-step="6">
+                                <span>餘裕資金:</span>
+                                <span :class="['font-semibold', availableBalance >= 0 ? 'text-green-600' : 'text-red-600']">
+                                    NT$ {{ Math.round(availableBalance).toLocaleString() }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 達標預測 -->
+                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg" 
+                         data-intro="現在您可以調整任何參數，立即看到對達標時間的影響。祝您早日達成財務目標！" data-step="7">
+                        <div v-if="targetYear !== null" data-intro="這裡顯示了達成您財務目標所需的時間。如果顯示「已達標！」，恭喜您，您的被動收入已經達到目標！" data-step="8">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <h3 class="font-semibold text-purple-800">達標預測</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="text-3xl font-bold text-purple-700">
+                                    {{ targetYear === 0 ? '已達標！' : `${targetYear} 年` }}
+                                </div>
+                                
+                                <div v-if="targetYear > 0">
+                                    <div class="text-sm text-gray-600">
+                                        預計第 {{ targetYear }} 年達到每月被動收入 NT$ {{ target.monthlyPassiveIncome.toLocaleString() }}
+                                    </div>
+                                    <div class="text-sm text-gray-600">
+                                        屆時月配息: NT$ {{ Math.round(targetData.monthlyDividend).toLocaleString() }}
+                                    </div>
+                                    <div class="text-sm text-gray-600">
+                                        累積資產: NT$ {{ Math.round(targetData.assets).toLocaleString() }}
+                                    </div>
+                                    <div class="text-sm text-green-600 font-medium">
+                                        屆時總月收入: NT$ {{ (totalRegularIncome + Math.round(targetData.monthlyDividend)).toLocaleString() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center text-gray-500"
+                             data-intro="如果這裡顯示「在10年內無法達標」，別擔心！您可以調整投資策略（增加每月投資金額或提高殖利率）或降低目標金額。" data-step="9">
+                            <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>在10年內無法達標</p>
+                            <p class="text-xs">請調整投資策略或目標</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 建議 -->
+                <div v-if="availableBalance > 0" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+                     data-intro="如果您還有餘裕資金，這裡會給出優化建議。增加投資金額可以有效加速達成財務目標的時間！" data-step="10">
+                    <h4 class="font-semibold text-yellow-800 mb-2">💡 優化建議</h4>
+                    <p class="text-sm text-yellow-700">
+                        你還有 NT$ {{ Math.round(availableBalance).toLocaleString() }} 的月餘裕資金，
+                        可以考慮增加投資額度來加速達標時間！
+                    </p>
+                </div>
+
+                <!-- 房貸與財務自由分析 -->
+                <div v-if="totalMortgageExpense > 0" class="mt-8 p-6 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg"
+                     data-intro="房貸對財務自由的重要影響！這裡分析房貸如何影響您的財務自由時間，並提供兩種策略選擇。" data-step="13">
+                    <h3 class="text-xl font-semibold text-orange-800 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        🏠 房貸與財務自由分析
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- 房貸概況 -->
+                        <div class="bg-white p-4 rounded-lg border border-orange-200">
+                            <h4 class="font-semibold text-orange-700 mb-3">📊 房貸概況</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>每月房貸支出：</span>
+                                    <span class="font-semibold text-orange-600">NT$ {{ totalMortgageExpense.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>剩餘本金：</span>
+                                    <span class="font-semibold">NT$ {{ totalRemainingMortgage.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>剩餘年期：</span>
+                                    <span class="font-semibold">{{ yearsToMortgageFree }}年</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-2 mt-2">
+                                    <span>房貸佔支出比例：</span>
+                                    <span class="font-semibold text-orange-600">{{ ((totalMortgageExpense / totalExpenses) * 100).toFixed(1) }}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 財務自由目標調整 -->
+                        <div class="bg-white p-4 rounded-lg border border-orange-200">
+                            <h4 class="font-semibold text-orange-700 mb-3">🎯 財務自由目標調整</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>原目標被動收入：</span>
+                                    <span class="font-semibold">NT$ {{ target.monthlyPassiveIncome.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>房貸月支出：</span>
+                                    <span class="font-semibold text-orange-600">+ NT$ {{ totalMortgageExpense.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-2 mt-2">
+                                    <span>調整後目標：</span>
+                                    <span class="font-semibold text-red-600">NT$ {{ mortgageAdjustedTarget.toLocaleString() }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">
+                                    含房貸的完全財務自由需要 {{ ((mortgageAdjustedTarget / target.monthlyPassiveIncome - 1) * 100).toFixed(0) }}% 更多被動收入
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 兩種策略比較 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- 策略A：房貸+投資並行 -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h5 class="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                                <span>📈</span> 策略A：房貸+投資並行
+                            </h5>
+                            <div class="text-sm text-blue-700 space-y-1">
+                                <p><strong>目標：</strong>被動收入達 NT$ {{ mortgageAdjustedTarget.toLocaleString() }}</p>
+                                <p><strong>4%法則所需資產：</strong>NT$ {{ (mortgageAdjustedTarget * 12 / 0.04).toLocaleString() }}</p>
+                                <p><strong>優點：</strong>槓桿效應、保留房產增值機會</p>
+                                <p><strong>風險：</strong>利率上升風險、現金流壓力大</p>
+                            </div>
+                        </div>
+
+                        <!-- 策略B：優先還清房貸 -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h5 class="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                <span>🏠</span> 策略B：優先還清房貸
+                            </h5>
+                            <div class="text-sm text-green-700 space-y-1">
+                                <p><strong>目標：</strong>被動收入達 NT$ {{ target.monthlyPassiveIncome.toLocaleString() }}</p>
+                                <p><strong>4%法則所需資產：</strong>NT$ {{ fourPercentRuleAssets.toLocaleString() }}</p>
+                                <p><strong>優點：</strong>降低風險、減少固定支出</p>
+                                <p><strong>機會成本：</strong>投資報酬率若 > {{ expenses.find(e => e.isMortgage)?.mortgageData?.rate || 0 }}% 較不划算</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                        <p class="text-sm text-yellow-800">
+                            <strong>💡 建議：</strong>
+                            當投資報酬率明顯高於房貸利率時，選擇策略A較佳；
+                            當經濟不確定或投資經驗不足時，策略B較為穩健。
+                            可考慮混合策略：部分資金提前還款，部分資金投資。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 退休後財務狀態分析 -->
+                <div class="mt-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                    <h3 class="text-xl font-semibold text-purple-800 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        🎯 退休後財務狀態分析
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <!-- 退休時間軸 -->
+                        <div class="bg-white p-4 rounded-lg border border-purple-200">
+                            <h4 class="font-semibold text-purple-700 mb-3">📅 時間規劃</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>目前年齡：</span>
+                                    <span class="font-semibold">{{ ageSettings.currentAge }}歲</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>退休年齡：</span>
+                                    <span class="font-semibold text-purple-600">{{ ageSettings.retirementAge }}歲</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>距離退休：</span>
+                                    <span class="font-semibold">{{ yearsToRetirement }}年</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>房貸還清年齡：</span>
+                                    <span class="font-semibold">{{ ageAtMortgageFree }}歲</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-2 mt-2">
+                                    <span>房貸退休前還清：</span>
+                                    <span :class="willMortgageFreeBeforeRetirement ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                                        {{ willMortgageFreeBeforeRetirement ? '✓ 是' : '✗ 否' }}
+                                    </span>
+                                </div>
+                                <div v-if="willMortgageFreeBeforeRetirement" class="flex justify-between">
+                                    <span>無房貸期間：</span>
+                                    <span class="font-semibold text-green-600">{{ yearsAfterMortgageFreeToRetirement }}年</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 退休時資產預估 -->
+                        <div class="bg-white p-4 rounded-lg border border-purple-200">
+                            <h4 class="font-semibold text-purple-700 mb-3">💰 退休時資產</h4>
+                            <div class="space-y-2 text-sm" v-if="passiveIncomeGrowth.find(data => data.isRetired)">
+                                <div class="flex justify-between">
+                                    <span>退休時總資產：</span>
+                                    <span class="font-semibold text-purple-600">
+                                        NT$ {{ Math.round(passiveIncomeGrowth.find(data => data.isRetired)?.assets || 0).toLocaleString() }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>退休時月配息：</span>
+                                    <span class="font-semibold">
+                                        NT$ {{ Math.round(passiveIncomeGrowth.find(data => data.isRetired)?.monthlyDividend || 0).toLocaleString() }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between border-t pt-2 mt-2">
+                                    <span>vs 目標收入：</span>
+                                    <span :class="(passiveIncomeGrowth.find(data => data.isRetired)?.monthlyDividend || 0) >= target.monthlyPassiveIncome ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                                        {{ ((passiveIncomeGrowth.find(data => data.isRetired)?.monthlyDividend || 0) / target.monthlyPassiveIncome * 100).toFixed(0) }}%
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">
+                                    {{ (passiveIncomeGrowth.find(data => data.isRetired)?.monthlyDividend || 0) >= target.monthlyPassiveIncome ? 
+                                        '✓ 已達到財務自由目標' : '⚠️ 尚未達到財務自由目標' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 退休後優勢 -->
+                        <div class="bg-white p-4 rounded-lg border border-purple-200">
+                            <h4 class="font-semibold text-purple-700 mb-3">🚀 退休期間優勢</h4>
+                            <div class="space-y-3 text-sm">
+                                <div v-if="willMortgageFreeBeforeRetirement" class="flex items-start gap-2">
+                                    <span class="text-green-500 mt-1">✓</span>
+                                    <span>房貸已清，月支出減少 NT$ {{ totalMortgageExpense.toLocaleString() }}</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="text-green-500 mt-1">✓</span>
+                                    <span>不需工作收入，完全依靠被動收入</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="text-green-500 mt-1">✓</span>
+                                    <span>生活支出可能降低（交通、職場相關費用）</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="text-blue-500 mt-1">💡</span>
+                                    <span>可考慮轉為較保守的投資組合</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 退休策略建議 -->
+                    <div class="bg-gradient-to-r from-indigo-100 to-purple-100 border border-indigo-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-indigo-800 mb-2 flex items-center gap-2">
+                            <span>🎯</span> 退休策略建議
+                        </h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-indigo-700"><strong>資產配置調整：</strong></p>
+                                <ul class="ml-4 mt-1 space-y-1 text-indigo-600">
+                                    <li>• 逐步降低股票比重（如：從70%調降至50%）</li>
+                                    <li>• 增加債券或穩定收益型資產</li>
+                                    <li>• 保留部分現金作為緊急備用金</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-indigo-700"><strong>收入來源多元化：</strong></p>
+                                <ul class="ml-4 mt-1 space-y-1 text-indigo-600">
+                                    <li>• 股息收入：高股息ETF或個股</li>
+                                    <li>• 債息收入：政府公債或投資級公司債</li>
+                                    <li>• 租金收入：若有第二房產</li>
+                                    <li>• 部分工作收入：顧問、講師等</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 圖表區域 -->
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 被動收入成長折線圖 -->
+                    <div class="bg-white p-6 rounded-lg border"
+                         data-intro="這個折線圖顯示您的被動收入在未來10年的成長趨勢，綠色線表示目標金額。" data-step="11">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
+                                <polyline points="17,6 23,6 23,12"></polyline>
+                            </svg>
+                            被動收入成長趨勢
+                        </h3>
+                        <div class="h-64">
+                            <canvas ref="passiveIncomeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 收支結構圓餅圖 -->
+                    <div class="bg-white p-6 rounded-lg border"
+                         data-intro="這個圓餅圖顯示您的月收支結構，讓您一目了然各項目的占比。" data-step="12">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M21.21 15.89A10 10 0 118 2.83"></path>
+                                <path d="M22 12A10 10 0 0012 2v10z"></path>
+                            </svg>
+                            月收支結構
+                        </h3>
+                        <div class="h-64">
+                            <canvas ref="incomeExpenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'settings',
+                    showHelp: false,
+                    showPdfOptions: false,
+                    
+                    // 圖表實例
+                    passiveIncomeChartInstance: null,
+                    incomeExpenseChartInstance: null,
+                    canvasResizeObserver: null,
+                    
+                    // 一般收入項目
+                    regularIncomes: [
+                        { id: 1, name: '薪資收入', amount: 45000, description: '每月固定薪資' },
+                    ],
+                    
+                    // 支出項目
+                    expenses: [
+                        { id: 1, name: '房貸負擔', amount: 41492, description: '每月房貸支出', isMortgage: true, mortgageData: { principal: 10000000, rate: 1.775, years: 30, remainingYears: 30 } },
+                        { id: 2, name: '生活費用', amount: 10000, description: '餐費、日用品等' }
+                    ],
+                    
+                    // 投資部位
+                    investments: [
+                        { id: 1, name: '股票定期定額', amount: 10000, currentValue: 500000, yieldRate: 7.2, description: '高股息ETF' },
+                    ],
+                    
+                    // 目標設定
+                    target: {
+                        monthlyPassiveIncome: 20000,
+                        description: '每月被動收入目標'
+                    },
+
+                    // 年齡與退休規劃
+                    ageSettings: {
+                        currentAge: 37,
+                        retirementAge: 65
+                    },
+
+                    // 標籤配置
+                    tabs: [
+                        {
+                            id: 'settings',
+                            name: '基本設定',
+                            icon: 'svg',
+                            step: '1',
+                            intro: '設定基本資料，包括年齡、退休規劃和財務目標。',
+                            help: {
+                                title: '基本設定說明',
+                                description: '配置個人基本資料和財務目標，這些設定會影響整個財務規劃',
+                                terms: [
+                                    { term: '目前年齡', definition: '您現在的年齡，用於計算退休時間線' },
+                                    { term: '退休年齡', definition: '預計退休的年齡，影響投資年限' },
+                                    { term: '被動收入目標', definition: '希望達到的每月被動收入金額' }
+                                ],
+                                calculation: '退休時間 = 退休年齡 - 目前年齡',
+                                note: '這些基礎設定將應用到所有財務計算中'
+                            }
+                        },
+                        {
+                            id: 'income',
+                            name: '一般收入',
+                            icon: 'svg',
+                            step: '2',
+                            intro: '在此設定薪資、補貼等固定收入。',
+                            help: {
+                                title: '一般收入說明',
+                                description: '設定每月固定收入來源，不包含投資配息',
+                                terms: [
+                                    { term: '薪資收入', definition: '工作獲得的固定月薪' },
+                                    { term: '房貸分擔', definition: '他人協助分擔的房貸金額' },
+                                    { term: '其他收入', definition: '兼職、租金等其他固定收入' }
+                                ],
+                                calculation: '一般收入總計 = 所有固定收入項目加總',
+                                note: '被動收入（股息配息）會在其他Tab中動態計算'
+                            }
+                        },
+                        {
+                            id: 'investment',
+                            name: '投資部位',
+                            icon: 'svg',
+                            step: '3',
+                            intro: '設定每月投資金額、目前持有市值，以及預期殖利率。',
+                            help: {
+                                title: '投資部位說明',
+                                description: '設定投資標的、金額與預期殖利率',
+                                terms: [
+                                    { term: '每月投入', definition: '定期定額投資的月投資金額' },
+                                    { term: '現在價值', definition: '目前持有投資標的的市值' },
+                                    { term: '年化殖利率', definition: '預期年配息率，如7.2%表示每年配息7.2%' }
+                                ],
+                                calculation: '投資效益 = (現值 + 累積投入) × 殖利率',
+                                note: '殖利率設為0代表該投資不產生配息（如成長型基金）'
+                            }
+                        },
+                        {
+                            id: 'expenses',
+                            name: '支出項目',
+                            icon: 'svg',
+                            step: '4',
+                            intro: '詳細記錄每月支出，計算真實的可投資餘額。',
+                            help: {
+                                title: '支出項目說明',
+                                description: '記錄每月固定支出項目',
+                                terms: [
+                                    { term: '房貸負擔', definition: '每月需支付的房貸金額' },
+                                    { term: '生活費用', definition: '食衣住行等日常開銷' },
+                                    { term: '其他支出', definition: '保險、娛樂等其他固定支出' }
+                                ],
+                                calculation: '支出總計 = 所有支出項目加總',
+                                note: '建議詳細記錄以精確計算可投資餘額'
+                            }
+                        },
+                        {
+                            id: 'passiveIncome',
+                            name: '被動收入成長',
+                            icon: 'svg',
+                            step: '5',
+                            intro: '這裡顯示未來10年被動收入的成長軌跡。',
+                            help: {
+                                title: '被動收入成長預測',
+                                description: '顯示10年投資被動收入的複合成長軌跡',
+                                terms: [
+                                    { term: '累積資產', definition: '每年末投資部位的總市值' },
+                                    { term: '月配息', definition: '該年末每月的配息能力（非年度平均）' },
+                                    { term: '達標狀態', definition: '月配息是否達到設定目標' }
+                                ],
+                                calculation: '年末資產 = 前年資產 + 年投資額；月配息 = 年末資產 × 殖利率 ÷ 12',
+                                note: '顯示的月配息是「年末配息能力」，實際配息會從年初逐月遞增'
+                            }
+                        },
+                        {
+                            id: 'summary',
+                            name: '結論與預估',
+                            icon: 'svg',
+                            step: '6',
+                            intro: '綜合所有資訊，顯示達標時間和財務狀況總覽。',
+                            help: {
+                                title: '結論與預估說明',
+                                description: '綜合分析財務狀況並預測達標時間',
+                                terms: [
+                                    { term: '餘裕資金', definition: '每月收入扣除支出和投資後的剩餘' },
+                                    { term: '達標時間', definition: '被動收入達到目標所需的年數' },
+                                    { term: '瞬時配息能力', definition: '達標時點每月可產生的配息金額' }
+                                ],
+                                calculation: '餘裕 = 總收入 - 總支出 - 總投資；達標年份 = 被動收入 ≥ 目標的年份',
+                                note: '負餘裕代表透支，需調整收支或投資策略'
+                            }
+                        }
+                    ]
+                };
+            },
+
+            computed: {
+                totalRegularIncome() {
+                    return this.regularIncomes.reduce((sum, item) => sum + (item.amount || 0), 0);
+                },
+
+                totalExpenses() {
+                    return this.expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+                },
+
+                totalInvestment() {
+                    return this.investments.reduce((sum, item) => sum + (item.amount || 0), 0);
+                },
+
+                totalInvestmentValue() {
+                    return this.investments.reduce((sum, item) => sum + (item.currentValue || 0), 0);
+                },
+
+                totalYieldInvestmentValue() {
+                    return this.investments
+                        .filter(inv => (inv.yieldRate || 0) > 0)
+                        .reduce((sum, inv) => sum + (inv.currentValue || 0), 0);
+                },
+
+                currentPassiveIncome() {
+                    return this.investments
+                        .filter(inv => (inv.yieldRate || 0) > 0)
+                        .reduce((sum, inv) => sum + ((inv.currentValue || 0) * (inv.yieldRate || 0) / 100 / 12), 0);
+                },
+
+                totalCurrentIncome() {
+                    return this.totalRegularIncome + this.currentPassiveIncome;
+                },
+
+                availableBalance() {
+                    return this.totalCurrentIncome - this.totalExpenses - this.totalInvestment;
+                },
+
+                passiveIncomeGrowth() {
+                    try {
+                        console.log('計算被動收入成長...');
+                        const stockInvestments = this.investments.filter(inv => (inv.yieldRate || 0) > 0);
+                        console.log('有殖利率的投資:', stockInvestments);
+                        
+                        if (stockInvestments.length === 0) {
+                            console.log('沒有有殖利率的投資');
+                            return [];
+                        }
+
+                        let totalStockAssets = stockInvestments.reduce((sum, inv) => sum + (inv.currentValue || 0), 0);
+                        let totalMonthlyStockInvestment = stockInvestments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+                        
+                        console.log('總股票資產:', totalStockAssets);
+                        console.log('總月投資額:', totalMonthlyStockInvestment);
+                        
+                        if (totalStockAssets === 0) {
+                            console.log('總股票資產為零');
+                            return [];
+                        }
+                        
+                        let averageYieldRate = stockInvestments.reduce((sum, inv) => sum + ((inv.yieldRate || 0) * (inv.currentValue || 0)), 0) / totalStockAssets / 100;
+                        console.log('平均殖利率:', averageYieldRate);
+                        
+                        if (isNaN(averageYieldRate) || averageYieldRate === 0) {
+                            console.log('平均殖利率無效:', averageYieldRate);
+                            return [];
+                        }
+
+                    const growthData = [];
+                    
+                    // 計算至退休年齡，但至少10年
+                    const yearsToCalculate = Math.max(10, this.yearsToRetirement);
+                    const mortgageFreeYear = this.yearsToMortgageFree;
+                    
+                    for (let year = 0; year <= yearsToCalculate; year++) {
+                        if (year > 0) {
+                            // 如果房貸已還清，可將原本的房貸支出轉為額外投資
+                            let additionalInvestment = 0;
+                            if (year >= mortgageFreeYear && this.totalMortgageExpense > 0) {
+                                // 假設將房貸支出的50%轉為額外投資
+                                additionalInvestment = this.totalMortgageExpense * 0.5 * 12;
+                            }
+                            totalStockAssets += (totalMonthlyStockInvestment * 12) + additionalInvestment;
+                        }
+                        
+                        const annualDividend = totalStockAssets * averageYieldRate;
+                        const monthlyDividend = annualDividend / 12;
+                        
+                        const currentAge = this.ageSettings.currentAge + year;
+                        const isMortgageFree = year >= mortgageFreeYear;
+                        const isRetired = currentAge >= this.ageSettings.retirementAge;
+                        
+                        growthData.push({
+                            year: year,
+                            currentAge: currentAge,
+                            assets: totalStockAssets,
+                            monthlyDividend: monthlyDividend,
+                            annualDividend: annualDividend,
+                            isMortgageFree: isMortgageFree,
+                            isRetired: isRetired,
+                            phase: isRetired ? '退休後' : (isMortgageFree ? '房貸已清' : '房貸期間')
+                        });
+                    }
+                    
+                    console.log('成長數據:', growthData);
+                    return growthData;
+                    } catch (error) {
+                        console.error('計算被動收入成長時發生錯誤:', error);
+                        return [];
+                    }
+                },
+
+                targetYear() {
+                    const targetData = this.passiveIncomeGrowth.find(data => data.monthlyDividend >= this.target.monthlyPassiveIncome);
+                    return targetData ? targetData.year : null;
+                },
+
+                targetData() {
+                    return this.passiveIncomeGrowth.find(data => data.monthlyDividend >= this.target.monthlyPassiveIncome);
+                },
+
+                currentTabHelp() {
+                    const tab = this.tabs.find(tab => tab.id === this.activeTab);
+                    return tab ? tab.help : {};
+                },
+
+                // 4% 法則計算
+                fourPercentRuleAssets() {
+                    // 所需資產 = 年支出 ÷ 4%
+                    const annualExpenses = this.target.monthlyPassiveIncome * 12;
+                    return annualExpenses / 0.04;
+                },
+
+                fourPercentGap() {
+                    // 資產缺口 = 所需資產 - 目前資產
+                    return this.fourPercentRuleAssets - this.totalInvestmentValue;
+                },
+
+                // 房貸相關計算
+                totalMortgageExpense() {
+                    return this.expenses
+                        .filter(expense => expense.isMortgage)
+                        .reduce((sum, expense) => sum + (expense.amount || 0), 0);
+                },
+
+                totalRemainingMortgage() {
+                    return this.expenses
+                        .filter(expense => expense.isMortgage && expense.mortgageData)
+                        .reduce((sum, expense) => sum + this.calculateRemainingMortgage(expense.mortgageData), 0);
+                },
+
+                mortgageAdjustedTarget() {
+                    // 考慮房貸的財務自由目標 = 原目標 + 房貸支出
+                    return this.target.monthlyPassiveIncome + this.totalMortgageExpense;
+                },
+
+                yearsToMortgageFree() {
+                    const mortgageExpenses = this.expenses.filter(expense => expense.isMortgage && expense.mortgageData);
+                    if (mortgageExpenses.length === 0) return 0;
+                    
+                    // 取最長的剩餘年期
+                    return Math.max(...mortgageExpenses.map(expense => expense.mortgageData.remainingYears));
+                },
+
+                // 年齡相關計算
+                yearsToRetirement() {
+                    return Math.max(0, this.ageSettings.retirementAge - this.ageSettings.currentAge);
+                },
+
+                ageAtMortgageFree() {
+                    return this.ageSettings.currentAge + this.yearsToMortgageFree;
+                },
+
+                willMortgageFreeBeforeRetirement() {
+                    return this.ageAtMortgageFree <= this.ageSettings.retirementAge;
+                },
+
+                yearsAfterMortgageFreeToRetirement() {
+                    if (!this.willMortgageFreeBeforeRetirement) return 0;
+                    return this.ageSettings.retirementAge - this.ageAtMortgageFree;
+                }
+            },
+
+            methods: {
+                // URL 狀態管理
+                updateUrlState() {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', this.activeTab);
+                    history.pushState({ tab: this.activeTab }, '', url);
+                },
+                
+                initUrlState() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tabFromUrl = urlParams.get('tab');
+                    const validTabs = ['settings', 'income', 'investment', 'passiveIncome', 'expenses', 'summary'];
+                    
+                    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
+                        this.activeTab = tabFromUrl;
+                    }
+                    
+                    // 監聽瀏覽器的前進/後退
+                    window.addEventListener('popstate', (event) => {
+                        if (event.state && event.state.tab) {
+                            this.activeTab = event.state.tab;
+                        }
+                    });
+                },
+                
+                // 一般收入方法
+                addRegularIncome() {
+                    const newId = Math.max(...this.regularIncomes.map(i => i.id), 0) + 1;
+                    this.regularIncomes.push({ id: newId, name: '', amount: 0, description: '' });
+                },
+
+                removeRegularIncome(id) {
+                    this.regularIncomes = this.regularIncomes.filter(income => income.id !== id);
+                },
+
+                // 支出方法
+                addExpense() {
+                    const newId = Math.max(...this.expenses.map(e => e.id), 0) + 1;
+                    this.expenses.push({ id: newId, name: '', amount: 0, description: '' });
+                },
+
+                removeExpense(id) {
+                    this.expenses = this.expenses.filter(expense => expense.id !== id);
+                },
+
+                // 投資方法
+                addInvestment() {
+                    const newId = Math.max(...this.investments.map(i => i.id), 0) + 1;
+                    this.investments.push({ id: newId, name: '', amount: 0, currentValue: 0, yieldRate: 0, description: '' });
+                },
+
+                removeInvestment(id) {
+                    this.investments = this.investments.filter(investment => investment.id !== id);
+                },
+
+
+                // 開始特定 Tab 的導覽
+                startTabTour(tabId) {
+                    if (typeof introJs === 'undefined') {
+                        console.error('Intro.js 尚未載入');
+                        return;
+                    }
+
+                    // 確保在正確的 tab 上
+                    if (this.activeTab !== tabId) {
+                        this.activeTab = tabId;
+                    }
+
+                    // 等待 DOM 更新
+                    this.$nextTick(() => {
+                        const tabClass = `.${tabId}-tour`;
+                        const intro = introJs(tabClass);
+                        
+                        // 配置選項
+                        intro.setOptions({
+                            nextLabel: '下一步 →',
+                            prevLabel: '← 上一步',
+                            skipLabel: '跳過',
+                            doneLabel: '完成！',
+                            exitOnOverlayClick: false,
+                            exitOnEsc: true,
+                            showStepNumbers: true,
+                            keyboardNavigation: true,
+                            showButtons: true,
+                            showBullets: false,
+                            showProgress: true,
+                            scrollToElement: true,
+                            overlayOpacity: 0.7,
+                            positionPrecedence: ["bottom", "top", "right", "left"]
+                        });
+
+                        // 設置完成回調 - 簡單的控制台記錄
+                        intro.oncomplete(() => {
+                            console.log(`完成「${this.getTabName(tabId)}」教學`);
+                        });
+
+                        // 設置退出回調
+                        intro.onexit(() => {
+                            console.log(`退出「${this.getTabName(tabId)}」教學`);
+                        });
+
+                        // 開始特定 tab 的導覽
+                        intro.start();
+                    });
+                },
+
+                // 取得 Tab 中文名稱
+                getTabName(tabId) {
+                    const tabNames = {
+                        'settings': '基本設定',
+                        'income': '一般收入',
+                        'investment': '投資部位',
+                        'passiveIncome': '被動收入成長',
+                        'expenses': '支出項目',
+                        'summary': '結論與預估'
+                    };
+                    return tabNames[tabId] || tabId;
+                },
+
+                // JSON 匯出功能
+                exportJSON() {
+                    const data = {
+                        version: '1.0',
+                        exportDate: new Date().toISOString(),
+                        regularIncomes: this.regularIncomes,
+                        expenses: this.expenses,
+                        investments: this.investments,
+                        target: this.target,
+                        ageSettings: this.ageSettings
+                    };
+
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `財務規劃_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+
+                // JSON 匯入功能
+                importJSON(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            // 驗證資料格式
+                            if (data.version && data.regularIncomes && data.expenses && data.investments && data.target) {
+                                // 直接匯入資料
+                                this.regularIncomes = data.regularIncomes;
+                                this.expenses = data.expenses;
+                                this.investments = data.investments;
+                                this.target = data.target;
+                                
+                                // 處理年齡設定（如果JSON中沒有，保持預設值）
+                                if (data.ageSettings) {
+                                    this.ageSettings = {
+                                        currentAge: data.ageSettings.currentAge || 37,
+                                        retirementAge: data.ageSettings.retirementAge || 65
+                                    };
+                                }
+                                
+                                console.log('資料匯入成功');
+                                
+                                // 強制更新圖表 - 多重保護機制
+                                this.$nextTick(() => {
+                                    // 如果目前在 summary 頁面，立即更新圖表
+                                    if (this.activeTab === 'summary') {
+                                        this.updateCharts();
+                                    }
+                                    
+                                    // 延遲再次更新，確保資料完全載入
+                                    setTimeout(() => {
+                                        this.updateCharts();
+                                    }, 300);
+                                });
+                                
+                                // 可以添加一個臨時的成功提示（可選）
+                                const successMsg = document.createElement('div');
+                                successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                                successMsg.textContent = '✓ 資料匯入成功';
+                                document.body.appendChild(successMsg);
+                                setTimeout(() => document.body.removeChild(successMsg), 3000);
+                            } else {
+                                console.error('檔案格式不正確');
+                                
+                                // 錯誤提示
+                                const errorMsg = document.createElement('div');
+                                errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                                errorMsg.textContent = '✗ 檔案格式不正確';
+                                document.body.appendChild(errorMsg);
+                                setTimeout(() => document.body.removeChild(errorMsg), 3000);
+                            }
+                        } catch (error) {
+                            console.error('無法解析 JSON 檔案:', error);
+                            
+                            // 錯誤提示
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                            errorMsg.textContent = '✗ 無法解析檔案';
+                            document.body.appendChild(errorMsg);
+                            setTimeout(() => document.body.removeChild(errorMsg), 3000);
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                    // 清空 input 值，以便能重複選擇同一個檔案
+                    event.target.value = '';
+                },
+
+                // 純 Canvas 轉 PDF 功能（無文字，避免亂碼）
+                async generateCanvasPDF() {
+                    // 顯示處理中指示器
+                    const loadingMsg = document.createElement('div');
+                    loadingMsg.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+                    loadingMsg.innerHTML = `
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>正在生成 PDF...</span>
+                    `;
+                    document.body.appendChild(loadingMsg);
+
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        
+                        // 設置字體（使用內建字體，對中文支援有限）
+                        pdf.setFont('helvetica');
+                        
+                        // 儲存當前 activeTab
+                        const originalTab = this.activeTab;
+                        
+                        // 定義要生成的 tabs
+                        const tabs = ['income', 'investment', 'passiveIncome', 'expenses', 'summary'];
+                        
+                        for (let i = 0; i < tabs.length; i++) {
+                            const tabId = tabs[i];
+                            this.activeTab = tabId;
+                            
+                            // 更新進度
+                            loadingMsg.querySelector('span').textContent = `正在生成 PDF... (${i + 1}/${tabs.length})`;
+                            
+                            // 等待 Vue 更新 DOM
+                            await this.$nextTick();
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                        
+                            // 取得當前 tab 的內容
+                            const element = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6');
+                            
+                            if (element) {
+                                // 使用 html2canvas 將 HTML 轉換為圖片
+                                const canvas = await html2canvas(element, {
+                                    scale: 2,
+                                    useCORS: true,
+                                    logging: false,
+                                    width: element.scrollWidth,
+                                    height: element.scrollHeight,
+                                    backgroundColor: '#ffffff'
+                                });
+                                
+                                // 計算圖片尺寸以適應 A4
+                                const pageWidth = 210; // A4 寬度 mm
+                                const pageHeight = 297; // A4 高度 mm
+                                const imgWidth = pageWidth - 20; // 減去邊距
+                                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                                
+                                // 如果不是第一頁，新增頁面
+                                if (i > 0) {
+                                    pdf.addPage();
+                                }
+                                
+                                // 直接添加圖片，不添加文字（避免亂碼）
+                                const imgData = canvas.toDataURL('image/png');
+                                
+                                // 如果圖片太高，需要分頁
+                                if (imgHeight > pageHeight - 20) {
+                                    // 計算需要分割的比例
+                                    const ratio = (pageHeight - 20) / imgHeight;
+                                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, (pageHeight - 20));
+                                } else {
+                                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                                }
+                            }
+                        }
+                        
+                        // 恢復原始 tab
+                        this.activeTab = originalTab;
+                        
+                        // 下載 PDF
+                        pdf.save(`財務規劃報告_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')}.pdf`);
+                        
+                        // 移除進度指示器
+                        document.body.removeChild(loadingMsg);
+                        
+                        // 顯示成功訊息
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                        successMsg.textContent = '✓ PDF 已成功生成';
+                        document.body.appendChild(successMsg);
+                        setTimeout(() => document.body.removeChild(successMsg), 3000);
+                        
+                    } catch (error) {
+                        console.error('生成 PDF 時發生錯誤:', error);
+                        
+                        // 移除進度指示器
+                        if (loadingMsg.parentNode) {
+                            document.body.removeChild(loadingMsg);
+                        }
+                        
+                        // 顯示錯誤訊息
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                        errorMsg.textContent = '✗ 生成 PDF 時發生錯誤';
+                        document.body.appendChild(errorMsg);
+                        setTimeout(() => document.body.removeChild(errorMsg), 3000);
+                    }
+                },
+
+                // 簡單列印功能
+                async printReport() {
+                    // 儲存當前狀態
+                    const originalTab = this.activeTab;
+                    const originalShowHelp = this.showHelp;
+                    
+                    // 隱藏說明區塊以獲得更乾淨的列印效果
+                    this.showHelp = false;
+                    
+                    // 等待 DOM 更新
+                    await this.$nextTick();
+                    
+                    // 使用瀏覽器內建列印功能
+                    window.print();
+                    
+                    // 恢復原始狀態
+                    this.activeTab = originalTab;
+                    this.showHelp = originalShowHelp;
+                },
+
+                // Canvas重建方法
+                rebuildCanvas(canvasRef) {
+                    console.log('重建Canvas元素:', canvasRef);
+                    
+                    const oldCanvas = this.$refs[canvasRef];
+                    if (!oldCanvas || !oldCanvas.parentNode) {
+                        console.error('找不到Canvas元素或父節點:', canvasRef);
+                        return null;
+                    }
+                    
+                    const parent = oldCanvas.parentNode;
+                    const newCanvas = document.createElement('canvas');
+                    
+                    // 複製所有屬性和樣式
+                    newCanvas.width = 400;
+                    newCanvas.height = 300;
+                    newCanvas.style.cssText = oldCanvas.style.cssText || '';
+                    newCanvas.className = oldCanvas.className || '';
+                    
+                    // 確保Canvas有正確的大小
+                    if (!newCanvas.style.width) newCanvas.style.width = '100%';
+                    if (!newCanvas.style.height) newCanvas.style.height = '100%';
+                    
+                    // 替換元素
+                    parent.replaceChild(newCanvas, oldCanvas);
+                    
+                    // 手動更新Vue的ref
+                    this.$refs[canvasRef] = newCanvas;
+                    
+                    // 獲取並測試新的context
+                    const ctx = newCanvas.getContext('2d');
+                    if (!ctx) {
+                        console.error('無法從新Canvas獲取2D context');
+                        return null;
+                    }
+                    
+                    // 測試context功能
+                    try {
+                        ctx.save();
+                        ctx.restore();
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(0, 0, 1, 1);
+                        ctx.clearRect(0, 0, 1, 1);
+                        console.log('新Canvas的context測試通過');
+                        return ctx;
+                    } catch (error) {
+                        console.error('新Canvas的context測試失敗:', error);
+                        return null;
+                    }
+                },
+                
+                // Canvas基本繪圖測試
+                testCanvasDrawing(canvasRef) {
+                    console.log('測試Canvas基本繪圖:', canvasRef);
+                    const ctx = this.rebuildCanvas(canvasRef);
+                    if (!ctx) return;
+                    
+                    // 繪製一個簡單的測試圖形
+                    ctx.fillStyle = '#9333EA';
+                    ctx.fillRect(10, 10, 100, 50);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '14px Arial';
+                    ctx.fillText('Canvas正常', 15, 35);
+                    
+                    console.log('Canvas基本繪圖測試完成');
+                },
+                
+                // 設置Canvas監測器
+                setupCanvasObserver() {
+                    console.log('設置Canvas ResizeObserver...');
+                    
+                    // 清理現有observer
+                    if (this.canvasResizeObserver) {
+                        this.canvasResizeObserver.disconnect();
+                    }
+                    
+                    // 如果瀏覽器不支援ResizeObserver，則跳過
+                    if (typeof ResizeObserver === 'undefined') {
+                        console.warn('瀏覽器不支援ResizeObserver');
+                        return;
+                    }
+                    
+                    this.canvasResizeObserver = new ResizeObserver((entries) => {
+                        console.log('Canvas大小變化偵測到');
+                        
+                        // 延遲處理以避免過於頻繁的重繪
+                        clearTimeout(this._resizeTimeout);
+                        this._resizeTimeout = setTimeout(() => {
+                            if (this.activeTab === 'summary') {
+                                console.log('因Canvas大小變化重新初始化圖表');
+                                this.updateCharts();
+                            }
+                        }, 300);
+                    });
+                    
+                    // 觀察兩個圖表的容器元素
+                    this.$nextTick(() => {
+                        const passiveIncomeContainer = this.$refs.passiveIncomeChart?.parentElement;
+                        const incomeExpenseContainer = this.$refs.incomeExpenseChart?.parentElement;
+                        
+                        if (passiveIncomeContainer) {
+                            this.canvasResizeObserver.observe(passiveIncomeContainer);
+                            console.log('開始觀察被動收入圖表容器');
+                        }
+                        
+                        if (incomeExpenseContainer) {
+                            this.canvasResizeObserver.observe(incomeExpenseContainer);
+                            console.log('開始觀察收支結構圖表容器');
+                        }
+                    });
+                },
+                
+                // 初始化被動收入成長折線圖
+                initPassiveIncomeChart() {
+                    console.log('初始化被動收入圖表...');
+                    
+                    // 安全地銷毀現有圖表
+                    if (this.passiveIncomeChartInstance) {
+                        try {
+                            this.passiveIncomeChartInstance.destroy();
+                            console.log('已銷毀現有被動收入圖表');
+                        } catch (error) {
+                            console.warn('銷毀被動收入圖表時發生錯誤:', error);
+                        }
+                        this.passiveIncomeChartInstance = null;
+                    }
+                    
+                    // 重建Canvas獲取新的context
+                    const ctx = this.rebuildCanvas('passiveIncomeChart');
+                    if (!ctx) {
+                        console.error('無法重建Canvas或獲取有效的context');
+                        // 回退到基本繪圖測試
+                        this.testCanvasDrawing('passiveIncomeChart');
+                        return;
+                    }
+                    
+                    // 檢查 Chart.js 是否已載入
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js 尚未載入');
+                        setTimeout(() => this.initPassiveIncomeChart(), 500);
+                        return;
+                    }
+                    
+                    console.log('投資數據:', this.investments);
+                    console.log('計算被動收入成長...');
+                    
+                    const chartData = this.passiveIncomeGrowth || [];
+                    console.log('圖表數據:', chartData);
+                    
+                    // 檢查數據是否有效
+                    if (chartData.length === 0) {
+                        console.warn('被動收入成長數據為空，跳過圖表更新');
+                        return;
+                    }
+                    
+                    const labels = chartData.map(item => item.year === 0 ? '目前' : `第${item.year}年`);
+                    const passiveIncomeData = chartData.map(item => Math.round(item.monthlyDividend || 0));
+                    const targetData = Array(chartData.length).fill(this.target.monthlyPassiveIncome || 0);
+                    
+                    console.log('創建被動收入圖表...', { labels, passiveIncomeData, targetData });
+                    
+                    // 使用雙重延遲確保DOM完全穩定
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            try {
+                                // 最終的context有效性檢查
+                                ctx.save();
+                                ctx.restore();
+                                
+                                this.passiveIncomeChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: '被動收入',
+                                    data: passiveIncomeData,
+                                    borderColor: 'rgb(147, 51, 234)',
+                                    backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4
+                                },
+                                {
+                                    label: '目標金額',
+                                    data: targetData,
+                                    borderColor: 'rgb(34, 197, 94)',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': NT$ ' + context.parsed.y.toLocaleString();
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return 'NT$ ' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('被動收入圖表創建成功');
+                            } catch (error) {
+                                console.error('創建被動收入圖表失敗:', error);
+                            }
+                        }, 200);
+                    });
+                },
+
+                // 初始化收支結構圓餅圖
+                initIncomeExpenseChart() {
+                    console.log('初始化收支結構圖表...');
+                    
+                    // 安全地銷毀現有圖表
+                    if (this.incomeExpenseChartInstance) {
+                        try {
+                            this.incomeExpenseChartInstance.destroy();
+                            console.log('已銷毀現有收支結構圖表');
+                        } catch (error) {
+                            console.warn('銷毀收支結構圖表時發生錯誤:', error);
+                        }
+                        this.incomeExpenseChartInstance = null;
+                    }
+                    
+                    // 重建Canvas獲取新的context
+                    const ctx = this.rebuildCanvas('incomeExpenseChart');
+                    if (!ctx) {
+                        console.error('無法重建Canvas或獲取有效的context');
+                        // 回退到基本繪圖測試
+                        this.testCanvasDrawing('incomeExpenseChart');
+                        return;
+                    }
+                    
+                    // 檢查 Chart.js 是否已載入
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js 尚未載入');
+                        setTimeout(() => this.initIncomeExpenseChart(), 500);
+                        return;
+                    }
+                    
+                    // 確保所有數據都是正數，避免圖表錯誤
+                    const data = [
+                        Math.max(0, this.totalRegularIncome || 0),
+                        Math.max(0, Math.round(this.currentPassiveIncome || 0)),
+                        Math.max(0, this.totalExpenses || 0),
+                        Math.max(0, this.totalInvestment || 0),
+                        Math.max(0, this.availableBalance || 0)
+                    ].filter(value => value > 0); // 移除零值，避免空切片
+                    
+                    // 原始數據和標籤
+                    const originalData = [
+                        Math.max(0, this.totalRegularIncome || 0),
+                        Math.max(0, Math.round(this.currentPassiveIncome || 0)),
+                        Math.max(0, this.totalExpenses || 0),
+                        Math.max(0, this.totalInvestment || 0),
+                        Math.max(0, this.availableBalance || 0)
+                    ];
+                    const allLabels = ['一般收入', '被動收入', '總支出', '總投資', '餘裕資金'];
+                    const allColors = [
+                        'rgba(34, 197, 94, 0.8)',   // 綠色 - 一般收入
+                        'rgba(147, 51, 234, 0.8)',  // 紫色 - 被動收入
+                        'rgba(239, 68, 68, 0.8)',   // 紅色 - 總支出
+                        'rgba(59, 130, 246, 0.8)',  // 藍色 - 總投資
+                        'rgba(245, 158, 11, 0.8)'   // 橙色 - 餘裕資金
+                    ];
+                    
+                    // 過濾出有數值的項目
+                    const labels = [];
+                    const colors = [];
+                    for (let i = 0; i < originalData.length; i++) {
+                        if (originalData[i] > 0) {
+                            labels.push(allLabels[i]);
+                            colors.push(allColors[i]);
+                        }
+                    }
+                    
+                    try {
+                        // 檢查 Chart.js 是否已載入
+                        if (typeof Chart === 'undefined') {
+                            console.error('Chart.js 尚未載入');
+                            setTimeout(() => this.initIncomeExpenseChart(), 500);
+                            return;
+                        }
+                        
+                        console.log('創建收支結構圖表...', { labels, data, colors });
+                        this.incomeExpenseChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: colors,
+                                borderColor: colors.map(color => color.replace('0.8', '1')),
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                            return `${label}: NT$ ${value.toLocaleString()} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('收支結構圖表創建成功');
+                    } catch (error) {
+                        console.error('創建收支結構圖表失敗:', error);
+                    }
+                },
+
+                // 更新所有圖表
+                updateCharts() {
+                    // 確保只在 summary tab 時才更新圖表
+                    if (this.activeTab !== 'summary') {
+                        console.log('不在 summary tab，跳過圖表更新');
+                        return;
+                    }
+
+                    console.log('準備更新圖表...');
+                    
+                    // 使用多層延遲確保 DOM 完全渲染
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.$nextTick(() => {
+                                try {
+                                    console.log('開始更新圖表...');
+                                    
+                                    // 確保 canvas 元素存在
+                                    if (!this.$refs.passiveIncomeChart || !this.$refs.incomeExpenseChart) {
+                                        console.log('Canvas 元素尚未準備好，再次延遲');
+                                        setTimeout(() => this.updateCharts(), 200);
+                                        return;
+                                    }
+                                    
+                                    // 設置Canvas監測器（只在首次初始化時）
+                                    if (!this.canvasResizeObserver) {
+                                        this.setupCanvasObserver();
+                                    }
+                                    
+                                    this.initPassiveIncomeChart();
+                                    this.initIncomeExpenseChart();
+                                    console.log('圖表更新完成');
+                                } catch (error) {
+                                    console.error('圖表更新失敗:', error);
+                                    
+                                    // 顯示錯誤提示
+                                    const errorMsg = document.createElement('div');
+                                    errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                                    errorMsg.textContent = '⚠️ 圖表更新失敗，請重新整理頁面';
+                                    document.body.appendChild(errorMsg);
+                                    setTimeout(() => {
+                                        if (errorMsg.parentNode) {
+                                            document.body.removeChild(errorMsg);
+                                        }
+                                    }, 5000);
+                                }
+                            });
+                        }, 150);
+                    });
+                },
+
+                // 計算房貸剩餘本金
+                calculateRemainingMortgage(mortgageData) {
+                    const { principal, rate, years, remainingYears } = mortgageData;
+                    const monthlyRate = rate / 100 / 12;
+                    const totalMonths = years * 12;
+                    const paidMonths = (years - remainingYears) * 12;
+                    
+                    if (monthlyRate === 0) {
+                        return principal - (principal / totalMonths * paidMonths);
+                    }
+                    
+                    // 計算每月付款金額
+                    const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, totalMonths) / 
+                                         (Math.pow(1 + monthlyRate, totalMonths) - 1);
+                    
+                    // 計算剩餘本金
+                    let remainingBalance = principal;
+                    for (let i = 0; i < paidMonths; i++) {
+                        const interestPayment = remainingBalance * monthlyRate;
+                        const principalPayment = monthlyPayment - interestPayment;
+                        remainingBalance -= principalPayment;
+                    }
+                    
+                    return Math.max(0, remainingBalance);
+                }
+            },
+
+            // 添加監聽器和初始化
+            mounted() {
+                // 初始化 URL 狀態
+                this.initUrlState();
+                
+                document.addEventListener('click', (e) => {
+                    // 點擊外部時關閉 PDF 選項
+                    if (!e.target.closest('.relative')) {
+                        this.showPdfOptions = false;
+                    }
+                });
+
+                // 初始化圖表 - 延遲一段時間確保 DOM 完全渲染
+                setTimeout(() => {
+                    this.$nextTick(() => {
+                        if (this.activeTab === 'summary') {
+                            this.updateCharts();
+                        }
+                    });
+                }, 300);
+            },
+
+            watch: {
+                // 監聽 activeTab 變化，當切換到 summary 時更新圖表，並更新 URL
+                activeTab(newTab) {
+                    if (newTab === 'summary') {
+                        this.updateCharts();
+                    }
+                    // 更新 URL 狀態
+                    this.updateUrlState();
+                },
+                
+                // 監聽數據變化，自動更新圖表
+                regularIncomes: {
+                    handler() { this.updateCharts(); },
+                    deep: true
+                },
+                expenses: {
+                    handler() { this.updateCharts(); },
+                    deep: true
+                },
+                investments: {
+                    handler() { this.updateCharts(); },
+                    deep: true
+                },
+                'target.monthlyPassiveIncome'() {
+                    this.updateCharts();
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
