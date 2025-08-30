@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具總覽 - Chris Cho 開發工具集</title>
+    
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="styles/pages.css">
+    <link rel="stylesheet" href="styles/tools.css">
+    <link rel="stylesheet" href="styles/select2-theme.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- jQuery (Select2 dependency) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        /* Tools Page Specific Styles */
+        
+        
+        
+        .header {
+            margin-bottom: 80px;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            padding-top: 40px;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 32px;
+            gap: 24px;
+        }
+        
+        .header-content h1 {
+            font-family: 'Charter', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+        
+        .header-content p {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            line-height: 1.6;
+            margin: 0 auto;
+        }
+        
+        
+        .search-section {
+            margin-bottom: 60px;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        
+        .search-container {
+            position: relative;
+            max-width: 480px;
+            margin: 0 auto 32px auto;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 32px;
+            font-size: 16px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+        
+        /* 第一層篩選 */
+        .primary-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        
+        .filter-tag {
+            padding: 8px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .filter-tag:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .filter-tag.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+        
+        /* 進階篩選 */
+        .advanced-filters {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            justify-content: center;
+            padding: 24px 0;
+            border-top: 1px solid var(--border-muted);
+            border-bottom: 1px solid var(--border-muted);
+            background: transparent;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 180px;
+            max-width: 220px;
+        }
+        
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-family: 'Charter', Georgia, serif;
+            margin-bottom: 4px;
+        }
+        
+        .filter-select-single {
+            width: 100%;
+            min-width: 150px;
+        }
+        
+        .filter-select-multi {
+            width: 100%;
+            min-width: 200px;
+        }
+        
+        /* 篩選結果 */
+        .filter-results {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 32px;
+        }
+        
+        #resultCount {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-bottom: 80px;
+        }
+        
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+            transition: all 0.2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .tool-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        
+        .tool-card a {
+            display: block;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .tool-icon i {
+            font-size: 1.25rem;
+            color: var(--accent-primary);
+        }
+        
+        .tool-title h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .tool-category {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+        
+        .tool-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .tool-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        
+        .tool-card.hidden {
+            display: none;
+        }
+        
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Select2 Medium 風格樣式 */
+        .select2-container--default .select2-selection--single {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 24px;
+            color: var(--text-primary);
+            height: 44px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        .select2-container--default .select2-selection--single:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__clear {
+            margin-right: 0px;
+            margin-left: 10px;
+            margin-top: 10px;
+            float: left;
+        }
+        
+        .select2-container--default .select2-search--inline .select2-search__field {
+            height: 24px;
+            padding-top: 2px;
+            padding-left: 10px;
+        }
+
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--text-primary);
+            line-height: 42px;
+
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px;
+            right: 16px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: var(--text-muted) transparent transparent transparent;
+        }
+        
+        .select2-container--default .select2-selection--multiple {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 24px;
+            color: var(--text-primary);
+            min-height: 44px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        .select2-container--default .select2-selection--multiple:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 4px 12px;
+            margin: 6px 6px 0 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white;
+            border-right: none;
+            margin-right: 5px;
+            padding-right: 0;
+        }
+        
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .select2-dropdown {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .select2-container--default .select2-results__option {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        
+        .select2-container--default .select2-results__option--highlighted {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .select2-container--default .select2-results__option[aria-selected="true"] {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .select2-search--dropdown .select2-search__field {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: var(--accent-primary);
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            
+            .header-top {
+                flex-direction: column;
+                gap: 16px;
+                align-items: center;
+            }
+            
+            .header-content h1 {
+                font-size: 1.875rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .search-container {
+                max-width: 100%;
+            }
+            
+            .advanced-filters {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .filter-group {
+                min-width: auto;
+            }
+        }
+    </style>
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <nav class="nav-menu">
+                <a href="index.html">首頁</a>
+                <a href="biography.html">關於我</a>
+                <a href="resume.html">履歷</a>
+                <a href="tools.html" class="active">工具集</a>
+            </nav>
+            <button class="theme-toggle" id="themeToggle" aria-label="切換主題">
+                <svg class="theme-icon light-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                </svg>
+                <svg class="theme-icon dark-icon" style="display: none;" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="header">
+            <div class="header-top">
+                <div class="header-content">
+                    <h1>開發工具集</h1>
+                    <p>專業的財務規劃、專案管理與開發流程工具</p>
+                </div>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-container">
+                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                    </svg>
+                    <input type="text" id="searchInput" class="search-input" placeholder="搜尋工具或遊戲...">
+                </div>
+                
+                <!-- 第一層：主要分類標籤 -->
+                <div class="primary-filters">
+                    <!-- 動態生成 -->
+                </div>
+                
+                <!-- 第二層：篩選器組 -->
+                <div class="advanced-filters">
+                    <div class="filter-group">
+                        <label>用途分類：</label>
+                        <select id="purposeFilter" class="filter-select-single">
+                            <option value="">全部</option>
+                            <option value="財務管理">財務管理</option>
+                            <option value="專案管理">專案管理</option>
+                            <option value="開發流程">開發流程</option>
+                            <option value="娛樂休閒">娛樂休閒</option>
+                            <option value="道德教育">道德教育</option>
+                            <option value="學習教育">學習教育</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>技術類型：</label>
+                        <select id="techFilter" class="filter-select-multi" multiple>
+                            <option value="Vue.js">Vue.js</option>
+                            <option value="Vanilla JS">Vanilla JS</option>
+                            <option value="Chart.js">Chart.js</option>
+                            <option value="AI">AI</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>特性標籤：</label>
+                        <select id="featureFilter" class="filter-select-multi" multiple>
+                            <option value="新功能">新功能</option>
+                            <option value="熱門">熱門</option>
+                            <option value="Beta">Beta</option>
+                            <option value="AI功能">AI功能</option>
+                            <option value="互動式">互動式</option>
+                            <option value="決策樹">決策樹</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 篩選結果顯示 -->
+                <div class="filter-results" id="filterResults">
+                    顯示全部 <span id="resultCount">0</span> 個項目
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-grid" id="toolsGrid">
+            <!-- 動態生成工具卡片 -->
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Chris Cho. Built using GitHub Pages</p>
+            <div class="contact-links">
+                <a href="https://github.com/ChrisChoTW">GitHub</a>
+                <a href="mailto:alibuda90019@gmail.com">Email</a>
+                <a href="index.html">首頁</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 工具資料 JSON
+        const toolsData = [
+            {
+                id: 'mortgage-calculator',
+                category: 'tools',
+                purpose: ['財務管理'],
+                tech: ['Vue.js', 'Chart.js'],
+                features: ['熱門'],
+                icon: '🏠',
+                title: '房貸試算系統',
+                categoryLabel: '財務工具',
+                description: '專業房屋貸款計算工具，支援多筆貸款管理、買賣換屋損益分析、情境模擬等功能。內建互動式圖表與 PDF 報告匯出。',
+                url: 'tools/mortgage-calculator.html',
+                tags: ['熱門', 'Vue.js', 'Chart.js', 'PDF匯出']
+            },
+            {
+                id: 'financial-planner',
+                category: 'tools',
+                purpose: ['財務管理'],
+                tech: ['Vue.js', 'AI'],
+                features: ['新功能', 'AI功能'],
+                icon: '📊',
+                title: '動態財務規劃工具',
+                categoryLabel: '財務工具',
+                description: '全方位財務規劃平台，整合資產負債管理、投資組合分析、退休規劃等功能。提供視覺化圖表與智能建議。',
+                url: 'tools/financial-planner.html',
+                tags: ['新功能', 'Vue.js', 'AI建議']
+            },
+            {
+                id: 'mcp-dashboard',
+                category: 'tools',
+                purpose: ['開發流程'],
+                tech: ['AI'],
+                features: ['Beta', 'AI功能'],
+                icon: '📈',
+                title: 'MCP 工作流程儀表板',
+                categoryLabel: '工作流程工具',
+                description: '模型上下文協議（MCP）的視覺化管理工具，監控和管理 AI 輔助開發流程，提供即時狀態追蹤。',
+                url: 'tools/mcp-dashboard.html',
+                tags: ['Beta', 'AI工具', '監控']
+            },
+            {
+                id: 'timeline-generator',
+                category: 'tools',
+                purpose: ['專案管理'],
+                tech: ['AI'],
+                features: ['新功能', 'AI功能'],
+                icon: '📅',
+                title: '時間軸生成工具',
+                categoryLabel: '工作流程工具',
+                description: '專案時間軸視覺化工具，支援里程碁管理、進度追蹤、HTML/JSON 匯出。內建 AI 自動生成功能。',
+                url: 'tools/timeline-generator.html',
+                tags: ['新功能', '專案管理', 'AI生成']
+            },
+            {
+                id: 'moral-dilemma',
+                category: 'games',
+                purpose: ['道德教育', '娛樂休閒'],
+                tech: ['Vanilla JS'],
+                features: ['互動式', '決策樹'],
+                icon: '🚇',
+                title: '博愛座道德困境',
+                categoryLabel: '道德教育遊戲',
+                description: '互動式道德教育遊戲，透過博愛座情境模擬探討社會道德問題。支援多重結局、決策樹分析及限時挑戰。',
+                url: 'games/moral-dilemma.html',
+                tags: ['互動式', '決策樹', 'Vanilla JS', '道德教育']
+            },
+            {
+                id: 'sdlc-overview',
+                category: 'docs',
+                purpose: ['開發流程'],
+                tech: [],
+                features: [],
+                icon: '📚',
+                title: 'SDLC 總覽',
+                categoryLabel: '軟體開發生命週期',
+                description: '軟體開發生命週期的完整指南，涵蓋需求分析、設計、開發、測試到部署的全流程管理。',
+                url: 'sdlc/index.html',
+                tags: ['文檔', '流程']
+            },
+            {
+                id: 'sdlc-basic',
+                category: 'docs',
+                purpose: ['開發流程', '學習教育'],
+                tech: [],
+                features: [],
+                icon: '🎯',
+                title: '基礎 SDLC 流程',
+                categoryLabel: '軟體開發生命週期',
+                description: '適合小型專案的簡化 SDLC 流程，快速上手軟體開發的核心步驟與最佳實踐。',
+                url: 'sdlc/basic.html',
+                tags: ['入門', '範本']
+            },
+            {
+                id: 'sdlc-enhance',
+                category: 'docs',
+                purpose: ['開發流程'],
+                tech: [],
+                features: [],
+                icon: '🚀',
+                title: '進階 SDLC 優化',
+                categoryLabel: '軟體開發生命週期',
+                description: '企業級 SDLC 流程優化方案，包含 DevOps 整合、CI/CD 管線、品質保證等進階主題。',
+                url: 'sdlc/enhance.html',
+                tags: ['進階', 'DevOps']
+            }
+        ];
+
+        // 動態生成工具卡片
+        function createToolCard(tool) {
+            const tagClass = (tag) => {
+                if (tag === '新功能') return 'tag new';
+                if (tag === 'Beta') return 'tag beta';
+                if (tag === '熱門') return 'tag popular';
+                return 'tag';
+            };
+
+            const tagsHTML = tool.tags.map(tag => 
+                `<span class="${tagClass(tag)}">${tag}</span>`
+            ).join('');
+
+            // Create icon based on category
+            const getIconClass = (category) => {
+                switch(category) {
+                    case 'tools': return 'fas fa-tools';
+                    case 'games': return 'fas fa-gamepad';
+                    case 'docs': return 'fas fa-book';
+                    default: return 'fas fa-cube';
+                }
+            };
+
+            return `
+                <div class="tool-card" data-id="${tool.id}">
+                    <a href="${tool.url}">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="${getIconClass(tool.category)}"></i>
+                            </div>
+                            <div class="tool-title">
+                                <h3>${tool.title}</h3>
+                                <div class="tool-category">${tool.categoryLabel}</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            ${tool.description}
+                        </div>
+                        <div class="tool-tags">
+                            ${tagsHTML}
+                        </div>
+                    </a>
+                </div>
+            `;
+        }
+
+        // 渲染所有工具卡片
+        function renderToolCards(tools = toolsData) {
+            const toolsGrid = document.getElementById('toolsGrid');
+            toolsGrid.innerHTML = tools.map(tool => createToolCard(tool)).join('');
+            
+            // 更新結果計數
+            const resultCount = document.getElementById('resultCount');
+            resultCount.textContent = tools.length;
+            
+            // 重新應用動畫觀察器
+            setupCardAnimations();
+        }
+
+        // 設置卡片動畫
+        function setupCardAnimations() {
+            const toolCards = document.querySelectorAll('.tool-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            toolCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        }
+
+        
+        // 動態生成分類標籤
+        function generateCategoryTags() {
+            const categories = ['all', ...new Set(toolsData.map(tool => tool.category))];
+            const categoryLabels = {
+                all: '全部',
+                tools: '工具',
+                games: '遊戲',
+                docs: '文檔'
+            };
+            
+            const primaryFilters = document.querySelector('.primary-filters');
+            primaryFilters.innerHTML = categories.map((category, index) => 
+                `<div class="filter-tag ${index === 0 ? 'active' : ''}" data-filter="${category}">${categoryLabels[category] || category}</div>`
+            ).join('');
+        }
+
+        // 篩選系統
+        let activeFilters = {
+            category: 'all',
+            purpose: '',
+            technologies: [],
+            features: []
+        };
+
+        function filterTools() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filteredTools = toolsData.filter(tool => {
+                // 搜尋詞匹配
+                const matchesSearch = searchTerm === '' || 
+                    tool.title.toLowerCase().includes(searchTerm) ||
+                    tool.description.toLowerCase().includes(searchTerm) ||
+                    tool.categoryLabel.toLowerCase().includes(searchTerm) ||
+                    tool.purpose.some(p => p.toLowerCase().includes(searchTerm)) ||
+                    tool.tech.some(t => t.toLowerCase().includes(searchTerm)) ||
+                    tool.features.some(f => f.toLowerCase().includes(searchTerm)) ||
+                    tool.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                
+                // 分類篩選
+                const matchesCategory = activeFilters.category === 'all' || tool.category === activeFilters.category;
+                
+                // 用途篩選
+                const matchesPurpose = activeFilters.purpose === '' || tool.purpose.includes(activeFilters.purpose);
+                
+                // 技術篩選 (OR)
+                const matchesTech = activeFilters.technologies.length === 0 || 
+                    activeFilters.technologies.some(tech => tool.tech.includes(tech));
+                
+                // 特性篩選 (OR)
+                const matchesFeatures = activeFilters.features.length === 0 || 
+                    activeFilters.features.some(feature => tool.features.includes(feature));
+                
+                return matchesSearch && matchesCategory && matchesPurpose && matchesTech && matchesFeatures;
+            });
+            
+            renderToolCards(filteredTools);
+        }
+
+        // Initialize Select2 and filtering system
+        $(document).ready(function() {
+            // 生成分類標籤
+            generateCategoryTags();
+            
+            // 初始渲染
+            renderToolCards();
+            
+            // Initialize Select2
+            $('#purposeFilter').select2({
+                placeholder: '選擇用途...',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            $('#techFilter').select2({
+                placeholder: '選擇技術...',
+                allowClear: true,
+                width: '100%',
+                closeOnSelect: false
+            });
+            
+            $('#featureFilter').select2({
+                placeholder: '選擇特性...',
+                allowClear: true,
+                width: '100%',
+                closeOnSelect: false
+            });
+            
+            // 搜尋輸入事件
+            document.getElementById('searchInput').addEventListener('input', filterTools);
+            
+            // 分類標籤點擊事件
+            document.querySelector('.primary-filters').addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-tag')) {
+                    // 更新活躍狀態
+                    document.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    activeFilters.category = e.target.getAttribute('data-filter');
+                    filterTools();
+                }
+            });
+            
+            // Select2 事件處理
+            $('#purposeFilter').on('select2:select select2:unselect select2:clear', function() {
+                activeFilters.purpose = $(this).val() || '';
+                filterTools();
+            });
+            
+            $('#techFilter').on('select2:select select2:unselect select2:clear', function() {
+                activeFilters.technologies = $(this).val() || [];
+                filterTools();
+            });
+            
+            $('#featureFilter').on('select2:select select2:unselect select2:clear', function() {
+                activeFilters.features = $(this).val() || [];
+                filterTools();
+            });
+        });
+    </script>
+</body>
+</html>

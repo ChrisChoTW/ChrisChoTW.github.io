@@ -1,2 +1,11 @@
+# Editor
 .claude
-.vscode
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary folders
+tmp/
+temp/

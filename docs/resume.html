@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume - Chris Cho</title>
+    
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="styles/pages.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Theme script (before body to prevent flash) -->
+    <script src="js/theme.js"></script>
+    
+    <style>
+        /* Resume Page Specific Styles */
+        .experience-item {
+            margin-bottom: 40px;
+        }
+        
+        .experience-header {
+            margin-bottom: 16px;
+        }
+        
+        .experience-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .experience-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .experience-description ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .experience-description li {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 1rem;
+            line-height: 1.6;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .experience-description li::before {
+            content: "•";
+            color: var(--accent-primary);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <nav class="nav-menu">
+                <a href="index.html">首頁</a>
+                <a href="biography.html">關於我</a>
+                <a href="resume.html" class="active">履歷</a>
+                <a href="tools.html">工具集</a>
+            </nav>
+            <button class="theme-toggle" id="themeToggle" aria-label="切換主題">
+                <svg class="theme-icon light-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                </svg>
+                <svg class="theme-icon dark-icon" style="display: none;" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="page-header">
+            <h1 class="page-title">Resume</h1>
+            <p class="page-subtitle">資深全端開發工程師｜技術主管｜系統架構專家</p>
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon fas fa-user"></i>
+                基本資料
+            </h2>
+            <p><strong>姓名：</strong>Chris Cho</p>
+            <p><strong>專業領域：</strong>全端開發、系統架構設計、技術團隊管理</p>
+            <p><strong>工作經驗：</strong>13+ 年軟體開發經驗，5+ 年技術主管經驗</p>
+            <p><strong>聯絡方式：</strong>
+                <a href="https://github.com/ChrisChoTW">GitHub</a> |
+                <a href="mailto:alibuda90019@gmail.com">Email</a>
+            </p>
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon fas fa-code"></i>
+                核心技術能力
+            </h2>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <h3>系統開發</h3>
+                    <p>Node.js, Express.js, PHP, Laravel, Yii, CodeIgniter</p>
+                </div>
+                <div class="skill-item">
+                    <h3>後端架構</h3>
+                    <p>微服務架構, API 設計, 系統設計, 效能優化, 資料庫架構</p>
+                </div>
+                <div class="skill-item">
+                    <h3>資料庫</h3>
+                    <p>MySQL, MongoDB, Redis</p>
+                </div>
+                <div class="skill-item">
+                    <h3>DevOps & AI 工具</h3>
+                    <p>Docker, CI/CD, Git, AI 工作流優化, 自動化測試</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Chris Cho. Built using GitHub Pages</p>
+            <div class="contact-links">
+                <a href="https://github.com/ChrisChoTW">GitHub</a>
+                <a href="mailto:alibuda90019@gmail.com">Email</a>
+                <a href="index.html">首頁</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
