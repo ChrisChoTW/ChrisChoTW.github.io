@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - Chris Cho</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-FV6ZHXEWMP');
+    </script>
+    
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="styles/pages.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Theme script (before body to prevent flash) -->
+    <script src="js/theme.js"></script>
+    
+    <style>
+        /* Biography Page Specific Styles */
+        .hero-image {
+            width: 100%;
+            max-width: 900px;
+            height: 400px;
+            margin: 32px auto 48px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(59, 130, 246, 0.05) 0%, 
+                rgba(59, 130, 246, 0.08) 100%);
+            pointer-events: none;
+        }
+        
+        .hero-image img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            object-position: center 60%;
+        }
+        
+        @media (max-width: 1024px) {
+            .hero-image {
+                height: 320px;
+            }
+            
+            .hero-image img {
+                height: 320px;
+                object-position: center 55%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-image {
+                height: 280px;
+                margin: 24px auto 32px;
+            }
+            
+            .hero-image img {
+                height: 280px;
+                object-position: center 50%;
+            }
+            
+            .highlight-quote {
+                padding: 32px 32px;
+                margin: 24px auto 32px;
+                max-width: 95%;
+            }
+            
+            .highlight-quote p {
+                font-size: 1.2rem;
+                line-height: 1.6;
+            }
+            
+            .highlight-quote::before,
+            .highlight-quote::after {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-image {
+                height: 240px;
+            }
+            
+            .hero-image img {
+                height: 240px;
+                object-position: center 45%;
+            }
+        }
+        
+        .lifestyle-section {
+            margin: 64px 0;
+            text-align: center;
+        }
+        
+        .lifestyle-image {
+            width: 100%;
+            max-width: 750px;
+            height: 500px;
+            margin: 0 auto 32px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .lifestyle-image:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+        }
+        
+        .lifestyle-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(59, 130, 246, 0.03) 0%, 
+                rgba(59, 130, 246, 0.06) 100%);
+            pointer-events: none;
+        }
+        
+        .lifestyle-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            transition: transform 0.3s ease;
+        }
+        
+        .lifestyle-image:hover img {
+            transform: scale(1.05);
+        }
+        
+        .lifestyle-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 40px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border-muted);
+            position: relative;
+        }
+        
+        .lifestyle-content::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: var(--accent-primary);
+            border-radius: 2px;
+        }
+        
+        .lifestyle-content p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            margin: 0;
+            font-style: normal;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.02em;
+            opacity: 0.95;
+            transition: all 0.3s ease;
+        }
+        
+        .lifestyle-section:hover .lifestyle-content p {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .lifestyle-section {
+                margin: 48px 0;
+            }
+            
+            .lifestyle-image {
+                height: 350px;
+                margin-bottom: 24px;
+            }
+            
+            .lifestyle-content {
+                padding: 24px 20px;
+                max-width: 95%;
+            }
+            
+            .lifestyle-content p {
+                font-size: 1.05rem;
+                line-height: 1.6;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .lifestyle-image {
+                height: 300px;
+                border-radius: 12px;
+                max-width: 95%;
+            }
+            
+            .lifestyle-image:hover {
+                transform: translateY(-4px);
+            }
+        }
+        
+        .highlight-quote {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(59, 130, 246, 0.03) 100%);
+            border: 2px solid var(--accent-primary);
+            padding: 40px 60px;
+            margin: 32px auto 48px;
+            text-align: center;
+            border-radius: 16px;
+            max-width: 950px;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+            position: relative;
+        }
+        
+        .highlight-quote::before {
+            content: '\201C';
+            position: absolute;
+            top: 16px;
+            left: 24px;
+            font-size: 3rem;
+            color: var(--accent-primary);
+            opacity: 0.6;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        
+        .highlight-quote::after {
+            content: '\201D';
+            position: absolute;
+            bottom: 16px;
+            right: 24px;
+            font-size: 3rem;
+            color: var(--accent-primary);
+            opacity: 0.6;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        
+        .highlight-quote p {
+            color: var(--text-primary);
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.7;
+            margin: 0;
+            font-style: normal;
+            letter-spacing: -0.01em;
+            word-break: keep-all;
+            white-space: pre-wrap;
+        }
+        
+        .content-section {
+            margin-bottom: 64px;
+        }
+        
+        .content-section p {
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .highlight {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: 40px;
+        }
+        
+        .skill-item {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            text-align: left;
+            border-left: 2px solid var(--border-muted);
+            padding-left: 24px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .skill-item:hover {
+            border-left-color: var(--accent-primary);
+        }
+        
+        .skill-item h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .skill-item p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <nav class="nav-menu">
+                <a href="index.html">首頁</a>
+                <a href="aboutme.html" class="active">關於我</a>
+                <a href="resume.html">履歷</a>
+                <a href="tools.html">工具集</a>
+            </nav>
+            <button class="theme-toggle" id="themeToggle" aria-label="切換主題">
+                <svg class="theme-icon light-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                </svg>
+                <svg class="theme-icon dark-icon" style="display: none;" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="page-header">
+            <h1 class="page-title">About Me</h1>
+            <p class="page-subtitle">系統思維技術創新者 / 團隊引導者 / 問題解決專家</p>
+        </div>
+        
+        <div class="highlight-quote">
+            <p>「真正的技術領導不僅建構系統，更培養人才；不僅解決問題，更創造可能。」</p>
+        </div>
+        
+        <div class="hero-image">
+            <img src="images/work-environment.webp" alt="Chris Cho - 工作環境">
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon far fa-lightbulb" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
+                技術背景
+            </h2>
+            <p><span class="highlight">13年軟體開發資歷</span>的後端技術專家，專精於構建<span class="highlight">高效能、可擴展</span>的系統架構。從基礎系統開發成長為<span class="highlight">技術領導者</span>，具備深厚的全端開發能力與豐富的<span class="highlight">團隊管理經驗</span>。</p>
+            
+            <p>致力於將複雜的業務需求轉化為優雅的技術解決方案，並透過<span class="highlight">系統性思維</span>建立可長期維護的架構設計。熟悉現代開發流程與最佳實踐，善於運用設計模式與架構原則創造兼具技術深度與商業價值的產品。</p>
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon far fa-compass" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
+                專業理念
+            </h2>
+            <p>相信技術應該服務於人，系統應該解決真實問題。追求<span class="highlight">代碼品質</span>與<span class="highlight">系統穩定性</span>的同時，更注重<span class="highlight">團隊協作</span>與<span class="highlight">知識傳承</span>。</p>
+            
+            <p>在快速變化的技術環境中保持<span class="highlight">學習熱忱</span>，持續關注新興技術與架構趨勢，並評估其在實際專案中的應用價值。透過建立技術標準與最佳實踐，提升團隊整體技術水平。</p>
+            
+            <p>擅長跨領域溝通協調，能夠在技術團隊、產品團隊與業務單位之間建立有效的合作橋樑，確保技術決策與業務目標保持一致。</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="lifestyle-section">
+                <div class="lifestyle-image">
+                    <img src="images/coffee-lifestyle.webp" alt="Chris Cho - 咖啡廳思考時光">
+                </div>
+                <div class="lifestyle-content">
+                    <p>相信最好的靈感來自於<span class="highlight">放鬆的心境</span>。在繁忙的專案開發之餘，給自己一些獨處思考的時間，讓思緒沈澱，這也是我保持<span class="highlight">技術熱忱</span>與<span class="highlight">創新思維</span>的秘訣。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon far fa-star" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
+                核心專長
+            </h2>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <h3>系統架構設計</h3>
+                    <p>微服務架構、API設計、資料庫優化</p>
+                </div>
+                <div class="skill-item">
+                    <h3>技術團隊領導</h3>
+                    <p>人才培育、流程優化、敏捷實踐</p>
+                </div>
+                <div class="skill-item">
+                    <h3>全端開發</h3>
+                    <p>前端框架、後端服務、整合測試</p>
+                </div>
+                <div class="skill-item">
+                    <h3>DevOps實踐</h3>
+                    <p>CI/CD、容器化、效能監控</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2>
+                <i class="section-icon far fa-eye" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
+                技術願景
+            </h2>
+            <p>理性看待 AI 技術浪潮，將 AI 視為強大的輔助工具，專注於透過<span class="highlight">智慧化流程</span>提升團隊效率，同時保持人類的<span class="highlight">創造力</span>與<span class="highlight">批判性思維</span>。</p>
+            
+            <p>致力於推動技術團隊文化建設，建立<span class="highlight">學習型組織</span>，培養具備系統思維與創新能力的技術人才，共同創造更有價值的技術產品。</p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Chris Cho. 致力於團隊成長與技術傳承</p>
+            <div class="contact-links">
+                <a href="https://github.com/ChrisChoTW">GitHub</a>
+                <a href="mailto:alibuda90019@gmail.com">Email</a>
+                <a href="index.html">首頁</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

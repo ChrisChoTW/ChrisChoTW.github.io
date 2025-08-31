@@ -27,6 +27,72 @@
     
     <style>
         /* Resume Page Specific Styles */
+        .resume-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 40px;
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--border-muted);
+        }
+        
+        .resume-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            border: 3px solid var(--bg-secondary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .resume-info {
+            flex: 1;
+        }
+        
+        .resume-info h1 {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .resume-info .title {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        
+        .resume-contact {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .resume-contact a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .resume-contact a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .resume-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .resume-contact {
+                justify-content: center;
+            }
+        }
+        
         .experience-item {
             margin-bottom: 40px;
         }
@@ -78,7 +144,7 @@
         <div class="nav-bar">
             <nav class="nav-menu">
                 <a href="index.html">首頁</a>
-                <a href="biography.html">關於我</a>
+                <a href="aboutme.html">關於我</a>
                 <a href="resume.html" class="active">履歷</a>
                 <a href="tools.html">工具集</a>
             </nav>
@@ -92,23 +158,25 @@
             </button>
         </div>
         
-        <div class="page-header">
-            <h1 class="page-title">Resume</h1>
-            <p class="page-subtitle">資深全端開發工程師｜技術主管｜系統架構專家</p>
-        </div>
-        
-        <div class="content-section">
-            <h2>
-                <i class="section-icon fas fa-user"></i>
-                基本資料
-            </h2>
-            <p><strong>姓名：</strong>Chris Cho</p>
-            <p><strong>專業領域：</strong>全端開發、系統架構設計、技術團隊管理</p>
-            <p><strong>工作經驗：</strong>13+ 年軟體開發經驗，5+ 年技術主管經驗</p>
-            <p><strong>聯絡方式：</strong>
-                <a href="https://github.com/ChrisChoTW">GitHub</a> |
-                <a href="mailto:alibuda90019@gmail.com">Email</a>
-            </p>
+        <div class="resume-header">
+            <img src="images/resume.webp" alt="Chris Cho" class="resume-photo">
+            <div class="resume-info">
+                <h1>Chris Cho</h1>
+                <p class="title">資深全端開發工程師｜技術主管｜系統架構專家</p>
+                <p><strong>專業領域：</strong>全端開發、系統架構設計、技術團隊管理</p>
+                <p><strong>工作經驗：</strong>13+ 年軟體開發經驗，5+ 年技術主管經驗</p>
+                <div class="resume-contact">
+                    <a href="https://github.com/ChrisChoTW">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                    <a href="mailto:alibuda90019@gmail.com">
+                        <i class="fas fa-envelope"></i> alibuda90019@gmail.com
+                    </a>
+                    <a href="https://linkedin.com/in/chrischot">
+                        <i class="fab fa-linkedin"></i> LinkedIn
+                    </a>
+                </div>
+            </div>
         </div>
         
         <div class="content-section">
@@ -137,7 +205,7 @@
         </div>
         
         <div class="footer">
-            <p>© 2025 Chris Cho. Built using GitHub Pages</p>
+            <p>© 2025 Chris Cho. 致力於團隊成長與技術傳承</p>
             <div class="contact-links">
                 <a href="https://github.com/ChrisChoTW">GitHub</a>
                 <a href="mailto:alibuda90019@gmail.com">Email</a>
