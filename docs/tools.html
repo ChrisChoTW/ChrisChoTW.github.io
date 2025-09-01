@@ -306,6 +306,218 @@
             transform: translateY(-2px);
         }
         
+        /* 預覽按鈕樣式 */
+        .preview-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .tool-card:hover .preview-button {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .preview-button:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+        
+        .preview-button i {
+            font-size: 0.875rem;
+        }
+        
+        /* Modal 樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            max-width: 90vw;
+            max-height: 90vh;
+            width: 800px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 24px 24px 16px 24px;
+            border-bottom: 1px solid var(--border-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .modal-title {
+            flex: 1;
+        }
+        
+        .modal-title h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+        }
+        
+        .modal-title .tool-category {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            margin-left: 16px;
+        }
+        
+        .modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 0;
+        }
+        
+        .modal-preview {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+        
+        .modal-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .modal-preview-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        
+        .modal-description {
+            padding: 24px;
+        }
+        
+        .modal-description h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 16px 0;
+        }
+        
+        .modal-description p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+        
+        .modal-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 24px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .modal-btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        .modal-btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .modal-btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+        }
+        
+        .modal-btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--accent-primary);
+        }
+        
         .tool-card a {
             display: block;
             padding: 24px;
@@ -554,6 +766,31 @@
             .filter-group {
                 min-width: auto;
             }
+            
+            /* 手機版預覽按鈕始終顯示 */
+            .preview-button {
+                opacity: 1;
+                transform: scale(1);
+            }
+            
+            /* 手機版 Modal 調整 */
+            .modal-content {
+                width: 95vw;
+                max-height: 95vh;
+                margin: 10px;
+            }
+            
+            .modal-preview {
+                height: 250px;
+            }
+            
+            .modal-description {
+                padding: 16px;
+            }
+            
+            .modal-header {
+                padding: 16px 16px 12px 16px;
+            }
         }
     </style>
     <script src="js/theme.js"></script>
@@ -651,6 +888,43 @@
                 <a href="https://github.com/ChrisChoTW">GitHub</a>
                 <a href="https://www.linkedin.com/in/chris-cho-94ab12163/">LinkedIn</a>
                 <a href="index.html">首頁</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preview Modal -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3 id="modalTitle">工具預覽</h3>
+                    <div class="tool-category" id="modalCategory">財務工具</div>
+                </div>
+                <button class="modal-close" onclick="closePreviewModal()" aria-label="關閉預覽">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-preview" id="modalPreview">
+                    <div class="modal-preview-placeholder">載入預覽圖片中...</div>
+                </div>
+                <div class="modal-description">
+                    <h4>功能特色</h4>
+                    <p id="modalDescription">工具描述載入中...</p>
+                    <div class="modal-tags" id="modalTags">
+                        <!-- 動態生成標籤 -->
+                    </div>
+                    <div class="modal-actions">
+                        <a href="#" id="modalLaunchBtn" class="modal-btn modal-btn-primary">
+                            <i class="fas fa-external-link-alt"></i>
+                            開啟工具
+                        </a>
+                        <button class="modal-btn modal-btn-secondary" onclick="closePreviewModal()">
+                            <i class="fas fa-times"></i>
+                            關閉
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -788,6 +1062,9 @@
 
             return `
                 <div class="tool-card" data-id="${tool.id}">
+                    <button class="preview-button" onclick="openPreviewModal('${tool.id}')" aria-label="預覽 ${tool.title}">
+                        <i class="fas fa-eye"></i>
+                    </button>
                     <a href="${tool.url}">
                         <div class="tool-header">
                             <div class="tool-icon">
@@ -963,6 +1240,65 @@
                 activeFilters.features = $(this).val() || [];
                 filterTools();
             });
+        });
+
+        // Modal 控制函數
+        function openPreviewModal(toolId) {
+            const tool = toolsData.find(t => t.id === toolId);
+            if (!tool) return;
+            
+            // 更新 Modal 內容
+            document.getElementById('modalTitle').textContent = tool.title;
+            document.getElementById('modalCategory').textContent = tool.categoryLabel;
+            document.getElementById('modalDescription').textContent = tool.description;
+            document.getElementById('modalLaunchBtn').href = tool.url;
+            
+            // 生成標籤
+            const tagClass = (tag) => {
+                if (tag === '新功能') return 'tag new';
+                if (tag === 'Beta') return 'tag beta';
+                if (tag === '熱門') return 'tag popular';
+                return 'tag';
+            };
+            
+            const modalTags = document.getElementById('modalTags');
+            modalTags.innerHTML = tool.tags.map(tag => 
+                `<span class="${tagClass(tag)}">${tag}</span>`
+            ).join('');
+            
+            // 載入預覽圖片
+            const modalPreview = document.getElementById('modalPreview');
+            const screenshotPath = `images/screenshots/${tool.id}.webp`;
+            
+            modalPreview.innerHTML = `
+                <img src="${screenshotPath}" alt="${tool.title} 預覽" 
+                     onerror="this.parentElement.innerHTML='<div class=\\'modal-preview-placeholder\\'>預覽圖片載入失敗</div>'">
+            `;
+            
+            // 顯示 Modal
+            const modal = document.getElementById('previewModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePreviewModal() {
+            const modal = document.getElementById('previewModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 點擊遮罩關閉 Modal
+        document.getElementById('previewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreviewModal();
+            }
+        });
+        
+        // ESC 鍵關閉 Modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePreviewModal();
+            }
         });
     </script>
 </body>
