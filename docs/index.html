@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="styles/nav.css">
     <link rel="stylesheet" href="styles/pages.css">
     
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -131,11 +134,92 @@
         }
         
         .main-sections {
-            max-width: 680px;
+            max-width: 900px;
             margin: 0 auto 80px auto;
             display: flex;
             flex-direction: column;
-            gap: 48px;
+            gap: 64px;
+        }
+        
+        /* 新增專案網格樣式 */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .project-item {
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-muted);
+            transition: all 0.2s ease;
+        }
+        
+        .project-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: var(--accent-primary);
+        }
+        
+        .project-item h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .project-item p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        
+        .project-item strong {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        /* 技術分類樣式 */
+        .tech-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .tech-category h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tech-tag {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-muted);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .tech-tag:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-1px);
         }
         
         .section-card {
@@ -247,13 +331,22 @@
             }
             
             .main-sections {
-                gap: 24px;
+                gap: 32px;
             }
             
             .header {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+            }
+            
+            .project-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .project-item {
+                padding: 20px;
             }
         }
     </style>
@@ -289,13 +382,13 @@
                 </div>
                 <div class="intro">
                     <h1>Chris Cho</h1>
-                    <p>資深軟體開發工程師</p>
-                    <p class="subtitle">擁有 13+ 年開發經驗，專注於系統架構設計與技術團隊管理。致力於將複雜的業務需求轉化為高效的技術解決方案，幫助企業實現數位轉型。</p>
+                    <p>後端技術架構師 | 技術團隊領導者</p>
+                    <p class="subtitle">專注建立可持續發展的技術體系，從系統重構到團隊文化，讓技術成為業務成長的穩固基石。擅長透過技術決策帶動團隊成長，建立高效的工程文化。</p>
                     <div class="tags">
-                        <span class="tag">系統架構</span>
-                        <span class="tag">微服務</span>
-                        <span class="tag">團隊管理</span>
-                        <span class="tag">AI 工具</span>
+                        <span class="tag">系統架構設計</span>
+                        <span class="tag">微服務開發</span>
+                        <span class="tag">技術團隊管理</span>
+                        <span class="tag">效能優化</span>
                     </div>
                 </div>
             </div>
@@ -304,23 +397,67 @@
         <div class="main-sections">
             <div class="section-card">
                 <h2>
-                    Biography
+                    <i class="fas fa-rocket" style="color: var(--accent-primary); margin-right: 12px;"></i>
+                    核心專案成就
                 </h2>
-                <p>熱愛技術創新的軟體開發工程師，專注於系統架構設計與技術團隊管理。</p>
-                <p>致力於將複雜的業務需求轉化為高效的技術解決方案，幫助企業實現數位轉型。</p>
-                <p>擅長系統架構設計與效能優化，同時專注於使用 AI 工具優化開發工作流程，提升團隊生產力。</p>
+                <div class="project-grid">
+                    <div class="project-item">
+                        <h3>非同步報表系統設計</h3>
+                        <p><strong>挑戰</strong>：大型報表生成阻塞用戶操作，影響系統整體穩定性</p>
+                        <p><strong>技術決策</strong>：設計非同步架構，將高負載操作從用戶請求中分離，確保核心服務穩定</p>
+                    </div>
+                    <div class="project-item">
+                        <h3>資料整合架構設計</h3>
+                        <p><strong>挑戰</strong>：多種異質資料源難以統一分析，影響決策效率</p>
+                        <p><strong>技術決策</strong>：設計 ETL 流程，整合 MongoDB、MySQL 等資料源至 ClickHouse，實現每小時自動同步</p>
+                    </div>
+                    <div class="project-item">
+                        <h3>模組化 BI 工具系統</h3>
+                        <p><strong>挑戰</strong>：各種商業儀表板獨立開發，維護成本高</p>
+                        <p><strong>技術決策</strong>：設計可配置元件架構，透過維度與指標組合建構 RFM、會員輪廓等儀表板</p>
+                    </div>
+                    <div class="project-item">
+                        <h3>統一支付接口設計</h3>
+                        <p><strong>挑戰</strong>：多家金流商接口不一致，新功能需要重複串接</p>
+                        <p><strong>技術決策</strong>：實作簡單工廠模式，產出實體金流商物件，統一支付接口，縮短開發時程</p>
+                    </div>
+                </div>
             </div>
             
             <div class="section-card">
                 <h2>
-                    Resume
+                    <i class="fas fa-code" style="color: var(--accent-primary); margin-right: 12px;"></i>
+                    技術專長領域
                 </h2>
-                <ul>
-                    <li>資深軟體開發工程師，具備 13+ 年開發經驗</li>
-                    <li>專精系統架構：微服務架構、API 設計、資料庫優化</li>
-                    <li>熟悉現代開發流程：Git, CI/CD, 敏捷開發、DevOps</li>
-                    <li>善用 AI 提升效率，但不盲從科技，專注實際價值創造</li>
-                </ul>
+                <div class="tech-categories">
+                    <div class="tech-category">
+                        <h3>後端開發</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">PHP/Laravel</span>
+                            <span class="tech-tag">Node.js</span>
+                            <span class="tech-tag">RESTful API</span>
+                            <span class="tech-tag">微服務架構</span>
+                        </div>
+                    </div>
+                    <div class="tech-category">
+                        <h3>資料庫技術</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">MySQL</span>
+                            <span class="tech-tag">MongoDB</span>
+                            <span class="tech-tag">Redis</span>
+                            <span class="tech-tag">ClickHouse</span>
+                        </div>
+                    </div>
+                    <div class="tech-category">
+                        <h3>DevOps & 工具</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Docker</span>
+                            <span class="tech-tag">CI/CD</span>
+                            <span class="tech-tag">Git</span>
+                            <span class="tech-tag">PHPUnit</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -339,7 +476,7 @@
             <p>© 2025 Chris Cho. 致力於團隊成長與技術傳承</p>
             <div class="contact-links">
                 <a href="https://github.com/ChrisChoTW">GitHub</a>
-                <a href="mailto:alibuda90019@gmail.com">Email</a>
+                <a href="https://www.linkedin.com/in/chris-cho-94ab12163/">LinkedIn</a>
                 <a href="tools.html">完整工具集</a>
             </div>
         </div>
