@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧再平衡模擬器 - 克服定期定額鈍化的決策工具</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/nav.css">
+    <link rel="stylesheet" href="../styles/pages.css">
+    <link rel="stylesheet" href="../styles/tools.css">
+    
+    <style>
+        /* 工具特定樣式 */
+        
+        .module-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--accent-primary);
+        }
+        
+        .module-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+        
+        /* 鈍化程度診斷器 */
+        .dulling-indicator {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .dulling-gauge {
+            width: 200px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .gauge-meter {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        
+        .gauge-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 180deg,
+                #4CAF50 0deg,
+                #FFC107 120deg,
+                #FF5722 180deg,
+                #e0e0e0 180deg
+            );
+            transition: transform 0.8s ease-out;
+            transform: rotate(0deg);
+        }
+        
+        .gauge-inner {
+            width: 140px;
+            height: 140px;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .gauge-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .gauge-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        /* 資產配置偏離度 */
+        .allocation-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .allocation-chart {
+            text-align: center;
+        }
+        
+        .pie-chart {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+        }
+        
+        .deviation-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .deviation-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .deviation-label {
+            width: 100px;
+            font-weight: 500;
+        }
+        
+        .deviation-bar {
+            flex: 1;
+            height: 30px;
+            background: linear-gradient(to right, #FF5722 0%, #FFC107 40%, #4CAF50 50%, #FFC107 60%, #FF5722 100%);
+            position: relative;
+            border-radius: 4px;
+        }
+        
+        .deviation-marker {
+            position: absolute;
+            width: 3px;
+            height: 100%;
+            background: #333;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .deviation-value {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* 策略比較器 */
+        .strategy-comparison {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .strategy-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .strategy-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .strategy-card.selected {
+            border-color: var(--accent-primary);
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .strategy-name {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent-primary);
+        }
+        
+        .strategy-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        
+        .metric-label {
+            color: var(--text-secondary);
+        }
+        
+        .metric-value {
+            font-weight: 500;
+        }
+        
+        /* 強調不同類型的指標值 */
+        .metric-number {
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .metric-effect {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .metric-effect.good {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+        
+        .metric-effect.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #FFC107;
+        }
+        
+        .metric-effect.danger {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+        }
+        
+        .metric-action {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-action.maintain {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .metric-action.adjust {
+            background: rgba(255, 193, 7, 0.15);
+            color: #F57C00;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .metric-action.aggressive {
+            background: rgba(244, 67, 54, 0.15);
+            color: #F44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        /* 心理決策輔助 */
+        .decision-checklist {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+        
+        .checklist-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        
+        .checklist-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .checklist-input {
+            width: 100px;
+            padding: 0.3rem;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        /* 未來模擬器 */
+        .future-scenarios {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .scenario-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .scenario-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .scenario-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .scenario-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .regret-meter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .regret-bar {
+            width: 100px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .regret-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #FFC107, #FF5722);
+            transition: width 0.3s ease;
+        }
+        
+        /* 執行計畫 */
+        .execution-plan {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .plan-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .plan-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .step-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* 心魔對話 */
+        .demon-dialog {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .dialog-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .dialog-message {
+            padding: 1rem;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+        
+        .demon-message {
+            background: #ffebee;
+            align-self: flex-start;
+            border-left: 4px solid #f44336;
+        }
+        
+        .system-message {
+            background: #e3f2fd;
+            align-self: flex-end;
+            border-right: 4px solid #2196f3;
+        }
+        
+        .message-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .demon-message .message-label {
+            color: #f44336;
+        }
+        
+        .system-message .message-label {
+            color: #2196f3;
+        }
+        
+        /* 按鈕樣式 */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+        }
+        
+        /* 輸入欄位樣式 */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .input-field {
+            padding: 0.8rem;
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .input-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* 標籤頁 */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-primary);
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab:hover {
+            color: var(--text-primary);
+        }
+        
+        .tab.active {
+            color: var(--accent-primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .allocation-comparison,
+            .strategy-comparison,
+            .future-scenarios {
+                grid-template-columns: 1fr;
+            }
+            
+            .dulling-indicator {
+                flex-direction: column;
+            }
+            
+            .dialog-message {
+                max-width: 90%;
+            }
+        }
+        
+        /* 圖表容器 */
+        #allocationChart,
+        #performanceChart,
+        #monteCarloChart {
+            height: 400px;
+            margin: 2rem 0;
+        }
+        
+        /* 載入動畫 */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 2rem auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading .loading-spinner {
+            display: block;
+        }
+    </style>
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <nav class="nav-menu">
+                <a href="../index.html">首頁</a>
+                <a href="../aboutme.html">關於我</a>
+                <a href="../resume.html">履歷</a>
+                <a href="../tools.html">工具集</a>
+            </nav>
+            <button class="theme-toggle" id="themeToggle" aria-label="切換主題">
+                <svg class="theme-icon light-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                </svg>
+                <svg class="theme-icon dark-icon" style="display: none;" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </button>
+        </div>
+        
+        <header class="page-header">
+            <h1 class="page-title">智慧再平衡模擬器</h1>
+            <p class="page-subtitle">克服定期定額鈍化，做出最佳投資決策</p>
+        </header>
+
+        <!-- 主要標籤頁 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('analysis')">現況分析</button>
+        </div>
+
+        <!-- 現況分析標籤 -->
+        <div id="analysis" class="tab-content active">
+            <!-- 資產配置設定 -->
+            <div class="module-section" id="portfolioAllocation">
+                <div class="module-header">
+                    <h2 class="module-title">資產配置設定</h2>
+                    <small style="color: var(--text-secondary);">設定您的目標配置比例</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin: 2rem 0;">
+                    <!-- 目前配置 -->
+                    <div>
+                        <h3 style="color: var(--accent-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">📊</span> 目前配置（輸入金額）
+                        </h3>
+                        <div class="input-group">
+                            <label class="input-label">股票 (NT$)</label>
+                            <input type="number" id="currentStock" class="input-field" placeholder="1950000" value="1950000" min="0" onchange="updateAllocationFromAmounts()">
+                            <span class="input-hint">目前投資於股票的總金額</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">債券 (NT$)</label>
+                            <input type="number" id="currentBond" class="input-field" placeholder="450000" value="450000" min="0" onchange="updateAllocationFromAmounts()">
+                            <span class="input-hint">目前投資於債券的總金額</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">基金 (NT$)</label>
+                            <input type="number" id="currentFund" class="input-field" placeholder="450000" value="450000" min="0" onchange="updateAllocationFromAmounts()">
+                            <span class="input-hint">目前投資於基金的總金額</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">現金 (NT$)</label>
+                            <input type="number" id="currentCash" class="input-field" placeholder="150000" value="150000" min="0" onchange="updateAllocationFromAmounts()">
+                            <span class="input-hint">目前現金部位的總金額</span>
+                        </div>
+                        
+                        <!-- 自動計算的比例顯示 -->
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                            <h4 style="margin: 0 0 1rem 0; color: var(--accent-primary); font-size: 0.9rem;">📋 自動計算比例</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                                <div>股票：<span id="stockPercentage" style="font-weight: bold; color: #FF6384;">65.0%</span></div>
+                                <div>債券：<span id="bondPercentage" style="font-weight: bold; color: #36A2EB;">15.0%</span></div>
+                                <div>基金：<span id="fundPercentage" style="font-weight: bold; color: #4BC0C0;">15.0%</span></div>
+                                <div>現金：<span id="cashPercentage" style="font-weight: bold; color: #FFCE56;">5.0%</span></div>
+                            </div>
+                            <div style="margin-top: 0.5rem; border-top: 1px solid rgba(52, 152, 219, 0.3); padding-top: 0.5rem;">
+                                <strong>總資產：NT$ <span id="totalAmount">3,000,000</span></strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 目標配置 -->
+                    <div>
+                        <h3 style="color: #4CAF50; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">🎯</span> 目標配置
+                        </h3>
+                        <div class="input-group">
+                            <label class="input-label">股票 (%)</label>
+                            <input type="number" id="targetStock" class="input-field" placeholder="50" value="50" min="0" max="100" onchange="updateAllocationCharts()">
+                            <span class="input-hint">理想的股票配置比例</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">債券 (%)</label>
+                            <input type="number" id="targetBond" class="input-field" placeholder="30" value="30" min="0" max="100" onchange="updateAllocationCharts()">
+                            <span class="input-hint">理想的債券配置比例</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">基金 (%)</label>
+                            <input type="number" id="targetFund" class="input-field" placeholder="15" value="15" min="0" max="100" onchange="updateAllocationCharts()">
+                            <span class="input-hint">理想的基金配置比例</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">現金 (%)</label>
+                            <input type="number" id="targetCash" class="input-field" placeholder="5" value="5" min="0" max="100" onchange="updateAllocationCharts()">
+                            <span class="input-hint">理想的現金配置比例</span>
+                        </div>
+                        
+                        <div class="allocation-total" style="text-align: center; margin-top: 1rem; padding: 0.5rem; background: var(--bg-card); border-radius: 6px;">
+                            <span style="color: var(--text-secondary);">總計：</span>
+                            <span id="targetTotal" style="font-weight: 600; color: #4CAF50;">100%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                    <button class="btn btn-secondary" onclick="resetToDefaults()">重設為預設值</button>
+                    <button class="btn btn-primary" onclick="calculateDeviations()">計算偏離度</button>
+                </div>
+            </div>
+
+            <!-- 投資組合資訊 -->
+            <div class="module-section">
+                <div class="module-header">
+                    <h2 class="module-title">投資組合資訊</h2>
+                    <small style="color: var(--text-secondary);">用於計算定期定額鈍化程度</small>
+                </div>
+                
+                <div class="input-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div class="input-group">
+                        <label class="input-label">每月投資金額</label>
+                        <input type="number" id="monthlyInvestment" class="input-field" placeholder="例：30000" value="30000">
+                        <span class="input-hint">您每月定期定額投入的金額</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">目前總資產價值</label>
+                        <input type="number" id="totalInvestment" class="input-field" placeholder="例：1000000" value="1000000">
+                        <span class="input-hint">包含所有投資部位的現值</span>
+                    </div>
+                    
+                </div>
+                
+                <button class="btn btn-primary" onclick="analyzePortfolio()">分析鈍化程度</button>
+            </div>
+
+            <!-- 鈍化程度診斷 -->
+            <div class="module-section" id="dullingDiagnosis" style="display: none;">
+                <div class="module-header">
+                    <h2 class="module-title">鈍化程度診斷</h2>
+                </div>
+                
+                <div class="dulling-analysis">
+                    <h3>診斷結果</h3>
+                    <p id="dullingDescription" style="margin-bottom: 2rem; line-height: 1.6;"></p>
+                    
+                    <!-- 鈍化指數進度條 -->
+                    <div style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600;">鈍化指數</span>
+                            <span id="dullingScore" style="font-weight: 600; color: var(--accent-primary);">0</span>
+                        </div>
+                        <div class="progress-bar" style="width: 100%; height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden;">
+                            <div id="progressFill" class="progress-fill" style="height: 100%; width: 0%; transition: all 0.8s ease; border-radius: 6px;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">
+                            <span>良好 (0-30)</span>
+                            <span>注意 (30-60)</span>
+                            <span>嚴重 (60-100)</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 關鍵指標 -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                        <div style="text-align: center; padding: 1rem; background: var(--bg-card); border-radius: 8px;">
+                            <div class="metric-label">月投資佔比</div>
+                            <div class="metric-value metric-number" id="monthlyRatio" style="font-size: 1.5rem; margin-top: 0.5rem;">0%</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: var(--bg-card); border-radius: 8px;">
+                            <div class="metric-label">攤平效果</div>
+                            <div class="metric-value metric-effect" id="averagingEffect" style="margin-top: 0.5rem; display: inline-block;">正常</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: var(--bg-card); border-radius: 8px;">
+                            <div class="metric-label">建議行動</div>
+                            <div class="metric-value metric-action" id="suggestedAction" style="margin-top: 0.5rem; display: inline-block;">維持現狀</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <canvas id="dullingChart"></canvas>
+            </div>
+
+            <!-- 資產配置偏離度 -->
+            <div class="module-section" id="allocationDeviation" style="display: none;">
+                <div class="module-header">
+                    <h2 class="module-title">資產配置偏離度分析</h2>
+                    <small style="color: var(--text-secondary);">分析目前配置與目標配置的差異，提供再平衡建議</small>
+                </div>
+                
+                <div class="allocation-comparison">
+                    <div class="allocation-chart">
+                        <h3 style="text-align: center; color: var(--accent-primary);">目前配置</h3>
+                        <canvas id="currentAllocationChart"></canvas>
+                    </div>
+                    <div class="allocation-chart">
+                        <h3 style="text-align: center; color: #4CAF50;">目標配置</h3>
+                        <canvas id="targetAllocationChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="deviation-analysis" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 2rem; text-align: center;">偏離度分析 & 再平衡建議</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="deviation-card" style="padding: 1.5rem; background: var(--bg-card); border-radius: 8px; border-left: 4px solid var(--accent-primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-weight: 600; color: var(--accent-primary);">📈 股票</span>
+                                <span id="stockDeviation" style="font-size: 1.2rem; font-weight: bold;">+15%</span>
+                            </div>
+                            <div id="stockAdvice" style="color: var(--text-secondary); line-height: 1.5;">
+                                目前超配15%，建議減持股票部位，將資金轉移至債券或現金
+                            </div>
+                        </div>
+                        
+                        <div class="deviation-card" style="padding: 1.5rem; background: var(--bg-card); border-radius: 8px; border-left: 4px solid #36A2EB;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-weight: 600; color: #36A2EB;">📊 債券</span>
+                                <span id="bondDeviation" style="font-size: 1.2rem; font-weight: bold;">-15%</span>
+                            </div>
+                            <div id="bondAdvice" style="color: var(--text-secondary); line-height: 1.5;">
+                                目前低配15%，建議增加債券配置以提升投資組合穩定性
+                            </div>
+                        </div>
+                        
+                        <div class="deviation-card" style="padding: 1.5rem; background: var(--bg-card); border-radius: 8px; border-left: 4px solid #4BC0C0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-weight: 600; color: #4BC0C0;">🏦 基金</span>
+                                <span id="fundDeviation" style="font-size: 1.2rem; font-weight: bold;">0%</span>
+                            </div>
+                            <div id="fundAdvice" style="color: var(--text-secondary); line-height: 1.5;">
+                                配置比例適中，無需調整
+                            </div>
+                        </div>
+                        
+                        <div class="deviation-card" style="padding: 1.5rem; background: var(--bg-card); border-radius: 8px; border-left: 4px solid #FFCE56;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-weight: 600; color: #FFCE56;">💰 現金</span>
+                                <span id="cashDeviation" style="font-size: 1.2rem; font-weight: bold;">0%</span>
+                            </div>
+                            <div id="cashAdvice" style="color: var(--text-secondary); line-height: 1.5;">
+                                現金配置適中，保持流動性充足
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Chris Cho. 致力於團隊成長與技術傳承</p>
+            <div class="contact-links">
+                <a href="https://github.com/ChrisChoTW">GitHub</a>
+                <a href="https://www.linkedin.com/in/chris-cho-94ab12163/">LinkedIn</a>
+                <a href="../index.html">首頁</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        // 初始化圖表變量
+        let dullingChart, currentAllocationChart, targetAllocationChart, performanceChart, backtestChart;
+        
+        // 標籤切換功能
+        function switchTab(tabName) {
+            // 隱藏所有標籤內容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有標籤的 active 類
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 顯示選中的標籤內容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 添加 active 類到選中的標籤
+            event.target.classList.add('active');
+        }
+        
+        // 分析投資組合
+        function analyzePortfolio() {
+            const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value) || 0;
+            const totalInvestment = parseFloat(document.getElementById('totalInvestment').value) || 0;
+            
+            if (monthlyInvestment === 0 || totalInvestment === 0) {
+                alert('請輸入有效的投資金額和資產價值');
+                return;
+            }
+            
+            // 計算鈍化程度
+            const monthlyRatio = (monthlyInvestment / totalInvestment) * 100;
+            const dullingScore = Math.max(0, Math.min(100, 100 - (monthlyRatio * 10)));
+            
+            // 顯示診斷結果
+            document.getElementById('dullingDiagnosis').style.display = 'block';
+            document.getElementById('dullingScore').textContent = Math.round(dullingScore);
+            document.getElementById('monthlyRatio').textContent = monthlyRatio.toFixed(2) + '%';
+            
+            // 動態更新鈍化進度條
+            updateProgressBar(dullingScore);
+            
+            // 設定攤平效果和建議
+            let averagingEffect, suggestedAction, dullingDescription, effectClass, actionClass;
+            
+            if (dullingScore < 30) {
+                averagingEffect = '良好';
+                suggestedAction = '維持現狀';
+                dullingDescription = '您的定期定額策略仍然有效，攤平效果良好。建議持續觀察，無需立即調整。';
+                effectClass = 'good';
+                actionClass = 'maintain';
+            } else if (dullingScore < 60) {
+                averagingEffect = '減弱';
+                suggestedAction = '考慮調整';
+                dullingDescription = '定期定額效果開始鈍化，建議考慮增加投資金額或進行適度的再平衡。';
+                effectClass = 'warning';
+                actionClass = 'adjust';
+            } else {
+                averagingEffect = '嚴重減弱';
+                suggestedAction = '積極調整';
+                dullingDescription = '定期定額嚴重鈍化！月投資佔比過低，建議立即執行再平衡或大幅增加投資金額。';
+                effectClass = 'danger';
+                actionClass = 'aggressive';
+            }
+            
+            const effectElement = document.getElementById('averagingEffect');
+            const actionElement = document.getElementById('suggestedAction');
+            
+            effectElement.textContent = averagingEffect;
+            effectElement.className = `metric-value metric-effect ${effectClass}`;
+            
+            actionElement.textContent = suggestedAction;
+            actionElement.className = `metric-value metric-action ${actionClass}`;
+            
+            document.getElementById('dullingDescription').textContent = dullingDescription;
+            
+            // 更新鈍化曲線圖
+            updateDullingChart();
+            
+            // 顯示資產配置偏離度
+            document.getElementById('allocationDeviation').style.display = 'block';
+            updateAllocationCharts();
+        }
+        
+        // 更新鈍化進度條
+        function updateProgressBar(score) {
+            const progressFill = document.getElementById('progressFill');
+            if (progressFill) {
+                const percentage = score;
+                progressFill.style.width = percentage + '%';
+                
+                // 根據分數改變顏色
+                let color;
+                if (score < 30) color = '#4CAF50';
+                else if (score < 60) color = '#FFC107';
+                else color = '#FF5722';
+                
+                progressFill.style.backgroundColor = color;
+            }
+        }
+        
+        // 更新總計顯示（只針對目標配置的百分比）
+        function updateTotals() {
+            const targetStock = parseFloat(document.getElementById('targetStock').value) || 0;
+            const targetBond = parseFloat(document.getElementById('targetBond').value) || 0;
+            const targetFund = parseFloat(document.getElementById('targetFund').value) || 0;
+            const targetCash = parseFloat(document.getElementById('targetCash').value) || 0;
+            const targetTotal = targetStock + targetBond + targetFund + targetCash;
+            
+            // 只更新目標配置的總計
+            const targetTotalElement = document.getElementById('targetTotal');
+            if (targetTotalElement) {
+                targetTotalElement.textContent = targetTotal.toFixed(0) + '%';
+                targetTotalElement.style.color = targetTotal === 100 ? '#4CAF50' : '#FF5722';
+            }
+        }
+        
+        // 重設為預設值（金額模式）
+        function resetToDefaults() {
+            // 設定預設金額值
+            document.getElementById('currentStock').value = 1950000;
+            document.getElementById('currentBond').value = 780000;
+            document.getElementById('currentFund').value = 390000;
+            document.getElementById('currentCash').value = 195000;
+            
+            // 設定目標百分比
+            document.getElementById('targetStock').value = 50;
+            document.getElementById('targetBond').value = 30;
+            document.getElementById('targetFund').value = 15;
+            document.getElementById('targetCash').value = 5;
+            
+            // 更新顯示
+            updateAllocationFromAmounts();
+            updateTotals();
+            updateAllocationCharts();
+        }
+        
+        // 計算偏離度（金額模式）
+        function calculateDeviations() {
+            updateTotals();
+            
+            // 獲取當前金額
+            const currentStock = parseFloat(document.getElementById('currentStock').value) || 0;
+            const currentBond = parseFloat(document.getElementById('currentBond').value) || 0;
+            const currentFund = parseFloat(document.getElementById('currentFund').value) || 0;
+            const currentCash = parseFloat(document.getElementById('currentCash').value) || 0;
+            
+            // 計算總額與比例
+            const total = currentStock + currentBond + currentFund + currentCash;
+            if (total === 0) {
+                alert('請先輸入當前資產配置金額');
+                return;
+            }
+            
+            const currentStockPercent = (currentStock / total) * 100;
+            const currentBondPercent = (currentBond / total) * 100;
+            const currentFundPercent = (currentFund / total) * 100;
+            const currentCashPercent = (currentCash / total) * 100;
+            
+            // 獲取目標百分比
+            const targetStock = parseFloat(document.getElementById('targetStock').value) || 0;
+            const targetBond = parseFloat(document.getElementById('targetBond').value) || 0;
+            const targetFund = parseFloat(document.getElementById('targetFund').value) || 0;
+            const targetCash = parseFloat(document.getElementById('targetCash').value) || 0;
+            
+            // 計算偏離度（比例差異）
+            const stockDeviation = currentStockPercent - targetStock;
+            const bondDeviation = currentBondPercent - targetBond;
+            const fundDeviation = currentFundPercent - targetFund;
+            const cashDeviation = currentCashPercent - targetCash;
+            
+            // 更新配置圖表
+            updateAllocationCharts();
+            
+            // 更新偏離度卡片
+            updateDeviationCards(stockDeviation, bondDeviation, fundDeviation, cashDeviation);
+            
+            // 顯示分析結果
+            document.getElementById('allocationDeviation').style.display = 'block';
+        }
+        
+        // 更新偏離度卡片
+        function updateDeviationCards(stockDev, bondDev, fundDev, cashDev) {
+            // 更新偏離度數值和建議
+            updateDeviationCard('stockDeviation', 'stockAdvice', stockDev, '股票');
+            updateDeviationCard('bondDeviation', 'bondAdvice', bondDev, '債券');
+            updateDeviationCard('fundDeviation', 'fundAdvice', fundDev, '基金');
+            updateDeviationCard('cashDeviation', 'cashAdvice', cashDev, '現金');
+        }
+        
+        // 更新單個偏離度卡片
+        function updateDeviationCard(deviationId, adviceId, deviation, assetName) {
+            const deviationElement = document.getElementById(deviationId);
+            const adviceElement = document.getElementById(adviceId);
+            
+            if (deviationElement && adviceElement) {
+                const devString = (deviation > 0 ? '+' : '') + deviation.toFixed(1) + '%';
+                deviationElement.textContent = devString;
+                
+                // 根據偏離度設定顏色和建議
+                let color, advice;
+                const absDeviation = Math.abs(deviation);
+                
+                if (absDeviation <= 5) {
+                    color = '#4CAF50';
+                    advice = `配置比例適中，無需調整`;
+                } else if (absDeviation <= 15) {
+                    color = '#FFC107';
+                    if (deviation > 0) {
+                        advice = `目前超配${absDeviation.toFixed(1)}%，可考慮適度減持`;
+                    } else {
+                        advice = `目前低配${absDeviation.toFixed(1)}%，可考慮適度增加`;
+                    }
+                } else {
+                    color = '#FF5722';
+                    if (deviation > 0) {
+                        advice = `目前嚴重超配${absDeviation.toFixed(1)}%，建議立即減持`;
+                    } else {
+                        advice = `目前嚴重低配${absDeviation.toFixed(1)}%，建議立即增加配置`;
+                    }
+                }
+                
+                deviationElement.style.color = color;
+                adviceElement.textContent = advice;
+            }
+        }
+        
+        // 更新鈍化曲線圖
+        function updateDullingChart() {
+            const ctx = document.getElementById('dullingChart').getContext('2d');
+            
+            // 生成鈍化曲線數據（固定時間範圍）
+            const labels = [];
+            const data = [];
+            for (let i = 0; i <= 60; i += 3) {
+                labels.push(`${i}個月`);
+                data.push(100 / (1 + i * 0.05)); // 簡化的鈍化公式
+            }
+            
+            if (dullingChart) {
+                dullingChart.destroy();
+            }
+            
+            dullingChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '攤平效果',
+                        data: data,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '定期定額攤平效果遞減曲線'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '攤平效果 (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 從金額更新分配比例
+        function updateAllocationFromAmounts() {
+            console.log('updateAllocationFromAmounts() 被呼叫');
+            // 獲取當前金額輸入值
+            const currentStock = parseFloat(document.getElementById('currentStock').value) || 0;
+            const currentBond = parseFloat(document.getElementById('currentBond').value) || 0;
+            const currentFund = parseFloat(document.getElementById('currentFund').value) || 0;
+            const currentCash = parseFloat(document.getElementById('currentCash').value) || 0;
+            
+            console.log('金額值:', { currentStock, currentBond, currentFund, currentCash });
+            
+            // 計算總額
+            const total = currentStock + currentBond + currentFund + currentCash;
+            console.log('計算總額:', total);
+            
+            // 如果總額為0，清空顯示
+            if (total === 0) {
+                document.getElementById('stockPercentage').textContent = '0.0%';
+                document.getElementById('bondPercentage').textContent = '0.0%';
+                document.getElementById('fundPercentage').textContent = '0.0%';
+                document.getElementById('cashPercentage').textContent = '0.0%';
+                if (document.getElementById('totalInvestment')) {
+                    document.getElementById('totalInvestment').value = '';
+                }
+                return;
+            }
+            
+            // 計算並更新比例顯示
+            const stockPercent = ((currentStock / total) * 100).toFixed(1);
+            const bondPercent = ((currentBond / total) * 100).toFixed(1);
+            const fundPercent = ((currentFund / total) * 100).toFixed(1);
+            const cashPercent = ((currentCash / total) * 100).toFixed(1);
+            
+            document.getElementById('stockPercentage').textContent = stockPercent + '%';
+            document.getElementById('bondPercentage').textContent = bondPercent + '%';
+            document.getElementById('fundPercentage').textContent = fundPercent + '%';
+            document.getElementById('cashPercentage').textContent = cashPercent + '%';
+            
+            // 同步更新總資產顯示和欄位
+            const totalAmountDisplay = document.getElementById('totalAmount');
+            const totalInvestmentInput = document.getElementById('totalInvestment');
+            
+            console.log('totalAmount 顯示元素:', totalAmountDisplay);
+            console.log('totalInvestment 輸入元素:', totalInvestmentInput);
+            
+            if (totalAmountDisplay) {
+                totalAmountDisplay.textContent = total.toLocaleString();
+                console.log('已更新 totalAmount 顯示為:', total.toLocaleString());
+            } else {
+                console.log('找不到 totalAmount 元素!');
+            }
+            
+            if (totalInvestmentInput) {
+                totalInvestmentInput.value = total;
+                console.log('已更新 totalInvestment 欄位為:', total);
+            } else {
+                console.log('找不到 totalInvestment 元素!');
+            }
+        }
+        
+        // 更新配置圖表
+        function updateAllocationCharts() {
+            // 獲取當前金額輸入值
+            const currentStock = parseFloat(document.getElementById('currentStock').value) || 0;
+            const currentBond = parseFloat(document.getElementById('currentBond').value) || 0;
+            const currentFund = parseFloat(document.getElementById('currentFund').value) || 0;
+            const currentCash = parseFloat(document.getElementById('currentCash').value) || 0;
+            
+            // 計算當前配置比例
+            const currentTotal = currentStock + currentBond + currentFund + currentCash;
+            const currentStockPercent = currentTotal > 0 ? (currentStock / currentTotal) * 100 : 0;
+            const currentBondPercent = currentTotal > 0 ? (currentBond / currentTotal) * 100 : 0;
+            const currentFundPercent = currentTotal > 0 ? (currentFund / currentTotal) * 100 : 0;
+            const currentCashPercent = currentTotal > 0 ? (currentCash / currentTotal) * 100 : 0;
+            
+            // 獲取目標百分比
+            const targetStock = parseFloat(document.getElementById('targetStock').value) || 0;
+            const targetBond = parseFloat(document.getElementById('targetBond').value) || 0;
+            const targetFund = parseFloat(document.getElementById('targetFund').value) || 0;
+            const targetCash = parseFloat(document.getElementById('targetCash').value) || 0;
+            
+            // 現況配置
+            const currentCtx = document.getElementById('currentAllocationChart').getContext('2d');
+            if (currentAllocationChart) {
+                currentAllocationChart.destroy();
+            }
+            
+            currentAllocationChart = new Chart(currentCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['股票', '債券', '基金', '現金'],
+                    datasets: [{
+                        data: [currentStockPercent, currentBondPercent, currentFundPercent, currentCashPercent],
+                        backgroundColor: ['#FF6384', '#36A2EB', '#4BC0C0', '#FFCE56']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value, context) => {
+                                const label = context.chart.data.labels[context.dataIndex];
+                                if (value > 0) {
+                                    return label + '\n' + value.toFixed(1) + '%';
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            
+            // 目標配置
+            const targetCtx = document.getElementById('targetAllocationChart').getContext('2d');
+            if (targetAllocationChart) {
+                targetAllocationChart.destroy();
+            }
+            
+            targetAllocationChart = new Chart(targetCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['股票', '債券', '基金', '現金'],
+                    datasets: [{
+                        data: [targetStock, targetBond, targetFund, targetCash],
+                        backgroundColor: ['#FF6384', '#36A2EB', '#4BC0C0', '#FFCE56']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value, context) => {
+                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                const label = context.chart.data.labels[context.dataIndex];
+                                return label + '\n' + percentage + '%';
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            
+            // 更新總計和比例顯示
+            updateTotals();
+            updateAllocationFromAmounts();
+        }
+        
+        // 更新偏離度條狀圖
+        function updateDeviationBars(stockDeviation, bondDeviation) {
+            // 更新股票偏離度
+            const stockBar = document.querySelector('.deviation-item:first-child .deviation-value');
+            if (stockBar) {
+                stockBar.textContent = (stockDeviation > 0 ? '+' : '') + stockDeviation.toFixed(1) + '%';
+                const position = 50 + (stockDeviation / 30) * 25; // 將偏離度映射到 25-75% 位置
+                stockBar.style.left = Math.max(5, Math.min(95, position)) + '%';
+            }
+            
+            // 更新債券偏離度
+            const bondBar = document.querySelector('.deviation-item:last-child .deviation-value');
+            if (bondBar) {
+                bondBar.textContent = (bondDeviation > 0 ? '+' : '') + bondDeviation.toFixed(1) + '%';
+                const position = 50 + (bondDeviation / 30) * 25;
+                bondBar.style.left = Math.max(5, Math.min(95, position)) + '%';
+            }
+        }
+        
+        // 選擇策略
+        function selectStrategy(strategy) {
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // 更新績效圖表
+            updatePerformanceChart(strategy);
+        }
+        
+        // 更新績效圖表
+        function updatePerformanceChart(strategy) {
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
+            
+            const chartCtx = ctx.getContext('2d');
+            
+            // 根據策略生成不同的數據
+            const strategies = {
+                maintain: [100, 105, 103, 108, 106, 110, 107, 112, 109, 115, 111, 118],
+                periodic: [100, 104, 106, 109, 111, 113, 115, 117, 119, 121, 123, 125],
+                threshold: [100, 105, 107, 110, 112, 114, 116, 119, 121, 124, 126, 129]
+            };
+            
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            performanceChart = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '選定策略',
+                        data: strategies[strategy] || strategies.threshold,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }, {
+                        label: '基準指數',
+                        data: [100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122],
+                        borderColor: '#95a5a6',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '策略績效比較'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '資產價值 (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 生成個人化建議
+        function generatePersonalizedAdvice() {
+            const adviceDiv = document.getElementById('personalizedAdvice');
+            const adviceContent = document.getElementById('adviceContent');
+            
+            // 檢查所有 checkbox 是否都已勾選
+            const allChecked = Array.from(document.querySelectorAll('.checklist-checkbox')).every(cb => cb.checked);
+            
+            if (!allChecked) {
+                alert('請完成所有檢查項目');
+                return;
+            }
+            
+            adviceDiv.style.display = 'block';
+            adviceContent.innerHTML = `
+                <div style="padding: 1rem; background: rgba(52, 152, 219, 0.1); border-left: 4px solid #3498db; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>您的風險屬性：</strong> 穩健平衡型
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>建議再平衡頻率：</strong> 每季度檢視，偏離10%時執行
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>適合的執行方式：</strong> 漸進式再平衡（分3個月逐步調整）
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>心理建議：</strong> 您較擔心錯過上漲，建議採用部分再平衡策略，保留30%的超配部位參與潛在上漲
+                </div>
+                <div style="padding: 1rem; background: rgba(46, 204, 113, 0.1); border-radius: 4px;">
+                    <strong>💡 專屬提醒：</strong> 根據您5年的投資期間，短期波動不應影響長期目標。建議設定自動提醒，避免情緒化決策。
+                </div>
+            `;
+        }
+        
+        // 心魔對話功能
+        function addDemonDialog(type) {
+            const dialogMessages = document.getElementById('dialogMessages');
+            
+            const dialogs = {
+                missed: {
+                    demon: '如果我現在賣出，股票繼續漲到天上去怎麼辦？我會恨死自己的！',
+                    system: '歷史數據顯示，完美預測頂部幾乎不可能。分批賣出能讓你既參與上漲，又能鎖定部分獲利。記住：沒人因為獲利了結而破產。'
+                },
+                loss: {
+                    demon: '萬一我賣在最低點，然後馬上反彈怎麼辦？',
+                    system: '再平衡不是要你賣在低點，而是賣出「相對表現較好」的資產。當股票超配時賣出，實際上是在相對高點獲利了結。'
+                },
+                regret: {
+                    demon: '我總是做錯決定，這次肯定也會後悔...',
+                    system: '完美的決策不存在，但「不決策」本身也是一種決策。根據回測，定期再平衡的投資者，後悔程度平均降低40%。'
+                },
+                timing: {
+                    demon: '現在真的是再平衡的好時機嗎？再等等會不會更好？',
+                    system: '等待「完美時機」是投資的最大敵人。研究顯示，定期再平衡比擇時再平衡的成功率高出23%。現在就是最好的時機。'
+                }
+            };
+            
+            const dialog = dialogs[type];
+            if (dialog) {
+                dialogMessages.innerHTML += `
+                    <div class="dialog-message demon-message">
+                        <div class="message-label">內心的聲音</div>
+                        <div>${dialog.demon}</div>
+                    </div>
+                    <div class="dialog-message system-message">
+                        <div class="message-label">理性分析</div>
+                        <div>${dialog.system}</div>
+                    </div>
+                `;
+                dialogMessages.scrollTop = dialogMessages.scrollHeight;
+            }
+        }
+        
+        // 生成懶人方案
+        function generateLazyPlan() {
+            const lazyPlan = document.getElementById('lazyPlan');
+            lazyPlan.style.display = 'block';
+            
+            // 滾動到懶人方案
+            lazyPlan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // 歷史回測
+        function backtest(period) {
+            const ctx = document.getElementById('backtestChart');
+            if (!ctx) return;
+            
+            const chartCtx = ctx.getContext('2d');
+            
+            // 根據不同時期生成數據
+            const periods = {
+                '2008': {
+                    labels: ['2008/1', '2008/4', '2008/7', '2008/10', '2009/1', '2009/4', '2009/7', '2009/10'],
+                    withRebalance: [100, 92, 78, 72, 75, 82, 88, 95],
+                    withoutRebalance: [100, 88, 68, 60, 65, 73, 80, 88]
+                },
+                '2020': {
+                    labels: ['2020/1', '2020/3', '2020/5', '2020/7', '2020/9', '2020/11', '2021/1'],
+                    withRebalance: [100, 75, 85, 95, 102, 108, 115],
+                    withoutRebalance: [100, 65, 78, 88, 95, 102, 108]
+                },
+                '2022': {
+                    labels: ['2022/1', '2022/4', '2022/7', '2022/10', '2023/1', '2023/4'],
+                    withRebalance: [100, 95, 88, 85, 90, 95],
+                    withoutRebalance: [100, 92, 82, 78, 84, 90]
+                }
+            };
+            
+            const data = periods[period] || periods['2008'];
+            
+            if (backtestChart) {
+                backtestChart.destroy();
+            }
+            
+            backtestChart = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: '有再平衡',
+                        data: data.withRebalance,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }, {
+                        label: '無再平衡',
+                        data: data.withoutRebalance,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${period} 歷史回測比較`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '資產價值 (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 顯示回測結果
+            document.getElementById('backtestResults').style.display = 'block';
+        }
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化圖表和顯示
+            updateAllocationFromAmounts();
+            updatePerformanceChart('threshold');
+        });
+    </script>
+</body>
+</html>
