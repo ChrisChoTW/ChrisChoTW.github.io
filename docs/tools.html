@@ -75,6 +75,19 @@
                 "name": "博愛座道德困境",
                 "description": "互動式道德教育遊戲，透過博愛座情境模擬探討社會道德問題",
                 "genre": "Educational"
+            },
+            {
+                "@type": "Game",
+                "name": "RPG中毒英雄",
+                "description": "扮演被毒蜘蛛咬傷的RPG英雄，考驗資源管理與策略選擇的生存遊戲",
+                "genre": "Strategy"
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "AI 安全風險學習中心",
+                "description": "互動式 AI 安全風險學習平台，透過實戰模擬了解資安威脅",
+                "applicationCategory": "EducationApplication",
+                "operatingSystem": "Any"
             }
         ]
     }
@@ -1036,17 +1049,30 @@
                 tags: ['進階', 'DevOps']
             },
             {
-                id: 'ai-security-learning',
-                category: 'learning',
-                purpose: ['安全教育', '風險學習'],
+                id: 'rpg-poisoned-hero',
+                category: 'games',
+                purpose: ['娛樂休閒'],
                 tech: ['Vanilla JS'],
-                features: ['新功能', '互動式', '學習專用'],
-                icon: '🔍',
+                features: ['互動式'],
+                icon: '🎮',
+                title: 'RPG中毒英雄',
+                categoryLabel: '生存遊戲',
+                description: '扮演被毒蜘蛛咬傷的RPG英雄，使用藥水對抗毒素。每次治療都會讓毒素更強，你能撐多久？考驗資源管理與策略選擇。',
+                url: 'games/rpg-poisoned-hero.html',
+                tags: ['互動式', '生存', 'Vanilla JS']
+            },
+            {
+                id: 'ai-agent-security-demo',
+                category: 'tools',
+                purpose: ['學習教育'],
+                tech: ['Vanilla JS', 'AI'],
+                features: ['新功能', '互動式', 'AI功能'],
+                icon: '🛡️',
                 title: 'AI 安全風險學習中心',
-                categoryLabel: '資安風險學習',
-                description: '互動式 AI 安全風險學習平台，透過實際案例模擬學習駭客如何利用 AI 提示詞攻擊，理解資安威脅並建立防護意識。',
+                categoryLabel: '資安教育工具',
+                description: '互動式 AI 安全風險學習平台，透過實戰模擬了解 AI Agent 提示詞攻擊原理，學習防護策略並建立資安意識。',
                 url: 'tools/ai-agent-security-demo.html',
-                tags: ['新功能', '互動式', '資安學習', 'AI風險']
+                tags: ['新功能', '互動式', '資安教育', 'AI風險']
             }
         ];
 
@@ -1069,6 +1095,7 @@
                     case 'tools': return 'fas fa-tools';
                     case 'games': return 'fas fa-gamepad';
                     case 'docs': return 'fas fa-book';
+                    case 'learning': return 'fas fa-graduation-cap';
                     default: return 'fas fa-cube';
                 }
             };
@@ -1143,7 +1170,8 @@
                 all: '全部',
                 tools: '工具',
                 games: '遊戲',
-                docs: '文檔'
+                docs: '文檔',
+                learning: '學習'
             };
             
             const primaryFilters = document.querySelector('.primary-filters');

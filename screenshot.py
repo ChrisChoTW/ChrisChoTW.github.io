@@ -21,7 +21,11 @@ def capture_screenshots():
     """截取所有工具頁面的截圖"""
     
     # 基礎 URL - 使用本地檔案路徑
-    base_url = "file:///C:/Users/alibuda/code/ChrisChoTW.github.io/docs/"
+    import platform
+    if platform.system() == "Windows":
+        base_url = "file:///C:/Users/alibuda/code/ChrisChoTW.github.io/docs/"
+    else:
+        base_url = f"file://{os.path.abspath('docs')}/"
     
     # 所有工具和文檔頁面
     pages_to_capture = [
@@ -46,9 +50,19 @@ def capture_screenshots():
             "title": "時間軸生成工具"
         },
         {
+            "url": "tools/ai-agent-security-demo.html",
+            "name": "ai-agent-security-demo",
+            "title": "AI 安全風險學習中心"
+        },
+        {
             "url": "games/moral-dilemma.html",
             "name": "moral-dilemma",
             "title": "博愛座道德困境"
+        },
+        {
+            "url": "games/rpg-poisoned-hero.html",
+            "name": "rpg-poisoned-hero",
+            "title": "RPG中毒英雄"
         },
         {
             "url": "sdlc/index.html",
