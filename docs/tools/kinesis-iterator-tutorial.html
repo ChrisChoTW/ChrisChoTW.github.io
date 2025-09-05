@@ -3,7 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinesis Iterator 完整教學 - 大水缸概念</title>
+    <title>AWS Kinesis Stream 完整教學 - Iterator 機制與 MQ 比較 | Chris Cho 工具集</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="深入理解 AWS Kinesis Stream Iterator 機制，透過互動式視覺化教學比較 Kinesis 與傳統 Message Queue 的差異。包含 TRIM_HORIZON、LATEST、AT_SEQUENCE_NUMBER 詳解與實務應用場景。">
+    <meta name="keywords" content="AWS Kinesis, Kinesis Stream, Iterator, TRIM_HORIZON, LATEST, Message Queue, MQ vs Kinesis, 事件驅動架構, Event Streaming, AWS 教學, 即時資料處理">
+    <meta name="author" content="Chris Cho">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://chrischottw.github.io/tools/kinesis-iterator-tutorial.html">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AWS Kinesis Stream 完整教學 - Iterator 機制詳解">
+    <meta property="og:description" content="透過互動式視覺化教學，深入理解 AWS Kinesis Stream Iterator 機制與實務應用">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://chrischottw.github.io/tools/kinesis-iterator-tutorial.html">
+    <meta property="og:site_name" content="Chris Cho 技術工具集">
+    <meta property="og:locale" content="zh_TW">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AWS Kinesis Stream 完整教學">
+    <meta name="twitter:description" content="透過互動式視覺化教學，深入理解 AWS Kinesis Stream Iterator 機制與實務應用">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "AWS Kinesis Stream Iterator 完整教學",
+        "description": "深入理解 AWS Kinesis Stream Iterator 機制，透過互動式視覺化教學比較 Kinesis 與傳統 Message Queue 的差異",
+        "author": {
+            "@type": "Person",
+            "name": "Chris Cho"
+        },
+        "datePublished": "2025-01-05",
+        "dateModified": "2025-01-05",
+        "publisher": {
+            "@type": "Person",
+            "name": "Chris Cho"
+        },
+        "keywords": ["AWS Kinesis", "Stream Processing", "Iterator Pattern", "Message Queue", "Event Streaming"],
+        "articleSection": "技術教學",
+        "inLanguage": "zh-TW",
+        "url": "https://chrischottw.github.io/tools/kinesis-iterator-tutorial.html",
+        "isAccessibleForFree": true,
+        "learningResourceType": "Interactive Tutorial",
+        "educationalLevel": "Professional",
+        "teaches": {
+            "@type": "DefinedTerm",
+            "name": "AWS Kinesis Stream",
+            "description": "Amazon Kinesis Data Streams 串流資料處理服務"
+        }
+    }
+    </script>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FV6ZHXEWMP');
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 
@@ -860,6 +921,99 @@
                 padding: 8px;
             }
         }
+
+        /* 測驗相關樣式 */
+        .question-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .question-container:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .question-text {
+            margin-bottom: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .answer-options.multiple {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .answer-btn {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .answer-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-bg-light);
+        }
+
+        .answer-btn.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .answer-btn.correct {
+            border-color: #4CAF50;
+            background: #4CAF50;
+            color: white;
+        }
+
+        .answer-btn.incorrect {
+            border-color: #f44336;
+            background: #f44336;
+            color: white;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            color: #2e7d32;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+
+        @media (max-width: 768px) {
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -874,6 +1028,7 @@
             <button class="tab" onclick="switchTab('stream')">🌊 Stream 核心概念</button>
             <button class="tab" onclick="switchTab('iterator-demo')">🎯 Iterator 核心概念及互動展示</button>
             <button class="tab" onclick="switchTab('summary')">🎆 總結與決策指南</button>
+            <button class="tab" onclick="switchTab('quiz')">🏆 互動測驗挑戦</button>
         </div>
 
         <!-- MQ vs Kinesis Stream 完整比較分析 -->
@@ -1549,6 +1704,177 @@
                 </div>
             </div>
         </div>
+
+        <!-- 互動測驗挑戦 Tab -->
+        <div id="quiz" class="tab-content">
+            <h3>🏆 互動測驗挑戦 - 測試你的 Kinesis 知識！</h3>
+            
+            <!-- 測驗結果區域 -->
+            <div id="quiz-results" style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0; display: none;">
+                <h4 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">🏆 測驗結果</h4>
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; font-weight: bold; color: var(--primary-color); margin: 20px 0;" id="final-score">0/10</div>
+                    <div style="font-size: 18px; margin: 10px 0;" id="score-message">待測驗</div>
+                    <div style="margin: 20px 0;">
+                        <button onclick="restartQuiz()" style="background: var(--primary-color); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; margin: 0 10px;">🔄 重新測驗</button>
+                        <button onclick="showAnswerReview()" id="review-btn" style="background: #4CAF50; color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; margin: 0 10px; display: none;">🔍 查看解答</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 測驗內容 -->
+            <div id="quiz-content">
+                <!-- 是非題區域 -->
+                <div style="background: #f8f9fa; border-radius: 15px; padding: 25px; margin: 20px 0;">
+                    <h4 style="color: #333; margin-bottom: 20px;">🔴 是非題 (5 題)</h4>
+                    
+                    <!-- 是非題 1 -->
+                    <div class="question-container" data-question="1" data-type="boolean">
+                        <div class="question-text">
+                            <strong>1.</strong> Kinesis Stream 和傳統 MQ 的主要差異是：Kinesis 是「事件日誌」模型，傳統 MQ 是「任務分發」模型。
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="true" onclick="selectAnswer(1, 'boolean', true)">✅ 正確</button>
+                            <button class="answer-btn" data-answer="false" onclick="selectAnswer(1, 'boolean', false)">❌ 錯誤</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 是非題 2 -->
+                    <div class="question-container" data-question="2" data-type="boolean">
+                        <div class="question-text">
+                            <strong>2.</strong> AWS 生產環境中，Kinesis Iterator Token 的有效期限為 10 分鐘。
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="true" onclick="selectAnswer(2, 'boolean', true)">✅ 正確</button>
+                            <button class="answer-btn" data-answer="false" onclick="selectAnswer(2, 'boolean', false)">❌ 錯誤</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 是非題 3 -->
+                    <div class="question-container" data-question="3" data-type="boolean">
+                        <div class="question-text">
+                            <strong>3.</strong> Kinesis Stream 支援多個消費者同時讀取同一份資料，而傳統 MQ 通常是競爭消費模式。
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="true" onclick="selectAnswer(3, 'boolean', true)">✅ 正確</button>
+                            <button class="answer-btn" data-answer="false" onclick="selectAnswer(3, 'boolean', false)">❌ 錯誤</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 是非題 4 -->
+                    <div class="question-container" data-question="4" data-type="boolean">
+                        <div class="question-text">
+                            <strong>4.</strong> TRIM_HORIZON Iterator 類型會從 Kinesis Stream 中最新的記錄開始讀取。
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="true" onclick="selectAnswer(4, 'boolean', true)">✅ 正確</button>
+                            <button class="answer-btn" data-answer="false" onclick="selectAnswer(4, 'boolean', false)">❌ 錯誤</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 是非題 5 -->
+                    <div class="question-container" data-question="5" data-type="boolean">
+                        <div class="question-text">
+                            <strong>5.</strong> 實作 Checkpoint 機制時，應該儲存 Iterator Token 供後續使用。
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="true" onclick="selectAnswer(5, 'boolean', true)">✅ 正確</button>
+                            <button class="answer-btn" data-answer="false" onclick="selectAnswer(5, 'boolean', false)">❌ 錯誤</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- 選擇題區域 -->
+                <div style="background: #e8f5e9; border-radius: 15px; padding: 25px; margin: 20px 0;">
+                    <h4 style="color: #2e7d32; margin-bottom: 20px;">🔵 選擇題 (5 題)</h4>
+                    
+                    <!-- 選擇題 1 -->
+                    <div class="question-container" data-question="6" data-type="multiple">
+                        <div class="question-text">
+                            <strong>6.</strong> 以下哪個情況最適合使用傳統 MQ 而非 Kinesis Stream？
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="a" onclick="selectAnswer(6, 'multiple', 'a')">A. 用戶行為分析和機器學習</button>
+                            <button class="answer-btn" data-answer="b" onclick="selectAnswer(6, 'multiple', 'b')">B. 需要歷史資料回放的場景</button>
+                            <button class="answer-btn" data-answer="c" onclick="selectAnswer(6, 'multiple', 'c')">C. 訂單處理系統，需要確保每筆訂單只處理一次</button>
+                            <button class="answer-btn" data-answer="d" onclick="selectAnswer(6, 'multiple', 'd')">D. 多個系統需要同時消費同一份資料</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 選擇題 2 -->
+                    <div class="question-container" data-question="7" data-type="multiple">
+                        <div class="question-text">
+                            <strong>7.</strong> Kinesis Stream 的資料保留期限範圍是？
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="a" onclick="selectAnswer(7, 'multiple', 'a')">A. 1 小時 - 7 天</button>
+                            <button class="answer-btn" data-answer="b" onclick="selectAnswer(7, 'multiple', 'b')">B. 24 小時 - 365 天</button>
+                            <button class="answer-btn" data-answer="c" onclick="selectAnswer(7, 'multiple', 'c')">C. 1 天 - 30 天</button>
+                            <button class="answer-btn" data-answer="d" onclick="selectAnswer(7, 'multiple', 'd')">D. 永久保存</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 選擇題 3 -->
+                    <div class="question-container" data-question="8" data-type="multiple">
+                        <div class="question-text">
+                            <strong>8.</strong> 當你需要從特定時間點開始讀取 Kinesis 資料時，應該使用哪種 Iterator 類型？
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="a" onclick="selectAnswer(8, 'multiple', 'a')">A. TRIM_HORIZON</button>
+                            <button class="answer-btn" data-answer="b" onclick="selectAnswer(8, 'multiple', 'b')">B. LATEST</button>
+                            <button class="answer-btn" data-answer="c" onclick="selectAnswer(8, 'multiple', 'c')">C. AT_TIMESTAMP</button>
+                            <button class="answer-btn" data-answer="d" onclick="selectAnswer(8, 'multiple', 'd')">D. AT_SEQUENCE_NUMBER</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 選擇題 4 -->
+                    <div class="question-container" data-question="9" data-type="multiple">
+                        <div class="question-text">
+                            <strong>9.</strong> 在選擇技術架構時，以下哪個決策框架最重要？
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="a" onclick="selectAnswer(9, 'multiple', 'a')">A. 選擇最新的技術</button>
+                            <button class="answer-btn" data-answer="b" onclick="selectAnswer(9, 'multiple', 'b')">B. 考慮成本因素</button>
+                            <button class="answer-btn" data-answer="c" onclick="selectAnswer(9, 'multiple', 'c')">C. 問「這個資料未來還會被使用嗎？」</button>
+                            <button class="answer-btn" data-answer="d" onclick="selectAnswer(9, 'multiple', 'd')">D. 跟隨大企業的選擇</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+
+                    <!-- 選擇題 5 -->
+                    <div class="question-container" data-question="10" data-type="multiple">
+                        <div class="question-text">
+                            <strong>10.</strong> 當 Iterator 過期時，最佳的處理方式是？
+                        </div>
+                        <div class="answer-options">
+                            <button class="answer-btn" data-answer="a" onclick="selectAnswer(10, 'multiple', 'a')">A. 重新啟動應用程式</button>
+                            <button class="answer-btn" data-answer="b" onclick="selectAnswer(10, 'multiple', 'b')">B. 等待 5 分鐘後再嘗試</button>
+                            <button class="answer-btn" data-answer="c" onclick="selectAnswer(10, 'multiple', 'c')">C. 捕獲 ExpiredIteratorException 並重新建立 Iterator</button>
+                            <button class="answer-btn" data-answer="d" onclick="selectAnswer(10, 'multiple', 'd')">D. 儲存備份 Iterator Token</button>
+                        </div>
+                        <div class="feedback" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- 測驗控制按鈕 -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <button id="submit-quiz" onclick="submitQuiz()" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        📨 提交測驗
+                    </button>
+                    <div id="quiz-progress" style="margin-top: 20px; font-size: 16px; color: #666;">
+                        已作答: <span id="answered-count">0</span>/10 題
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -2172,13 +2498,14 @@
 
         // 全域導航狀態
         let currentTabIndex = 0;
-        const tabNames = ['comparison', 'interactive-demo', 'stream', 'iterator-demo', 'summary'];
+        const tabNames = ['comparison', 'interactive-demo', 'stream', 'iterator-demo', 'summary', 'quiz'];
         const tabTitles = [
             '📚 MQ vs Kinesis Stream 基礎概念',
             '⚖️ MQ vs Kinesis Stream 互動展示',
             '🌊 Stream 核心概念',
             '🎯 Iterator 機制詳解',
-            '🎆 總結與決策指南'
+            '🎆 總結與決策指南',
+            '🏆 互動測驗挑戦'
         ];
         let visitedTabs = new Set();
         let isNavigationOpen = false;
@@ -2413,6 +2740,242 @@
                 setupComparisonToggle(); // 初始化對比切換功能
             }, 100);
         });
+
+        // ========== 測驗功能 ==========
+        
+        // 測驗答案配置
+        const quizAnswers = {
+            1: true,     // Kinesis 是事件日誌，MQ 是任務分發
+            2: false,    // Iterator Token 有效期是 5 分鐘，不是 10 分鐘
+            3: true,     // Kinesis 支援多消費者，MQ 競爭消費
+            4: false,    // TRIM_HORIZON 是從最古老資料開始，不是最新
+            5: false,    // 應該儲存 Sequence Number，不是 Iterator Token
+            6: 'c',      // 訂單處理系統適合 MQ
+            7: 'b',      // Kinesis 保留期限 24小時-365天
+            8: 'c',      // 從特定時間開始讀取使用 AT_TIMESTAMP
+            9: 'c',      // 決策框架：問資料未來還會被使用嗎
+            10: 'c'      // Iterator 過期應捕獲異常並重建
+        };
+        
+        // 答案解釋
+        const quizExplanations = {
+            1: "Kinesis Stream 是「事件日誌」模型，用於記錄發生的事實；傳統 MQ 是「任務分發」模型，用於分發要處理的任務。",
+            2: "AWS 生產環境中，Iterator Token 的有效期限是 <strong>5 分鐘</strong>，不是 10 分鐘。這是 AWS 的硬性限制。",
+            3: "Kinesis Stream 支援多重觀察模式，多個消費者可以同時讀取同一份資料；傳統 MQ 通常是競爭消費模式。",
+            4: "TRIM_HORIZON 是從 Stream 中<strong>最古老</strong>的記錄開始讀取，不是最新的。<strong>LATEST</strong> 才是從最新資料開始讀取。",
+            5: "實作 Checkpoint 機制時，應該儲存 <strong>Sequence Number</strong>，不是 Iterator Token。Iterator Token 會過期，不能用於持久化。",
+            6: "<strong>選項 C 正確！</strong>訂單處理系統需要確保每筆訂單只處理一次，這是傳統 MQ 的競爭消費模式的優勢。<br><strong>為什麼其他選項不對？</strong><br>• A/B/D 都更適合使用 Kinesis Stream，因為需要歷史資料或多系統消費。",
+            7: "<strong>選項 B 正確！</strong>Kinesis Stream 的資料保留期限範圍是 <strong>24 小時 - 365 天</strong>。<br>• 預設是 24 小時<br>• 最多可延長到 365 天",
+            8: "<strong>選項 C 正確！</strong>AT_TIMESTAMP Iterator 用於從指定時間點開始讀取。<br><strong>各 Iterator 類型用途：</strong><br>• TRIM_HORIZON：從最古老資料開始<br>• LATEST：從最新資料開始<br>• AT_TIMESTAMP：從指定時間開始<br>• AT_SEQUENCE_NUMBER：從指定序列號開始",
+            9: "<strong>選項 C 正確！</strong>最重要的決策框架是問：<strong>「這個資料未來還會被使用嗎？」</strong><br>• 如果<strong>不會</strong> → 選擇 MQ<br>• 如果<strong>會</strong> → 選擇 Stream<br><br>這個簡單問題能幫助你做出 80% 的正確決策！",
+            10: "<strong>選項 C 正確！</strong>當 Iterator 過期時，正確做法是捕獲 <code>ExpiredIteratorException</code> 並重新建立 Iterator。<br><strong>為什麼其他選項不對？</strong><br>• A：重啟應用過於粗暴<br>• B：等待 5 分鐘沒有意義<br>• D： Iterator Token 會過期，不能備份"
+        };
+        
+        let userAnswers = {}; // 儲存用戶答案
+        let answeredCount = 0;
+        
+        // 選擇答案函數
+        function selectAnswer(questionNumber, questionType, answer) {
+            // 取消所有按鈕的選中狀態
+            const container = document.querySelector(`[data-question="${questionNumber}"]`);
+            const buttons = container.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // 設定選中的按鈕
+            const selectedButton = container.querySelector(`[data-answer="${answer}"]`);
+            selectedButton.classList.add('selected');
+            
+            // 儲存答案
+            if (!userAnswers[questionNumber]) {
+                answeredCount++;
+            }
+            userAnswers[questionNumber] = answer;
+            
+            // 更新進度
+            document.getElementById('answered-count').textContent = answeredCount;
+        }
+        
+        // 提交測驗
+        function submitQuiz() {
+            if (answeredCount < 10) {
+                alert('請作答所有題目後再提交！');
+                return;
+            }
+            
+            let correctCount = 0;
+            
+            // 檢查答案並顯示反饋
+            for (let i = 1; i <= 10; i++) {
+                const container = document.querySelector(`[data-question="${i}"]`);
+                const feedback = container.querySelector('.feedback');
+                const correctAnswer = quizAnswers[i];
+                const userAnswer = userAnswers[i];
+                const isCorrect = userAnswer === correctAnswer;
+                
+                if (isCorrect) correctCount++;
+                
+                // 更新按鈕樣式
+                const buttons = container.querySelectorAll('.answer-btn');
+                buttons.forEach(btn => {
+                    btn.classList.remove('selected');
+                    const btnAnswer = btn.getAttribute('data-answer');
+                    
+                    // 對於是非題，需要將字串轉為布爾值進行比較
+                    let btnAnswerValue = btnAnswer;
+                    let correctAnswerValue = correctAnswer;
+                    if (i <= 5) { // 是非題 (1-5題)
+                        btnAnswerValue = btnAnswer === 'true';
+                        correctAnswerValue = correctAnswer;
+                    }
+                    
+                    if (i <= 5) { // 是非題：只有用戶選擇的按鈕改變顏色
+                        if (btnAnswerValue == userAnswer) {
+                            btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+                        }
+                    } else { // 選擇題：正確答案綠色，用戶錯誤選擇紅色
+                        if (btnAnswerValue == correctAnswerValue) {
+                            btn.classList.add('correct');
+                        } else if (btnAnswer == userAnswer && !isCorrect) {
+                            btn.classList.add('incorrect');
+                        }
+                    }
+                    
+                    // 禁用按鈕
+                    btn.disabled = true;
+                    btn.style.cursor = 'not-allowed';
+                });
+                
+                // 顯示反饋
+                feedback.style.display = 'block';
+                feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+                
+                // 增加答案對比顯示
+                let feedbackHtml = '';
+                if (i <= 5) { // 是非題（1-5題）
+                    feedbackHtml += `<div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 5px;">`;
+                    feedbackHtml += `<strong>👆 你的答案：</strong> ${userAnswer ? '✅ 正確' : '❌ 錯誤'} `;
+                    feedbackHtml += isCorrect ? 
+                        `<span style="color: #4CAF50; font-weight: bold;">答對了！</span>` : 
+                        `<span style="color: #f44336; font-weight: bold;">答錯了！</span>`;
+                    
+                    if (!isCorrect) {
+                        feedbackHtml += `<br><strong>✅ 正確答案是：</strong> ${correctAnswer ? '✅ 正確' : '❌ 錯誤'}`;
+                    }
+                    feedbackHtml += `</div>`;
+                } else { // 選擇題（6-10題）
+                    const optionLabels = ['A', 'B', 'C', 'D'];
+                    const userOptionIndex = optionLabels.indexOf(userAnswer.toUpperCase());
+                    const correctOptionIndex = optionLabels.indexOf(correctAnswer.toUpperCase());
+                    
+                    feedbackHtml += `<div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 5px;">`;
+                    feedbackHtml += `<strong>👆 你的答案：</strong> ${userAnswer.toUpperCase()} `;
+                    feedbackHtml += isCorrect ? 
+                        `<span style="color: #4CAF50; font-weight: bold;">✅ 正確</span>` : 
+                        `<span style="color: #f44336; font-weight: bold;">❌ 錯誤</span>`;
+                    
+                    if (!isCorrect) {
+                        feedbackHtml += `<br><strong>✅ 正確答案：</strong> ${correctAnswer.toUpperCase()}`;
+                    }
+                    feedbackHtml += `</div>`;
+                }
+                
+                feedbackHtml += quizExplanations[i];
+                feedback.innerHTML = feedbackHtml;
+            }
+            
+            // 顯示結果
+            showResults(correctCount);
+            
+            // 隐藏提交按鈕
+            document.getElementById('submit-quiz').style.display = 'none';
+        }
+        
+        // 顯示結果
+        function showResults(correctCount) {
+            const percentage = Math.round((correctCount / 10) * 100);
+            const resultDiv = document.getElementById('quiz-results');
+            const scoreDiv = document.getElementById('final-score');
+            const messageDiv = document.getElementById('score-message');
+            const reviewBtn = document.getElementById('review-btn');
+            
+            scoreDiv.textContent = `${correctCount}/10`;
+            
+            let message, emoji;
+            if (percentage >= 90) {
+                message = '🎆 卓越！你已經完全掌握 Kinesis 核心概念！';
+                emoji = '🎆';
+            } else if (percentage >= 80) {
+                message = '😄 優秀！你對 Kinesis 有很好的理解！';
+                emoji = '😄';
+            } else if (percentage >= 70) {
+                message = '😊 良好！大部分概念都掌握了！';
+                emoji = '😊';
+            } else if (percentage >= 60) {
+                message = '😐 合格！建議再復習一下核心概念。';
+                emoji = '😐';
+            } else {
+                message = '😔 需要加油！建議重新閱讀教學內容。';
+                emoji = '😔';
+            }
+            
+            messageDiv.innerHTML = `${emoji} ${message}<br><small>得分率：${percentage}%</small>`;
+            
+            resultDiv.style.display = 'block';
+            reviewBtn.style.display = 'inline-block';
+            
+            // 滚動到結果區域
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // 重新測驗
+        function restartQuiz() {
+            // 清空答案
+            userAnswers = {};
+            answeredCount = 0;
+            
+            // 重設按鈕狀態
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('selected', 'correct', 'incorrect');
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            });
+            
+            // 隐藏反饋
+            const feedbacks = document.querySelectorAll('.feedback');
+            feedbacks.forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+            
+            // 隐藏結果、顯示提交按鈕
+            document.getElementById('quiz-results').style.display = 'none';
+            document.getElementById('submit-quiz').style.display = 'inline-block';
+            document.getElementById('answered-count').textContent = '0';
+            
+            // 滚動到頂部
+            document.getElementById('quiz-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 查看解答
+        function showAnswerReview() {
+            alert('解答已在上方每題後顯示，可以向上滚動查看詳細解釋！');
+            
+            // 滚動到第一題
+            const firstQuestion = document.querySelector('.question-container');
+            firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 初始化選擇題按鈕樣式
+        document.addEventListener('DOMContentLoaded', function() {
+            // 為選擇題設定特殊樣式
+            const multipleChoiceContainers = document.querySelectorAll('[data-type="multiple"] .answer-options');
+            multipleChoiceContainers.forEach(container => {
+                container.classList.add('multiple');
+            });
+        });
+        
     </script>
 
     <!-- 浮動導航樣式 -->
