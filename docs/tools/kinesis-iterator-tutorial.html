@@ -864,36 +864,120 @@
 </head>
 <body>
     <div class="container">
-        <h1>🌊 Kinesis Iterator 完整教學</h1>
-        <p class="subtitle">用大水缸概念理解 Stream 資料處理</p>
+        <h1>🌊 AWS Kinesis 完整教學</h1>
+        <p class="subtitle">從基礎概念到實戰應用，深入理解 Stream 資料處理</p>
 
         <!-- Tab 切換區域 -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('overview')">🔄 為什麼需要 Kinesis</button>
-            <button class="tab" onclick="switchTab('comparison')">⚖️ 完整對比分析</button>
-            <button class="tab" onclick="switchTab('concept')">📚 Kinesis 基礎概念</button>
-            <button class="tab" onclick="switchTab('iterator-guide')">🎯 Iterator 完整指南</button>
-            <button class="tab" onclick="switchTab('management')">⏱️ 管理與監控</button>
-            <button class="tab" onclick="switchTab('code')">💻 程式碼範例</button>
-            <button class="tab" onclick="switchTab('practice')">🚀 進階實務與決策</button>
+            <button class="tab active" onclick="switchTab('comparison')">📚 MQ vs Kinesis Stream 完整比較分析</button>
+            <button class="tab" onclick="switchTab('interactive-demo')">⚖️ MQ vs Kinesis Stream 互動展示</button>
+            <button class="tab" onclick="switchTab('stream')">🌊 Stream 核心概念</button>
+            <button class="tab" onclick="switchTab('iterator-demo')">🎯 Iterator 核心概念及互動展示</button>
+            <button class="tab" onclick="switchTab('summary')">🎆 總結與決策指南</button>
         </div>
 
-        <!-- Tab 內容 -->
-        <!-- 第一個Tab：為什麼需要 Kinesis -->
-        <div id="overview" class="tab-content active">
-            <h3>🔄 從傳統 MQ 到 Stream 的演進</h3>
-            
-            <div style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
-                <h4 style="color: #1976d2; margin-bottom: 15px; text-align: center;">💡 核心差異一句話</h4>
-                <div style="text-align: center; font-size: 18px; line-height: 1.8;">
-                    <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid #FF6B6B;">
-                        <strong>傳統 MQ</strong>：「任務分發器」- 任務完成就丟棄 🗑️
+        <!-- MQ vs Kinesis Stream 完整比較分析 -->
+        <div id="comparison" class="tab-content active">
+            <h3>📚 MQ vs Kinesis Stream 完整比較分析</h3>
+            <!-- 詳細功能對比表格 -->
+            <div style="margin: 30px 0;">
+                <h4 style="color: #333; margin-bottom: 20px; text-align: center;">📊 功能特性詳細對比</h4>
+                
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white;">
+                                <th style="padding: 15px; text-align: left; font-weight: bold;">特性</th>
+                                <th style="padding: 15px; text-align: center; font-weight: bold;">傳統 MQ</th>
+                                <th style="padding: 15px; text-align: center; font-weight: bold;">Kinesis Stream</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">📝 資料持久性</td>
+                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">❌ 消費後刪除</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">✅ 保留 24小時-365天</td>
+                            </tr>
+                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">👥 消費模式</td>
+                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">競爭消費 (1對1)</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">多重觀察 (1對多)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">🔁 重播能力</td>
+                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">❌ 無法重播</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">✅ 任意時間點重播</td>
+                            </tr>
+                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">📈 擴展性</td>
+                                <td style="padding: 15px; text-align: center; color: #FFC107;">⚡ 垂直擴展為主</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">🚀 水平擴展 (Sharding)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">⏱️ 處理延遲</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">⚡ 超低延遲 (毫秒級)</td>
+                                <td style="padding: 15px; text-align: center; color: #FFC107;">📊 低延遲 (秒級)</td>
+                            </tr>
+                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">💰 成本模式</td>
+                                <td style="padding: 15px; text-align: center;">按處理量計費</td>
+                                <td style="padding: 15px; text-align: center;">按 Shard 小時計費</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px; font-weight: bold;">🛡️ 容錯能力</td>
+                                <td style="padding: 15px; text-align: center; color: #FFC107;">需要額外實作</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">內建多 AZ 復寫</td>
+                            </tr>
+                            <tr style="background: #f9f9f9;">
+                                <td style="padding: 15px; font-weight: bold;">🔧 管理複雜度</td>
+                                <td style="padding: 15px; text-align: center; color: #4CAF50;">相對簡單</td>
+                                <td style="padding: 15px; text-align: center; color: #FFC107;">需要 Shard 管理</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 實際案例分析 -->
+            <div style="background: #f5f5f5; border-radius: 15px; padding: 25px; margin: 30px 0;">
+                <h4 style="color: #333; margin-bottom: 20px; text-align: center;">🏢 實際案例分析</h4>
+                
+                <div class="comparison-container">
+                    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                        <h5 style="color: #e91e63; margin-bottom: 15px;">🛒 電商平台 - 訂單處理系統</h5>
+                        <p><strong>需求</strong>：用戶下單後，需要庫存扣減、支付處理、發貨通知</p>
+                        <p><strong>選擇</strong>：<span style="color: #FF6B6B; font-weight: bold;">傳統 MQ</span></p>
+                        <p><strong>原因</strong>：</p>
+                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
+                            <li>每個訂單只需處理一次，避免重複扣款</li>
+                            <li>需要低延遲，用戶期望即時反饋</li>
+                            <li>任務性質明確，不需要歷史回放</li>
+                            <li>失敗後可以重新入隊處理</li>
+                        </ul>
                     </div>
-                    <div style="background: rgba(196, 30, 58, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--primary-color);">
-                        <strong>Kinesis Stream</strong>：「事件日誌」- 事件發生就記錄 📖
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                        <h5 style="color: #1976d2; margin-bottom: 15px;">📱 社交平台 - 用戶行為分析</h5>
+                        <p><strong>需求</strong>：追蹤用戶點擊、瀏覽、分享行為供推薦引擎和商業分析使用</p>
+                        <p><strong>選擇</strong>：<span style="color: var(--primary-color); font-weight: bold;">Kinesis Stream</span></p>
+                        <p><strong>原因</strong>：</p>
+                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
+                            <li>同一個用戶行為需要被多個系統使用</li>
+                            <li>需要保存歷史數據供離線分析</li>
+                            <li>可以重新處理歷史數據來改善推薦算法</li>
+                            <li>支持實時和批處理雙重模式</li>
+                        </ul>
                     </div>
                 </div>
             </div>
+
+        </div>
+
+        <!-- 第二個Tab：MQ vs Kinesis Stream 互動展示 -->
+        <div id="interactive-demo" class="tab-content">
+            <h3>⚖️ MQ vs Kinesis Stream 互動展示</h3>
+            
+
 
             <!-- 動畫演示區域保持不變 -->
             <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; padding: 25px; margin: 30px 0; border: 2px solid #dee2e6;">
@@ -984,32 +1068,11 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 簡化的使用場景 -->
-            <div class="info-cards">
-                <div class="card">
-                    <h3><span class="card-icon">📦</span>MQ 適合場景</h3>
-                    <p>
-                        • 訂單處理系統<br>
-                        • 郵件發送任務<br>
-                        • 微服務通訊<br>
-                        • 即時通知推送
-                    </p>
-                </div>
-                <div class="card">
-                    <h3><span class="card-icon">🌊</span>Kinesis 適合場景</h3>
-                    <p>
-                        • 用戶行為分析<br>
-                        • 交易記錄存檔<br>
-                        • 系統監控日誌<br>
-                        • 機器學習訓練
-                    </p>
-                </div>
-            </div>
         </div>
 
-        <div id="concept" class="tab-content">
-            <h3>📚 Kinesis Stream 基礎概念</h3>
+        <!-- 第三個Tab：Stream 核心概念 -->
+        <div id="stream" class="tab-content">
+            <h3>🌊 Stream 核心概念</h3>
             
             <!-- 水缸概念說明 -->
             <div style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
@@ -1166,8 +1229,54 @@
             </div>
         </div>
 
-        <div id="iterator-guide" class="tab-content">
-            <h3>🎯 Iterator 完整指南</h3>
+        <div id="iterator-demo" class="tab-content">
+            <h3>🎯 Iterator 機制詳解</h3>
+            
+            <!-- 合併 Iterator 簡介與類型詳解 -->
+            <div style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
+                <h4 style="color: var(--primary-color); margin-bottom: 20px;">🔍 Iterator 是什麼？</h4>
+                <p style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
+                    Iterator 是讀取 Kinesis Stream 資料的<strong>「書籤」</strong>，它記錄你當前讀到哪裡，下次從哪裡繼續讀。
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 25px;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #4CAF50;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🔄</div>
+                        <h4 style="color: #4CAF50; margin-bottom: 10px;">TRIM_HORIZON</h4>
+                        <p style="font-size: 14px; line-height: 1.6; color: #666;">
+                            <strong>從最古老資料開始讀</strong><br>
+                            適用：日誌分析、數據移轉、全量處理
+                        </p>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #2196F3;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
+                        <h4 style="color: #2196F3; margin-bottom: 10px;">LATEST</h4>
+                        <p style="font-size: 14px; line-height: 1.6; color: #666;">
+                            <strong>從最新資料開始讀</strong><br>
+                            適用：即時監控、即時告警、即時分析
+                        </p>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #FF9800;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">⏰</div>
+                        <h4 style="color: #FF9800; margin-bottom: 10px;">AT_TIMESTAMP</h4>
+                        <p style="font-size: 14px; line-height: 1.6; color: #666;">
+                            <strong>從指定時間開始讀</strong><br>
+                            適用：故障從放、特定時間分析
+                        </p>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #9C27B0;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🔢</div>
+                        <h4 style="color: #9C27B0; margin-bottom: 10px;">AT_SEQUENCE_NUMBER</h4>
+                        <p style="font-size: 14px; line-height: 1.6; color: #666;">
+                            <strong>從指定序列號開始讀</strong><br>
+                            適用：精確重播、錯誤復原
+                        </p>
+                    </div>
+                </div>
+            </div>
             
             <!-- Kinesis Iterator 詳細演示區域（保留原動畫） -->
             <div class="water-tank-section">
@@ -1267,359 +1376,95 @@
                 </div>
             </div>
 
-            <!-- 程式碼範例 -->
-            <div class="code-example">
-                <pre><span class="code-comment">// TRIM_HORIZON - 讀取所有歷史資料</span>
-<span class="code-keyword">$iterator</span> = <span class="code-keyword">$client</span>->getShardIterator([
-    <span class="code-string">'StreamName'</span> => <span class="code-string">'my-stream'</span>,
-    <span class="code-string">'ShardId'</span> => <span class="code-string">'shardId-000000000000'</span>,
-    <span class="code-string">'ShardIteratorType'</span> => <span class="code-string">'TRIM_HORIZON'</span>
-]);
-
-<span class="code-comment">// LATEST - 只讀新資料</span>
-<span class="code-keyword">$iterator</span> = <span class="code-keyword">$client</span>->getShardIterator([
-    <span class="code-string">'StreamName'</span> => <span class="code-string">'my-stream'</span>,
-    <span class="code-string">'ShardId'</span> => <span class="code-string">'shardId-000000000000'</span>,
-    <span class="code-string">'ShardIteratorType'</span> => <span class="code-string">'LATEST'</span>
-]);
-
-<span class="code-comment">// AT_SEQUENCE_NUMBER - 從特定位置</span>
-<span class="code-keyword">$iterator</span> = <span class="code-keyword">$client</span>->getShardIterator([
-    <span class="code-string">'StreamName'</span> => <span class="code-string">'my-stream'</span>,
-    <span class="code-string">'ShardId'</span> => <span class="code-string">'shardId-000000000000'</span>,
-    <span class="code-string">'ShardIteratorType'</span> => <span class="code-string">'AT_SEQUENCE_NUMBER'</span>,
-    <span class="code-string">'StartingSequenceNumber'</span> => <span class="code-string">'49635....'</span>
-]);</pre>
-            </div>
         </div>
-
-        <div id="management" class="tab-content">
-            <h3>⏱️ Iterator 生命週期管理</h3>
-            
+        
+        <!-- 新增 Iterator 類型詳解 Tab -->
+        <div id="iterator-types" class="tab-content">
+            <h3>🔄 Iterator 類型詳解</h3>
             <div class="info-cards">
                 <div class="card">
-                    <h3><span class="card-icon">⚠️</span>有效期限制</h3>
-                    <p>
-                        <strong>AWS 生產環境：5 分鐘</strong><br>
-                        Iterator Token 在建立後 5 分鐘自動失效，這是 AWS 的硬性限制。<br><br>
-                        
-                        <strong>LocalStack 測試環境：可能更長</strong><br>
-                        LocalStack 簡化了實作，Iterator 可能保持更長時間有效。
-                    </p>
+                    <div class="card-header">
+                        <span class="icon">🔄</span>
+                        <h3>TRIM_HORIZON Iterator</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>從 Stream 中最古老的記錄開始讀取，適用於需要處理所有歷史資料的情況。</p>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <h3><span class="card-icon">💾</span>持久化策略</h3>
-                    <p>
-                        <strong>❌ 錯誤做法：</strong><br>
-                        儲存 Iterator Token 供後續使用<br><br>
-                        
-                        <strong>✅ 正確做法：</strong><br>
-                        儲存 Sequence Number，重啟後使用 AT_SEQUENCE_NUMBER 繼續
-                    </p>
+                    <div class="card-header">
+                        <span class="icon">⚡</span>
+                        <h3>LATEST Iterator</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>從 Iterator 建立時點開始，只讀取新的資料，適用於即時處理情況。</p>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <h3><span class="card-icon">🔄</span>失效情況</h3>
-                    <p>
-                        Iterator 會在以下情況失效：<br>
-                        • 超過 5 分鐘未使用<br>
-                        • 網路連接中斷<br>
-                        • Client 程式重啟<br>
-                        • Kinesis 服務端異常<br><br>
-                        失效後必須重新建立新的 Iterator
-                    </p>
+                    <div class="card-header">
+                        <span class="icon">⏰</span>
+                        <h3>AT_TIMESTAMP Iterator</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>從指定時間開始讀取，適用於從特定時間點回放數據的情況。</p>
+                    </div>
                 </div>
-            </div>
-
-            <div class="code-example">
-                <pre><span class="code-comment">// 正確的 Checkpoint 實作</span>
-<span class="code-keyword">class</span> KinesisConsumer {
-    <span class="code-keyword">private</span> <span class="code-keyword">$lastSequenceNumber</span> = <span class="code-keyword">null</span>;
-    
-    <span class="code-keyword">public function</span> consume() {
-        <span class="code-comment">// 檢查是否有儲存的進度</span>
-        <span class="code-keyword">if</span> (<span class="code-keyword">$this</span>->hasCheckpoint()) {
-            <span class="code-comment">// 從上次位置繼續</span>
-            <span class="code-keyword">$iterator</span> = <span class="code-keyword">$this</span>->getIteratorFromCheckpoint();
-        } <span class="code-keyword">else</span> {
-            <span class="code-comment">// 新的開始</span>
-            <span class="code-keyword">$iterator</span> = <span class="code-keyword">$this</span>->getLatestIterator();
-        }
-        
-        <span class="code-comment">// 讀取並處理資料</span>
-        <span class="code-keyword">$records</span> = <span class="code-keyword">$this</span>->getRecords(<span class="code-keyword">$iterator</span>);
-        <span class="code-keyword">foreach</span> (<span class="code-keyword">$records</span> <span class="code-keyword">as</span> <span class="code-keyword">$record</span>) {
-            <span class="code-keyword">$this</span>->processRecord(<span class="code-keyword">$record</span>);
-            <span class="code-comment">// 儲存進度</span>
-            <span class="code-keyword">$this</span>->saveCheckpoint(<span class="code-keyword">$record</span>['SequenceNumber']);
-        }
-    }
-}</pre>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="icon">🔢</span>
+                        <h3>AT_SEQUENCE_NUMBER Iterator</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>從指定的序列號開始讀取，適用於精確定位的情況。</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="code" class="tab-content">
-            <h3>💻 完整程式碼範例</h3>
 
-            <div class="code-example">
-                <pre><span class="code-comment">// 完整的 Kinesis Consumer 實作範例</span>
-<span class="code-keyword">&lt;?php</span>
-<span class="code-keyword">require</span> <span class="code-string">'vendor/autoload.php'</span>;
 
-<span class="code-keyword">use</span> Aws\Kinesis\KinesisClient;
-<span class="code-keyword">use</span> Aws\Exception\AwsException;
 
-<span class="code-keyword">class</span> RobustKinesisConsumer {
-    <span class="code-keyword">private</span> <span class="code-keyword">$client</span>;
-    <span class="code-keyword">private</span> <span class="code-keyword">$streamName</span>;
-    <span class="code-keyword">private</span> <span class="code-keyword">$checkpointFile</span>;
-    
-    <span class="code-keyword">public function</span> __construct(<span class="code-keyword">$config</span>) {
-        <span class="code-keyword">$this</span>->client = <span class="code-keyword">new</span> KinesisClient([
-            <span class="code-string">'region'</span> => <span class="code-keyword">$config</span>[<span class="code-string">'region'</span>],
-            <span class="code-string">'version'</span> => <span class="code-string">'latest'</span>
-        ]);
-        <span class="code-keyword">$this</span>->streamName = <span class="code-keyword">$config</span>[<span class="code-string">'stream_name'</span>];
-        <span class="code-keyword">$this</span>->checkpointFile = <span class="code-keyword">$config</span>[<span class="code-string">'checkpoint_file'</span>];
-    }
-    
-    <span class="code-comment">/**
-     * 主要消費邏輯
-     */</span>
-    <span class="code-keyword">public function</span> startConsuming() {
-        <span class="code-comment">// 取得所有 Shards</span>
-        <span class="code-keyword">$shards</span> = <span class="code-keyword">$this</span>->getShards();
         
-        <span class="code-keyword">foreach</span> (<span class="code-keyword">$shards</span> <span class="code-keyword">as</span> <span class="code-keyword">$shard</span>) {
-            <span class="code-keyword">$shardId</span> = <span class="code-keyword">$shard</span>[<span class="code-string">'ShardId'</span>];
+
+        <!-- 總結 Tab -->
+        <div id="summary" class="tab-content">
+            <h3>🎆 總結與決策指南</h3>
             
-            <span class="code-comment">// 取得或建立 Iterator</span>
-            <span class="code-keyword">$iterator</span> = <span class="code-keyword">$this</span>->getIterator(<span class="code-keyword">$shardId</span>);
-            
-            <span class="code-comment">// 持續讀取直到沒有更多資料</span>
-            <span class="code-keyword">while</span> (<span class="code-keyword">$iterator</span>) {
-                <span class="code-keyword">try</span> {
-                    <span class="code-keyword">$result</span> = <span class="code-keyword">$this</span>->client->getRecords([
-                        <span class="code-string">'ShardIterator'</span> => <span class="code-keyword">$iterator</span>,
-                        <span class="code-string">'Limit'</span> => 100
-                    ]);
-                    
-                    <span class="code-comment">// 處理記錄</span>
-                    <span class="code-keyword">foreach</span> (<span class="code-keyword">$result</span>[<span class="code-string">'Records'</span>] <span class="code-keyword">as</span> <span class="code-keyword">$record</span>) {
-                        <span class="code-keyword">$this</span>->processRecord(<span class="code-keyword">$record</span>);
-                        <span class="code-keyword">$this</span>->saveCheckpoint(
-                            <span class="code-keyword">$shardId</span>, 
-                            <span class="code-keyword">$record</span>[<span class="code-string">'SequenceNumber'</span>]
-                        );
-                    }
-                    
-                    <span class="code-comment">// 更新 Iterator</span>
-                    <span class="code-keyword">$iterator</span> = <span class="code-keyword">$result</span>[<span class="code-string">'NextShardIterator'</span>];
-                    
-                    <span class="code-comment">// 避免過度請求</span>
-                    <span class="code-keyword">if</span> (<span class="code-keyword">empty</span>(<span class="code-keyword">$result</span>[<span class="code-string">'Records'</span>])) {
-                        sleep(1);
-                    }
-                    
-                } <span class="code-keyword">catch</span> (AwsException <span class="code-keyword">$e</span>) {
-                    <span class="code-comment">// Iterator 過期，重新建立</span>
-                    <span class="code-keyword">if</span> (<span class="code-keyword">$e</span>->getAwsErrorCode() === <span class="code-string">'ExpiredIteratorException'</span>) {
-                        <span class="code-keyword">$iterator</span> = <span class="code-keyword">$this</span>->getIterator(<span class="code-keyword">$shardId</span>);
-                    } <span class="code-keyword">else</span> {
-                        <span class="code-keyword">throw</span> <span class="code-keyword">$e</span>;
-                    }
-                }
-            }
-        }
-    }
-    
-    <span class="code-comment">/**
-     * 取得 Iterator - 支援 Checkpoint 恢復
-     */</span>
-    <span class="code-keyword">private function</span> getIterator(<span class="code-keyword">$shardId</span>) {
-        <span class="code-keyword">$checkpoint</span> = <span class="code-keyword">$this</span>->loadCheckpoint(<span class="code-keyword">$shardId</span>);
-        
-        <span class="code-keyword">if</span> (<span class="code-keyword">$checkpoint</span>) {
-            <span class="code-comment">// 從 Checkpoint 恢復</span>
-            <span class="code-keyword">$params</span> = [
-                <span class="code-string">'StreamName'</span> => <span class="code-keyword">$this</span>->streamName,
-                <span class="code-string">'ShardId'</span> => <span class="code-keyword">$shardId</span>,
-                <span class="code-string">'ShardIteratorType'</span> => <span class="code-string">'AFTER_SEQUENCE_NUMBER'</span>,
-                <span class="code-string">'StartingSequenceNumber'</span> => <span class="code-keyword">$checkpoint</span>
-            ];
-        } <span class="code-keyword">else</span> {
-            <span class="code-comment">// 新的開始</span>
-            <span class="code-keyword">$params</span> = [
-                <span class="code-string">'StreamName'</span> => <span class="code-keyword">$this</span>->streamName,
-                <span class="code-string">'ShardId'</span> => <span class="code-keyword">$shardId</span>,
-                <span class="code-string">'ShardIteratorType'</span> => <span class="code-string">'LATEST'</span>
-            ];
-        }
-        
-        <span class="code-keyword">$result</span> = <span class="code-keyword">$this</span>->client->getShardIterator(<span class="code-keyword">$params</span>);
-        <span class="code-keyword">return</span> <span class="code-keyword">$result</span>[<span class="code-string">'ShardIterator'</span>];
-    }
-}</pre>
-            </div>
-        </div>
-
-        <div id="practice" class="tab-content">
-            <h3>🚀 最佳實務與建議</h3>
-
-            <div class="info-cards">
-                <div class="card">
-                    <h3><span class="card-icon">💡</span>Iterator 管理</h3>
-                    <p>
-                        1. <strong>永遠不要儲存 Iterator Token</strong><br>
-                        Iterator Token 是暫時性的，會過期<br><br>
-                        
-                        2. <strong>實作 Checkpoint 機制</strong><br>
-                        儲存 Sequence Number 以便恢復<br><br>
-                        
-                        3. <strong>處理 Iterator 過期</strong><br>
-                        捕獲 ExpiredIteratorException 並重新建立
-                    </p>
-                </div>
-                <div class="card">
-                    <h3><span class="card-icon">⚡</span>效能優化</h3>
-                    <p>
-                        1. <strong>批次讀取</strong><br>
-                        使用 Limit 參數一次讀取多筆記錄<br><br>
-                        
-                        2. <strong>避免過度請求</strong><br>
-                        當沒有新資料時，加入 sleep 避免超過 API 限制<br><br>
-                        
-                        3. <strong>並行處理</strong><br>
-                        多個 Shard 可以並行讀取提高吞吐量
-                    </p>
-                </div>
-                <div class="card">
-                    <h3><span class="card-icon">🛡️</span>錯誤處理</h3>
-                    <p>
-                        1. <strong>重試機制</strong><br>
-                        實作指數退避的重試策略<br><br>
-                        
-                        2. <strong>死信隊列</strong><br>
-                        無法處理的記錄送到另一個 Stream<br><br>
-                        
-                        3. <strong>監控與告警</strong><br>
-                        追蹤處理延遲和錯誤率
-                    </p>
-                </div>
-            </div>
-
-            <div style="background: #e8f5e9; border-radius: 10px; padding: 20px; margin: 20px 0;">
-                <h3 style="color: #2e7d32; margin-bottom: 15px;">✅ Checklist：生產環境準備</h3>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 5px 0;">☑️ 實作 Checkpoint 機制避免資料遺失</li>
-                    <li style="padding: 5px 0;">☑️ 處理 Iterator 過期的例外情況</li>
-                    <li style="padding: 5px 0;">☑️ 設定適當的 Shard 數量以支援並行</li>
-                    <li style="padding: 5px 0;">☑️ 實作重試機制處理暫時性錯誤</li>
-                    <li style="padding: 5px 0;">☑️ 監控 Iterator Age 指標</li>
-                    <li style="padding: 5px 0;">☑️ 考慮使用 KCL 或 Spark Streaming</li>
-                    <li style="padding: 5px 0;">☑️ 設定適當的資料保留期間</li>
-                    <li style="padding: 5px 0;">☑️ 實作死信隊列處理失敗記錄</li>
-                </ul>
-            </div>
-
-            <div style="background: #fff3e0; border-radius: 10px; padding: 20px; margin: 20px 0;">
-                <h3 style="color: #e65100; margin-bottom: 15px;">🚀 為什麼需要 Spark Streaming？</h3>
-                <p style="line-height: 1.8;">
-                    雖然 PHP 可以實作基本的 Kinesis Consumer，但對於生產環境的大規模資料處理，
-                    Spark Streaming 提供了關鍵優勢：
-                </p>
-                <ul style="margin-top: 15px; line-height: 1.8;">
-                    <li><strong>自動 Checkpoint：</strong>內建的進度保存和恢復機制</li>
-                    <li><strong>24/7 運行：</strong>長效執行，避免 Iterator 過期問題</li>
-                    <li><strong>分散式處理：</strong>自動擴展到多個節點並行處理</li>
-                    <li><strong>容錯機制：</strong>節點故障時自動轉移任務</li>
-                    <li><strong>狀態管理：</strong>支援複雜的聚合和視窗運算</li>
-                    <li><strong>整合生態系：</strong>輕鬆對接 S3、Redshift、ElasticSearch</li>
-                </ul>
-            </div>
-        </div>
-
-        <div id="comparison" class="tab-content">
-            <h3>⚖️ 傳統 MQ vs Kinesis Stream 完整比較分析</h3>
-            
-            <!-- 核心差異概述 -->
+            <!-- 核心概念總結 -->
             <div style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
-                <h4 style="color: #1976d2; margin-bottom: 20px; text-align: center;">🎯 核心設計理念差異</h4>
+                <h4 style="color: #1976d2; margin-bottom: 20px; text-align: center;">🎯 Kinesis vs 傳統 MQ 核心差異</h4>
                 <div class="comparison-container">
                     <div style="background: rgba(255, 107, 107, 0.1); padding: 20px; border-radius: 10px; border-left: 5px solid #FF6B6B;">
-                        <h5 style="color: #FF6B6B; margin-bottom: 10px;">📦 傳統 MQ 設計理念</h5>
+                        <h5 style="color: #FF6B6B; margin-bottom: 10px;">📦 傳統 MQ</h5>
                         <p><strong>「任務分發」模型</strong> - 訊息是要被處理的任務，處理完就可以丟棄</p>
-                        <p>🎯 <strong>目標</strong>：確保每個任務只被執行一次，避免重複處理</p>
-                        <p>📝 <strong>使用場景</strong>：訂單處理、郵件發送、文件轉換等一次性任務</p>
+                        <p>🎯 確保每個任務只被執行一次，避免重複處理</p>
+                        <p>📝 適合：訂單處理、郵件發送、文件轉換</p>
                     </div>
                     <div style="background: rgba(196, 30, 58, 0.1); padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary-color);">
-                        <h5 style="color: var(--primary-color); margin-bottom: 10px;">🌊 Kinesis Stream 設計理念</h5>
+                        <h5 style="color: var(--primary-color); margin-bottom: 10px;">🌊 Kinesis Stream</h5>
                         <p><strong>「事件日誌」模型</strong> - 記錄是發生過的事實，需要長期保存供分析</p>
-                        <p>🎯 <strong>目標</strong>：讓多個系統都能從同一份事件日誌中獲取洞察</p>
-                        <p>📝 <strong>使用場景</strong>：用戶行為分析、交易記錄、系統監控等需要歷史回放的場景</p>
+                        <p>🎯 讓多個系統都能從同一份事件日誌中獲取洞察</p>
+                        <p>📝 適合：用戶行為分析、交易記錄、系統監控</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 詳細功能對比表格 -->
-            <div style="margin: 30px 0;">
-                <h4 style="color: #333; margin-bottom: 20px; text-align: center;">📊 功能特性詳細對比</h4>
-                
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-                        <thead>
-                            <tr style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white;">
-                                <th style="padding: 15px; text-align: left; font-weight: bold;">特性</th>
-                                <th style="padding: 15px; text-align: center; font-weight: bold;">傳統 MQ</th>
-                                <th style="padding: 15px; text-align: center; font-weight: bold;">Kinesis Stream</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">📝 資料持久性</td>
-                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">❌ 消費後刪除</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">✅ 保留 24小時-365天</td>
-                            </tr>
-                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">👥 消費模式</td>
-                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">競爭消費 (1對1)</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">多重觀察 (1對多)</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">🔁 重播能力</td>
-                                <td style="padding: 15px; text-align: center; color: #FF6B6B;">❌ 無法重播</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">✅ 任意時間點重播</td>
-                            </tr>
-                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">📈 擴展性</td>
-                                <td style="padding: 15px; text-align: center; color: #FFC107;">⚡ 垂直擴展為主</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">🚀 水平擴展 (Sharding)</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">⏱️ 處理延遲</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">⚡ 超低延遲 (毫秒級)</td>
-                                <td style="padding: 15px; text-align: center; color: #FFC107;">📊 低延遲 (秒級)</td>
-                            </tr>
-                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">💰 成本模式</td>
-                                <td style="padding: 15px; text-align: center;">按處理量計費</td>
-                                <td style="padding: 15px; text-align: center;">按 Shard 小時計費</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px; font-weight: bold;">🛡️ 容錯能力</td>
-                                <td style="padding: 15px; text-align: center; color: #FFC107;">需要額外實作</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">內建多 AZ 復寫</td>
-                            </tr>
-                            <tr style="background: #f9f9f9;">
-                                <td style="padding: 15px; font-weight: bold;">🔧 管理複雜度</td>
-                                <td style="padding: 15px; text-align: center; color: #4CAF50;">相對簡單</td>
-                                <td style="padding: 15px; text-align: center; color: #FFC107;">需要 Shard 管理</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div style="background: linear-gradient(135deg, var(--primary-bg-light) 0%, var(--primary-bg-lighter) 100%); border-radius: 15px; padding: 25px; margin: 20px 0;">
+                <h4 style="color: #1976d2; margin-bottom: 15px; text-align: center;">💡 核心差異一句話</h4>
+                <div style="text-align: center; font-size: 18px; line-height: 1.8;">
+                    <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid #FF6B6B;">
+                        <strong>傳統 MQ</strong>：「任務分發器」- 任務完成就丟棄 🗑️
+                    </div>
+                    <div style="background: rgba(196, 30, 58, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--primary-color);">
+                        <strong>Kinesis Stream</strong>：「事件日誌」- 事件發生就記錄 📖
+                    </div>
                 </div>
             </div>
 
-            <!-- 使用場景建議 -->
+            <!-- 使用場景決策 -->
             <div class="info-cards">
                 <div class="card">
                     <h3><span class="card-icon">📦</span>何時選擇傳統 MQ？</h3>
@@ -1654,40 +1499,7 @@
                 </div>
             </div>
 
-            <!-- 實際案例分析 -->
-            <div style="background: #f5f5f5; border-radius: 15px; padding: 25px; margin: 30px 0;">
-                <h4 style="color: #333; margin-bottom: 20px; text-align: center;">🏢 實際案例分析</h4>
-                
-                <div class="comparison-container">
-                    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
-                        <h5 style="color: #e91e63; margin-bottom: 15px;">🛒 電商平台 - 訂單處理系統</h5>
-                        <p><strong>需求</strong>：用戶下單後，需要庫存扣減、支付處理、發貨通知</p>
-                        <p><strong>選擇</strong>：<span style="color: #FF6B6B; font-weight: bold;">傳統 MQ</span></p>
-                        <p><strong>原因</strong>：</p>
-                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
-                            <li>每個訂單只需處理一次，避免重複扣款</li>
-                            <li>需要低延遲，用戶期望即時反饋</li>
-                            <li>任務性質明確，不需要歷史回放</li>
-                            <li>失敗後可以重新入隊處理</li>
-                        </ul>
-                    </div>
-                    
-                    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
-                        <h5 style="color: #1976d2; margin-bottom: 15px;">📱 社交平台 - 用戶行為分析</h5>
-                        <p><strong>需求</strong>：追蹤用戶點擊、瀏覽、分享行為供推薦引擎和商業分析使用</p>
-                        <p><strong>選擇</strong>：<span style="color: var(--primary-color); font-weight: bold;">Kinesis Stream</span></p>
-                        <p><strong>原因</strong>：</p>
-                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
-                            <li>同一個用戶行為需要被多個系統使用</li>
-                            <li>需要保存歷史數據供離線分析</li>
-                            <li>可以重新處理歷史數據來改善推薦算法</li>
-                            <li>支持實時和批處理雙重模式</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 遷移建議 -->
+            <!-- 架構遷移建議 -->
             <div style="background: #e8f5e9; border-radius: 10px; padding: 20px; margin: 20px 0;">
                 <h3 style="color: #2e7d32; margin-bottom: 15px;">🔄 架構遷移建議</h3>
                 
@@ -2360,15 +2172,13 @@
 
         // 全域導航狀態
         let currentTabIndex = 0;
-        const tabNames = ['overview', 'comparison', 'concept', 'iterator-guide', 'management', 'code', 'practice'];
+        const tabNames = ['comparison', 'interactive-demo', 'stream', 'iterator-demo', 'summary'];
         const tabTitles = [
-            '🔄 為什麼需要 Kinesis',
-            '⚖️ 完整對比分析',
-            '📚 Kinesis 基礎概念', 
-            '🎯 Iterator 完整指南',
-            '⏱️ 管理與監控',
-            '💻 程式碼範例',
-            '🚀 進階實務與決策'
+            '📚 MQ vs Kinesis Stream 基礎概念',
+            '⚖️ MQ vs Kinesis Stream 互動展示',
+            '🌊 Stream 核心概念',
+            '🎯 Iterator 機制詳解',
+            '🎆 總結與決策指南'
         ];
         let visitedTabs = new Set();
         let isNavigationOpen = false;
