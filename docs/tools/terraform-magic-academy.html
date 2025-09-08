@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 Terraform 基礎設施魔法學院</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-FV6ZHXEWMP');
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 30%, #2d1b69 70%, #1e3a8a 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 魔法粒子背景 */
+        .magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #fbbf24, #f59e0b);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+            box-shadow: 0 0 10px #fbbf24;
+        }
+
+        @keyframes float {
+            0% { 
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { 
+                opacity: 1;
+            }
+            90% { 
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(-20px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 學院標題區域 */
+        .academy-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 0;
+            position: relative;
+        }
+
+        .academy-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #fbbf24, #f59e0b, #d97706, #92400e, #fbbf24);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: goldShimmer 4s ease infinite;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+        }
+
+        @keyframes goldShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .academy-subtitle {
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        /* 魔法師狀態 */
+        .mage-status {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            padding: 15px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(251, 191, 36, 0.1);
+        }
+
+        /* 學院大廳 */
+        .academy-hall {
+            background: rgba(15, 15, 35, 0.4);
+            border: 2px solid rgba(251, 191, 36, 0.2);
+            border-radius: 25px;
+            padding: 40px;
+            margin-bottom: 50px;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .academy-hall::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(251, 191, 36, 0.1), transparent);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hall-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hall-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fbbf24;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 魔法陣網格 */
+        .magic-circles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .magic-circle {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1));
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .magic-circle::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+            transition: all 0.6s ease;
+            transform: scale(0);
+        }
+
+        .magic-circle:hover::before {
+            transform: scale(1);
+            animation: magicPulse 1.5s ease infinite;
+        }
+
+        @keyframes magicPulse {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.1); }
+        }
+
+        .magic-circle:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(251, 191, 36, 0.3);
+            border-color: #fbbf24;
+        }
+
+        .circle-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+            text-align: center;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .circle-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fbbf24;
+            position: relative;
+            z-index: 1;
+        }
+
+        .circle-description {
+            font-size: 1rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        .magic-command {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: #fbbf24;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 魔法記憶水晶 */
+        .memory-crystal {
+            background: rgba(15, 15, 35, 0.6);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .crystal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .crystal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #a855f7;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .crystal-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .crystal-btn {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #a855f7;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .crystal-btn:hover {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: #a855f7;
+        }
+
+        .crystal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .crystal-status {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #a855f7;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            height: 250px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        /* 魔法主題滾動條 */
+        .crystal-status::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .crystal-status::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .crystal-status::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(168, 85, 247, 0.5);
+        }
+
+        .crystal-status::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #a855f7, #c084fc);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.8);
+        }
+
+        /* 魔法記憶水晶 Modal 樣式 */
+        .crystal-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .crystal-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .crystal-modal-content {
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(30, 41, 59, 0.95));
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px;
+            padding: 0;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90%;
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3);
+            animation: modalSlideIn 0.4s ease;
+            overflow: hidden;
+        }
+
+        .crystal-modal-header {
+            background: rgba(139, 92, 246, 0.1);
+            padding: 20px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .crystal-modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #a855f7;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        .crystal-modal-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .crystal-modal-status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #a855f7;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            height: 500px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* Modal 滾動條樣式 */
+        .crystal-modal-status::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .crystal-modal-status::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .crystal-modal-status::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(168, 85, 247, 0.5);
+        }
+
+        .crystal-modal-status::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #a855f7, #c084fc);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.8);
+        }
+
+        /* 程式碼區塊樣式 */
+        .code-block {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.9), rgba(30, 27, 75, 0.8));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+            animation: codeBlockAppear 0.8s ease forwards;
+        }
+
+        .code-block::before {
+            content: '💻 程式碼範例';
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .code-block .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(139, 92, 246, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+
+        .copy-button:hover {
+            background: rgba(139, 92, 246, 1);
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* 語法高亮效果 */
+        .code-block .keyword {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+
+        .code-block .string {
+            color: #10b981;
+        }
+
+        .code-block .comment {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .code-block .number {
+            color: #f59e0b;
+        }
+
+        .code-block .operator {
+            color: #ef4444;
+        }
+
+        @keyframes codeBlockAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* 終端機輸出樣式 */
+        .terminal-block {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(15, 15, 15, 0.8));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);
+            animation: codeBlockAppear 0.8s ease forwards;
+        }
+
+        .terminal-block::before {
+            content: '🖥️ 終端機輸出';
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        .terminal-block pre {
+            margin: 0;
+            color: #22c55e;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from { 
+                opacity: 0; 
+                transform: scale(0.8) translateY(-50px);
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .crystal-page {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+        }
+
+        .crystal-page.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .crystal-page-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            background: rgba(139, 92, 246, 0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            color: #a855f7;
+        }
+
+        /* 頁面切換動畫 */
+        .crystal-page.sliding-out {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        .crystal-page.sliding-in {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-30px); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-line {
+            margin: 8px 0;
+            opacity: 0;
+            animation: fadeInLine 0.8s ease forwards;
+        }
+
+        .status-line:nth-child(1) { animation-delay: 0.2s; }
+        .status-line:nth-child(2) { animation-delay: 0.4s; }
+        .status-line:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes fadeInLine {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .prompt { color: #f59e0b; }
+        .success { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+
+        /* 學習進度條 */
+        .progress-bar {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 1s ease;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .academy-title { font-size: 2.5rem; }
+            .magic-circles { grid-template-columns: 1fr; }
+            .container { padding: 15px; }
+            .academy-hall { padding: 25px; }
+        }
+
+        /* 魔法效果動畫 */
+        .casting-animation {
+            position: absolute;
+            pointer-events: none;
+            font-size: 2rem;
+            animation: castSpell 2s ease forwards;
+        }
+
+        @keyframes castSpell {
+            0% { 
+                opacity: 1; 
+                transform: scale(1) rotate(0deg);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.5) rotate(180deg);
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(2) rotate(360deg);
+            }
+        }
+
+        /* 隱藏/顯示章節 */
+        .chapter {
+            display: none;
+            animation: slideInChapter 0.5s ease forwards;
+        }
+
+        .chapter.active {
+            display: block;
+        }
+
+        @keyframes slideInChapter {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 章節導航 */
+        .chapter-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .chapter-btn {
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .chapter-btn:hover, .chapter-btn.active {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- 魔法粒子背景 -->
+    <div class="magic-particles" id="particles"></div>
+    
+    <div class="container">
+        <!-- 學院標題區域 -->
+        <div class="academy-header">
+            <h1 class="academy-title">🏰 Terraform 基礎設施魔法學院 🏰</h1>
+            <p class="academy-subtitle">掌握雲端基礎設施魔法的終極秘奧</p>
+            <div class="mage-status">
+                <span id="mageLevel">魔法師等級: 新手學徒</span> | 
+                <span id="masteredSpells">掌握法術: 0</span> | 
+                <span id="infraCount">創造基礎設施: 0</span>
+            </div>
+        </div>
+
+        <!-- 章節導航 -->
+        <div class="chapter-nav">
+            <button class="chapter-btn active" onclick="showChapter('basics')">🌟 基礎理論</button>
+            <button class="chapter-btn" onclick="showChapter('practice')">🔮 魔法練習</button>
+            <button class="chapter-btn" onclick="showChapter('advanced')">⚡ 進階奧義</button>
+            <button class="chapter-btn" onclick="showChapter('dangers')">💀 禁忌警告</button>
+        </div>
+
+        <!-- 第一章：基礎理論 -->
+        <div id="chapter-basics" class="chapter active">
+            <div class="academy-hall">
+                <div class="hall-content">
+                    <h2 class="hall-title">📚 魔法基礎理論殿</h2>
+                    <div class="magic-circles">
+                        <!-- 第一排：核心概念 -->
+                        <div class="magic-circle" onclick="learnConcept('terraform')">
+                            <div class="circle-icon">🧙‍♂️</div>
+                            <div class="circle-title">基礎設施魔法師</div>
+                            <div class="circle-description">Terraform 是一位能夠憑空創造雲端資源的強大魔法師，使用宣告式魔法語言 HCL 來描述理想的基礎設施狀態。</div>
+                            <div class="magic-command">terraform --version</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnConcept('hcl')">
+                            <div class="circle-icon">📜</div>
+                            <div class="circle-title">魔法咒語書 (HCL)</div>
+                            <div class="circle-description">HCL (HashiCorp Configuration Language) 是魔法師使用的古老語言，用來撰寫創造基礎設施的神秘咒語。</div>
+                            <div class="magic-command">resource "aws_instance" "magic_server" { ... }</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnConcept('providers')">
+                            <div class="circle-icon">🌐</div>
+                            <div class="circle-title">魔法供應商 (Providers)</div>
+                            <div class="circle-description">Providers 是連接不同雲端平台的魔法橋樑，讓魔法師能夠在 AWS、Azure、GCP 等各個次元施展魔法。</div>
+                            <div class="magic-command">provider "aws" { region = "us-west-2" }</div>
+                        </div>
+
+                        <!-- 第二排：狀態管理 -->
+                        <div class="magic-circle" onclick="learnConcept('state')">
+                            <div class="circle-icon">🔮</div>
+                            <div class="circle-title">魔法記憶水晶</div>
+                            <div class="circle-description">terraform.tfstate 是記錄所有魔法造物狀態的神聖水晶，絕對不能隨意破壞，它是魔法師的記憶核心！</div>
+                            <div class="magic-command">cat terraform.tfstate | jq</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnConcept('plan')">
+                            <div class="circle-icon">👁️</div>
+                            <div class="circle-title">魔法預視術 (Plan)</div>
+                            <div class="circle-description">terraform plan 讓魔法師能預見施法的結果，這是防止魔法失控的最重要保護咒語！</div>
+                            <div class="magic-command">terraform plan</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnConcept('lifecycle')">
+                            <div class="circle-icon">🔄</div>
+                            <div class="circle-title">魔法生命週期</div>
+                            <div class="circle-description">了解 Terraform 的工作流程：Plan → Apply → State，以及資源的創建、更新、銷毀循環。</div>
+                            <div class="magic-command">terraform init → plan → apply</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二章：魔法練習 -->
+        <div id="chapter-practice" class="chapter">
+            <div class="academy-hall">
+                <div class="hall-content">
+                    <h2 class="hall-title">⚡ 魔法練習場</h2>
+                    <div class="magic-circles">
+                        <!-- 第一排：基礎指令 -->
+                        <div class="magic-circle" onclick="practiceSpell('init')">
+                            <div class="circle-icon">🌱</div>
+                            <div class="circle-title">魔法學院入學儀式</div>
+                            <div class="circle-description">terraform init - 初始化魔法環境，下載必要的魔法模組與外掛程式。這是每個魔法專案的第一步！</div>
+                            <div class="magic-command">terraform init</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('validate')">
+                            <div class="circle-icon">🔍</div>
+                            <div class="circle-title">咒語檢驗術</div>
+                            <div class="circle-description">terraform validate - 檢查咒語語法是否正確，確保魔法陣沒有錯誤。預防勝於治療！</div>
+                            <div class="magic-command">terraform validate</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('fmt')">
+                            <div class="circle-icon">✨</div>
+                            <div class="circle-title">魔法整理術</div>
+                            <div class="circle-description">terraform fmt - 自動整理魔法咒語格式，讓程式碼保持美觀一致。整潔的魔法陣威力更強大！</div>
+                            <div class="magic-command">terraform fmt</div>
+                        </div>
+
+                        <!-- 第二排：部署指令 -->
+                        <div class="magic-circle" onclick="practiceSpell('plan')">
+                            <div class="circle-icon">👁️</div>
+                            <div class="circle-title">預視魔法</div>
+                            <div class="circle-description">terraform plan - 詳細預覽即將發生的變化，這是安全施法的黃金法則。</div>
+                            <div class="magic-command">terraform plan</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('apply')">
+                            <div class="circle-icon">🚀</div>
+                            <div class="circle-title">魔法顯現術</div>
+                            <div class="circle-description">terraform apply - 將魔法咒語化為現實，在雲端創造真實的基礎設施。力量強大，需小心使用！</div>
+                            <div class="magic-command">terraform apply</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('destroy')">
+                            <div class="circle-icon">💥</div>
+                            <div class="circle-title">魔法消散術</div>
+                            <div class="circle-description">terraform destroy - 安全地消散所有魔法造物，清理雲端資源。這是負責任魔法師的基本修養！</div>
+                            <div class="magic-command">terraform destroy</div>
+                        </div>
+
+                        <!-- 第三排：進階指令 -->
+                        <div class="magic-circle" onclick="practiceSpell('show')">
+                            <div class="circle-icon">📋</div>
+                            <div class="circle-title">魔法狀態檢視術</div>
+                            <div class="circle-description">terraform show - 顯示目前狀態檔案的詳細內容，讓魔法師清楚了解所有資源的狀況。</div>
+                            <div class="magic-command">terraform show</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('output')">
+                            <div class="circle-icon">📤</div>
+                            <div class="circle-title">魔法輸出術</div>
+                            <div class="circle-description">terraform output - 取得魔法陣的輸出值，如 IP 位址、DNS 名稱等重要資訊。</div>
+                            <div class="magic-command">terraform output</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="practiceSpell('refresh')">
+                            <div class="circle-icon">🔄</div>
+                            <div class="circle-title">魔法同步術</div>
+                            <div class="circle-description">terraform refresh - 與雲端實際狀態同步，更新魔法記憶水晶的內容。</div>
+                            <div class="magic-command">terraform refresh</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三章：進階奧義 -->
+        <div id="chapter-advanced" class="chapter">
+            <div class="academy-hall">
+                <div class="hall-content">
+                    <h2 class="hall-title">🌟 進階魔法奧義殿</h2>
+                    <div class="magic-circles">
+                        <!-- 第一排：配置管理 -->
+                        <div class="magic-circle" onclick="learnAdvanced('variables')">
+                            <div class="circle-icon">📋</div>
+                            <div class="circle-title">魔法配方書 (Variables)</div>
+                            <div class="circle-description">使用 variables.tf 和 .tfvars 檔案來管理不同環境的魔法配方。就像 Laravel 的 .env 一樣，機密配方絕不進入法典庫！</div>
+                            <div class="magic-command">variable "instance_type" { default = "t2.micro" }</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('outputs')">
+                            <div class="circle-icon">📤</div>
+                            <div class="circle-title">魔法輸出寶典 (Outputs)</div>
+                            <div class="circle-description">定義魔法陣的輸出值，讓其他魔法師能夠獲取重要的魔法造物資訊，如 IP 地址、DNS 名稱等。</div>
+                            <div class="magic-command">output "server_ip" { value = aws_instance.web.public_ip }</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('locals')">
+                            <div class="circle-icon">🧮</div>
+                            <div class="circle-title">本地魔法計算術 (Locals)</div>
+                            <div class="circle-description">使用 locals 區塊進行複雜的魔法計算和值的組合，讓魔法陣更加靈活和可維護。</div>
+                            <div class="magic-command">locals { common_tags = { Environment = var.env } }</div>
+                        </div>
+
+                        <!-- 第二排：環境管理 -->
+                        <div class="magic-circle" onclick="learnAdvanced('environments')">
+                            <div class="circle-icon">🏛️</div>
+                            <div class="circle-title">多重魔法學院 (Environments)</div>
+                            <div class="circle-description">建立開發院、測試院、正式院三大分院，每個學院都有獨立的魔法記憶水晶，互不干擾！</div>
+                            <div class="magic-command">terraform apply -var-file="prod.tfvars"</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('workspaces')">
+                            <div class="circle-icon">🔮</div>
+                            <div class="circle-title">平行次元工作空間</div>
+                            <div class="circle-description">使用 terraform workspace 在同一個魔法專案中創造多個平行次元，每個次元都有獨立的狀態！</div>
+                            <div class="magic-command">terraform workspace new production</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('remote-backend')">
+                            <div class="circle-icon">☁️</div>
+                            <div class="circle-title">雲端記憶殿堂 (Remote Backend)</div>
+                            <div class="circle-description">將魔法記憶水晶存放在雲端殿堂 (S3)，讓多位魔法師能安全協作，並防止記憶衝突！</div>
+                            <div class="magic-command">backend "s3" { bucket = "terraform-states" }</div>
+                        </div>
+
+                        <!-- 第三排：高級概念 -->
+                        <div class="magic-circle" onclick="learnAdvanced('modules')">
+                            <div class="circle-icon">📦</div>
+                            <div class="circle-title">魔法模組術 (Modules)</div>
+                            <div class="circle-description">創建可重複使用的魔法模組，讓複雜的基礎設施像積木一樣組合。模組化是高級魔法師的標誌！</div>
+                            <div class="magic-command">module "web_cluster" { source = "./modules/web" }</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('data-sources')">
+                            <div class="circle-icon">🔍</div>
+                            <div class="circle-title">魔法探測術 (Data Sources)</div>
+                            <div class="circle-description">使用 data 資源從雲端獲取現有資源的資訊，讓魔法陣能夠與既有的基礎設施協調運作。</div>
+                            <div class="magic-command">data "aws_ami" "latest" { most_recent = true }</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnAdvanced('lifecycle')">
+                            <div class="circle-icon">🔄</div>
+                            <div class="circle-title">生命週期控制術 (Lifecycle)</div>
+                            <div class="circle-description">精細控制資源的生命週期，包括防止意外刪除、優雅替換等高級魔法技巧。</div>
+                            <div class="magic-command">lifecycle { prevent_destroy = true }</div>
+                        </div>
+
+                        <!-- 第四排：最佳實踐 -->
+                        <div class="magic-circle" onclick="learnAdvanced('project-structure')">
+                            <div class="circle-icon">📂</div>
+                            <div class="circle-title">魔法書架整理術 (Project Structure)</div>
+                            <div class="circle-description">學會如何組織大型魔法專案，將咒語分類整理，讓團隊協作更加順暢。</div>
+                            <div class="magic-command">main.tf | variables.tf | outputs.tf</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第四章：禁忌警告 -->
+        <div id="chapter-dangers" class="chapter">
+            <div class="academy-hall">
+                <div class="hall-content">
+                    <h2 class="hall-title">💀 禁忌魔法警告殿</h2>
+                    <div style="background: rgba(255, 107, 107, 0.1); border: 2px solid rgba(255, 107, 107, 0.3); border-radius: 20px; padding: 30px; margin-bottom: 30px;">
+                        <h3 style="color: #ff6b6b; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            ⚠️ 魔法師守則：永恆的禁忌法則
+                        </h3>
+                        <p style="color: #ff6b6b; font-size: 1.1rem; margin-bottom: 20px;">
+                            強大的魔法伴隨著危險。以下是每個魔法師都必須遵守的鐵律，違者將面臨現實崩壞的災難！
+                        </p>
+                    </div>
+                    
+                    <div class="magic-circles">
+                        <div class="magic-circle" onclick="learnDanger('state-deletion')" style="border-color: rgba(255, 107, 107, 0.3);">
+                            <div class="circle-icon">💀</div>
+                            <div class="circle-title">記憶水晶破壞禁忌</div>
+                            <div class="circle-description">絕對禁止手動刪除 terraform.tfstate！這會讓魔法師失去對所有造物的記憶，導致魔法失控！</div>
+                            <div class="magic-command" style="border-color: rgba(255, 107, 107, 0.5);">❌ rm terraform.tfstate # 絕對禁止！</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnDanger('direct-apply')" style="border-color: rgba(255, 107, 107, 0.3);">
+                            <div class="circle-icon">⚠️</div>
+                            <div class="circle-title">盲目施法禁忌</div>
+                            <div class="circle-description">永遠不要直接使用 terraform apply！必須先用 terraform plan 預視魔法效果，確認無誤才能施展！</div>
+                            <div class="magic-command" style="border-color: rgba(255, 107, 107, 0.5);">✅ terraform plan 然後 terraform apply</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnDanger('secrets-exposure')" style="border-color: rgba(255, 107, 107, 0.3);">
+                            <div class="circle-icon">🔐</div>
+                            <div class="circle-title">機密洩漏禁忌</div>
+                            <div class="circle-description">絕對不要將密碼、金鑰等機密寫入 .tf 檔案！就像 Laravel 的 .env 一樣，機密配方要分離保存！</div>
+                            <div class="magic-command" style="border-color: rgba(255, 107, 107, 0.5);">✅ 使用 variables + .tfvars 或秘密管理服務</div>
+                        </div>
+
+                        <div class="magic-circle" onclick="learnDanger('concurrent-modification')" style="border-color: rgba(255, 107, 107, 0.3);">
+                            <div class="circle-icon">🌪️</div>
+                            <div class="circle-title">多人施法衝突禁忌</div>
+                            <div class="circle-description">多位魔法師不能同時修改同一個魔法記憶水晶！必須使用雲端記憶殿堂的鎖定機制防止衝突！</div>
+                            <div class="magic-command" style="border-color: rgba(255, 107, 107, 0.5);">✅ 使用 Remote Backend + State Locking</div>
+                        </div>
+                    </div>
+
+                    <!-- 魔法師的修練心得 -->
+                    <div style="background: rgba(251, 191, 36, 0.1); border: 2px solid rgba(251, 191, 36, 0.3); border-radius: 20px; padding: 30px; margin-top: 30px;">
+                        <h3 style="color: #fbbf24; font-size: 1.4rem; margin-bottom: 15px; text-align: center;">
+                            🧙‍♂️ 魔法師修練心得
+                        </h3>
+                        <div style="font-size: 1rem; color: #cbd5e1; line-height: 1.8;">
+                            <p style="margin-bottom: 15px;">
+                                <strong style="color: #fbbf24;">「一個好的魔法師，不是因為他創造了多少，而是因為他知道何時不該施法。」</strong>
+                            </p>
+                            <p style="margin-bottom: 15px;">
+                                就像你在對話中提到的，Terraform 的核心是「宣告式思維」：你只需要告訴它「現在是什麼」和「我想要變成什麼」，它會自己判斷如何達成目標。
+                            </p>
+                            <p style="margin-bottom: 15px;">
+                                記住：<code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #fbbf24;">terraform plan</code> 是你最好的朋友，<code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #a855f7;">terraform.tfstate</code> 是你的生命線。
+                            </p>
+                            <p style="text-align: center; font-style: italic; color: #fbbf24;">
+                                —— 基礎設施魔法學院院長の智慧
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 魔法記憶水晶 Modal -->
+        <div class="crystal-modal" id="crystalModal">
+            <div class="crystal-modal-content">
+                <div class="crystal-modal-header">
+                    <div class="crystal-modal-title">🔮 魔法記憶水晶狀態</div>
+                    <div class="crystal-modal-controls">
+                        <button class="crystal-btn" id="prevPageModalBtn" onclick="changeCrystalPage(-1)" disabled>◀ 上頁</button>
+                        <span style="color: #a855f7; font-size: 0.8rem;" id="pageModalInfo">1/1</span>
+                        <button class="crystal-btn" id="nextPageModalBtn" onclick="changeCrystalPage(1)" disabled>下頁 ▶</button>
+                        <button class="crystal-btn" onclick="clearCrystal()">🗑️ 清空</button>
+                        <button class="crystal-btn" onclick="closeCrystalModal()">✖ 關閉</button>
+                    </div>
+                </div>
+                <div class="crystal-modal-status" id="crystalModalStatus">
+                    <div class="crystal-page active" id="modal-page-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 學習進度條 -->
+        <div style="background: rgba(15, 15, 35, 0.6); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 20px; padding: 30px; margin-top: 40px; backdrop-filter: blur(20px);">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div style="text-align: center; margin-top: 10px; color: #cbd5e1;">
+                學習進度: <span id="progressText">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域狀態管理
+        let mageLevel = 0;
+        let masteredSpells = 0;
+        let infraCount = 0;
+        let currentChapter = 'basics';
+        let learnedConcepts = new Set();
+        let practicedSpells = new Set();
+
+        // 魔法記憶水晶翻頁系統
+        let crystalPages = [];
+        let currentPage = 1;
+        let autoScroll = true;
+        let currentPageLines = []; // 當前頁面正在累積的內容
+
+        // 創建魔法粒子背景
+        function createMagicParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 3) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // 初始化魔法記憶水晶分頁系統
+        function initializeCrystalPages() {
+            // 只初始化數據結構，不需要渲染到舊版區塊
+            crystalPages = [];
+            currentPageLines = [];
+            currentPage = 1;
+            updatePageInfo();
+        }
+
+        // 建立新頁面
+        function createNewPage() {
+            // 如果當前頁面有累積的內容，先保存到 crystalPages
+            if (currentPageLines.length > 0) {
+                // 如果已經有頁面且最後一頁是空的，替換它
+                if (crystalPages.length > 0 && crystalPages[crystalPages.length - 1].length === 0) {
+                    crystalPages[crystalPages.length - 1] = [...currentPageLines];
+                } else {
+                    crystalPages.push([...currentPageLines]);
+                }
+            }
+            
+            // 創建一個新的空頁面準備接收新內容
+            crystalPages.push([]);
+            
+            // 重置當前頁面內容
+            currentPageLines = [];
+            
+            // 總是跳到最新建立的頁面（對 Modal 版本很重要）
+            currentPage = crystalPages.length;
+            updatePageInfo();
+            
+            // 清空 Modal 準備顯示新內容
+            const crystal = document.getElementById('crystalModalStatus');
+            if (crystal) {
+                crystal.innerHTML = '';
+            }
+        }
+
+        // 添加魔法記憶水晶輸出（支援 Modal 版本）
+        function addCrystalLine(content, type = 'success') {
+            const formattedContent = `<span class="${type}">${content}</span>`;
+            
+            // 添加到當前累積的內容中
+            currentPageLines.push(formattedContent);
+            
+            // 同時更新 Modal 和原版本
+            renderCurrentPageContentModal();
+            
+            // 只有在觀看最新頁面時才即時更新，避免跳頁干擾
+            if (currentPage === crystalPages.length) {
+                renderCurrentPageContent();
+            }
+        }
+
+        // 添加程式碼區塊（一次性顯示，不逐行）
+        function addCodeBlock(code, isTerminal = false) {
+            // 應用語法高亮
+            const highlightedCode = highlightSyntax(code);
+            
+            const blockClass = isTerminal ? 'terminal-block' : 'code-block';
+            const copyButtonId = `copy-btn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            // 創建帶有複製按鈕的程式碼區塊（僅限非終端機區塊）
+            const copyButton = !isTerminal ? `<button class="copy-button" onclick="copyCode('${copyButtonId}', this)">複製</button>` : '';
+            const codeBlock = `<div class="${blockClass}" data-original-code="${encodeURIComponent(code)}">${copyButton}<pre>${highlightedCode}</pre></div>`;
+            
+            // 添加到當前累積的內容中
+            currentPageLines.push(codeBlock);
+            
+            // 同時更新 Modal
+            renderCurrentPageContentModal();
+            
+            // 只有在觀看最新頁面時才即時更新
+            if (currentPage === crystalPages.length) {
+                renderCurrentPageContent();
+            }
+        }
+
+        // 複製程式碼功能
+        function copyCode(buttonId, button) {
+            const codeBlock = button.parentElement;
+            const originalCode = decodeURIComponent(codeBlock.dataset.originalCode);
+            
+            // 使用 Clipboard API 複製
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(originalCode).then(() => {
+                    button.textContent = '已複製 ✓';
+                    setTimeout(() => {
+                        button.textContent = '複製';
+                    }, 2000);
+                }).catch(() => {
+                    // 降級到傳統方式
+                    fallbackCopyToClipboard(originalCode, button);
+                });
+            } else {
+                fallbackCopyToClipboard(originalCode, button);
+            }
+        }
+
+        // 降級複製方法
+        function fallbackCopyToClipboard(text, button) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                button.textContent = '已複製 ✓';
+                setTimeout(() => {
+                    button.textContent = '複製';
+                }, 2000);
+            } catch (err) {
+                console.error('無法複製程式碼:', err);
+                button.textContent = '複製失敗';
+                setTimeout(() => {
+                    button.textContent = '複製';
+                }, 2000);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // 改進的語法高亮函數
+        function highlightSyntax(code) {
+            // 先轉義 HTML 字符
+            let highlightedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // 使用臨時標記來避免重複替換
+            highlightedCode = highlightedCode
+                // Terraform 關鍵字高亮
+                .replace(/\b(resource|variable|output|data|locals|terraform|provider|module|for_each|count|depends_on|lifecycle)\b/g, '___KEYWORD_START___$1___KEYWORD_END___')
+                // 字串高亮 (注意引號)
+                .replace(/"([^"]*)"/g, '"___STRING_START___$1___STRING_END___"')
+                // 註釋高亮
+                .replace(/#(.*)$/gm, '___COMMENT_START___#$1___COMMENT_END___')
+                // 數字高亮
+                .replace(/\b\d+\.?\d*\b/g, '___NUMBER_START___$&___NUMBER_END___');
+            
+            // 最後替換成實際的 HTML 標籤
+            return highlightedCode
+                .replace(/___KEYWORD_START___/g, '<span class="keyword">')
+                .replace(/___KEYWORD_END___/g, '</span>')
+                .replace(/___STRING_START___/g, '<span class="string">')
+                .replace(/___STRING_END___/g, '</span>')
+                .replace(/___COMMENT_START___/g, '<span class="comment">')
+                .replace(/___COMMENT_END___/g, '</span>')
+                .replace(/___NUMBER_START___/g, '<span class="number">')
+                .replace(/___NUMBER_END___/g, '</span>');
+        }
+
+        // 已停用：舊版本的內容渲染函數，現在只使用 Modal 版本
+        function renderCurrentPageContent() {
+            // 不再使用，因為已改為 Modal 版本
+            return;
+        }
+
+        // 更新頁面資訊顯示
+        function updatePageInfo() {
+            const totalPages = Math.max(crystalPages.length, 1);
+            const pageInfoElement = document.getElementById('pageInfo');
+            const pageModalInfoElement = document.getElementById('pageModalInfo');
+            
+            if (pageInfoElement) {
+                pageInfoElement.textContent = `${currentPage}/${totalPages}`;
+            }
+            if (pageModalInfoElement) {
+                pageModalInfoElement.textContent = `${currentPage}/${totalPages}`;
+            }
+        }
+
+        // Modal 版本的內容渲染（不跳頁，不閃爍）
+        function renderCurrentPageContentModal() {
+            const crystal = document.getElementById('crystalModalStatus');
+            if (!crystal) return;
+            
+            // 找到現有的頁面容器
+            let pageContainer = crystal.querySelector('.crystal-page.active');
+            if (!pageContainer) {
+                // 如果沒有容器，創建一個
+                pageContainer = document.createElement('div');
+                pageContainer.className = 'crystal-page active';
+                pageContainer.id = `modal-page-${currentPage}`;
+                crystal.appendChild(pageContainer);
+            }
+            
+            // 只添加新的最後一行，不重新渲染整個內容
+            const currentLineCount = pageContainer.children.length;
+            const totalContentLines = currentPageLines.length;
+            
+            // 如果有新內容需要顯示
+            if (totalContentLines > currentLineCount) {
+                const newLine = currentPageLines[totalContentLines - 1];
+                const line = document.createElement('div');
+                line.className = 'status-line';
+                line.innerHTML = newLine;
+                line.style.animationDelay = `${currentLineCount * 0.05}s`;
+                pageContainer.appendChild(line);
+                
+                // 平滑滾動到底部
+                crystal.scrollTop = crystal.scrollHeight;
+            }
+            
+            // 更新頁面資訊
+            updatePageInfo();
+        }
+
+        // 開啟魔法記憶水晶 Modal
+        function openCrystalModal() {
+            const modal = document.getElementById('crystalModal');
+            modal.classList.add('show');
+            
+            // 防止背景滾動
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 關閉魔法記憶水晶 Modal
+        function closeCrystalModal() {
+            const modal = document.getElementById('crystalModal');
+            modal.classList.remove('show');
+            
+            // 恢復背景滾動
+            document.body.style.overflow = 'auto';
+        }
+
+        // 點擊 Modal 背景關閉
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('crystalModal');
+            if (event.target === modal) {
+                closeCrystalModal();
+            }
+        });
+
+        // ESC 鍵關閉 Modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeCrystalModal();
+            }
+        });
+
+        // 渲染當前累積的內容（不是完整頁面）
+        function renderCurrentContent() {
+            const crystal = document.getElementById('crystalStatus');
+            const pageIndicator = document.getElementById('pageIndicator');
+            const pageInfo = document.getElementById('pageInfo');
+            
+            // 清空當前內容
+            crystal.innerHTML = '';
+            
+            // 創建頁面容器
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'crystal-page active';
+            pageContainer.id = `page-current`;
+            
+            // 顯示最新完成的頁面內容
+            let contentToShow = [];
+            if (currentPage <= crystalPages.length) {
+                contentToShow = crystalPages[currentPage - 1] || [];
+            }
+            
+            // 如果在最新頁面，也顯示當前累積的內容
+            if (currentPage === crystalPages.length) {
+                contentToShow = [...contentToShow, ...currentPageLines];
+            }
+            
+            // 添加內容行
+            contentToShow.forEach((content, index) => {
+                const line = document.createElement('div');
+                line.className = 'status-line';
+                line.innerHTML = content;
+                line.style.animationDelay = `${index * 0.1}s`;
+                pageContainer.appendChild(line);
+            });
+            
+            crystal.appendChild(pageContainer);
+            
+            // 重新創建頁面指示器
+            const indicator = document.createElement('div');
+            indicator.className = 'crystal-page-indicator';
+            indicator.id = 'pageIndicator';
+            const totalPages = Math.max(crystalPages.length, 1);
+            indicator.textContent = `${currentPage}/${totalPages}`;
+            crystal.appendChild(indicator);
+            
+            // 更新頂部頁面資訊
+            pageInfo.textContent = `${currentPage}/${totalPages}`;
+            updatePageControls();
+        }
+
+        // 渲染指定頁面（用於翻頁）
+        // 已停用：舊版本的渲染函數，現在使用 Modal 版本
+        function renderCrystalPage() {
+            // 不再使用，因為已改為 Modal 版本
+            return;
+            
+            if (crystalPages.length === 0 || currentPage < 1) {
+                return;
+            }
+            
+            // 創建頁面容器
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'crystal-page active';
+            pageContainer.id = `page-${currentPage}`;
+            
+            // 取得當前頁面內容
+            let contentToShow = crystalPages[currentPage - 1] || [];
+            
+            // 如果在最新頁面且有累積內容，也顯示累積內容
+            if (currentPage === crystalPages.length && currentPageLines.length > 0) {
+                contentToShow = [...contentToShow, ...currentPageLines];
+            }
+            
+            // 添加內容行
+            contentToShow.forEach((content, index) => {
+                const line = document.createElement('div');
+                line.className = 'status-line';
+                line.innerHTML = content;
+                line.style.animationDelay = `${index * 0.1}s`;
+                pageContainer.appendChild(line);
+            });
+            
+            crystal.appendChild(pageContainer);
+            
+            // 重新創建頁面指示器
+            const indicator = document.createElement('div');
+            indicator.className = 'crystal-page-indicator';
+            indicator.id = 'pageIndicator';
+            const totalPages = Math.max(crystalPages.length, 1);
+            indicator.textContent = `${currentPage}/${totalPages}`;
+            crystal.appendChild(indicator);
+            
+            // 更新頂部頁面資訊
+            pageInfo.textContent = `${currentPage}/${totalPages}`;
+            updatePageControls();
+        }
+
+        // 切換頁面（Modal 版本）
+        function changeCrystalPage(direction) {
+            const newPage = currentPage + direction;
+            
+            if (newPage < 1 || newPage > crystalPages.length) {
+                return;
+            }
+            
+            // 更新頁面
+            currentPage = newPage;
+            
+            // 渲染 Modal 中的新頁面內容
+            renderModalPage();
+            
+            // 更新頁面資訊和控制按鈕
+            updatePageInfo();
+            updatePageControls();
+        }
+
+        // 渲染 Modal 中的指定頁面
+        function renderModalPage() {
+            const crystal = document.getElementById('crystalModalStatus');
+            if (!crystal) return;
+            
+            // 清空當前內容
+            crystal.innerHTML = '';
+            
+            // 創建頁面容器
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'crystal-page active';
+            pageContainer.id = `modal-page-${currentPage}`;
+            
+            // 取得要顯示的頁面內容
+            let contentToShow = [];
+            if (currentPage <= crystalPages.length && crystalPages[currentPage - 1]) {
+                contentToShow = crystalPages[currentPage - 1];
+            }
+            
+            // 如果是最新頁面且有累積內容，也顯示累積內容
+            if (currentPage === crystalPages.length && currentPageLines.length > 0) {
+                contentToShow = [...contentToShow, ...currentPageLines];
+            }
+            
+            // 添加內容行
+            contentToShow.forEach((content, index) => {
+                const line = document.createElement('div');
+                line.className = 'status-line';
+                line.innerHTML = content;
+                line.style.animationDelay = `${index * 0.05}s`;
+                pageContainer.appendChild(line);
+            });
+            
+            // 添加到容器
+            crystal.appendChild(pageContainer);
+            
+            // 滾動到底部
+            crystal.scrollTop = crystal.scrollHeight;
+        }
+
+        // 更新頁面控制按鈕（支援 Modal 版本）
+        function updatePageControls() {
+            // Modal 版本的按鈕
+            const prevModalBtn = document.getElementById('prevPageModalBtn');
+            const nextModalBtn = document.getElementById('nextPageModalBtn');
+            
+            const totalPages = Math.max(crystalPages.length, 1);
+            
+            if (prevModalBtn && nextModalBtn) {
+                prevModalBtn.disabled = currentPage <= 1;
+                nextModalBtn.disabled = currentPage >= totalPages;
+            }
+        }
+
+        // 清空魔法記憶水晶
+        function clearCrystal() {
+            crystalPages = [];
+            currentPageLines = [];
+            currentPage = 1;
+            initializeCrystalPages();
+            
+            // 添加清空訊息
+            setTimeout(() => {
+                addCrystalLine('🧹 魔法記憶水晶已清空，準備記錄新的魔法歷程...', 'info');
+            }, 500);
+        }
+
+        // 切換自動翻頁
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            const autoScrollText = document.getElementById('autoScrollText');
+            autoScrollText.textContent = autoScroll ? '關閉自動翻頁' : '自動翻頁';
+            
+            const status = autoScroll ? '已啟用' : '已停用';
+            addCrystalLine(`📜 自動翻頁功能${status}`, 'info');
+        }
+
+        // 創建魔法施放效果
+        function createMagicEffect(element, emoji = '✨') {
+            const rect = element.getBoundingClientRect();
+            const effect = document.createElement('div');
+            effect.className = 'casting-animation';
+            effect.textContent = emoji;
+            effect.style.left = (rect.left + rect.width / 2) + 'px';
+            effect.style.top = (rect.top + rect.height / 2) + 'px';
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 2000);
+        }
+
+        // 學習概念
+        function learnConcept(concept) {
+            // 這次學習會在 setTimeout 內建立新頁面
+            const concepts = {
+                'terraform': {
+                    name: 'Terraform 基礎設施魔法師',
+                    description: '您已理解 Terraform 的核心理念！它是一位能夠用程式碼創造雲端資源的強大魔法師。',
+                    details: [
+                        '📖 Terraform 採用「宣告式」魔法 - 您只需描述想要的最終狀態',
+                        '🌍 支援多雲平台：AWS、Azure、GCP、阿里雲等',
+                        '📝 使用 HCL 語言撰寫基礎設施程式碼',
+                        '🔄 透過 Plan → Apply 的安全流程執行變更'
+                    ],
+                    example: `# 範例：創造一個魔法伺服器（包含版本鎖定）
+terraform {
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"  # 鎖定 AWS provider 版本
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-west-2"  # 指定 AWS 區域
+}
+
+# 創建 EC2 執行個體
+resource "aws_instance" "magic_server" {
+  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI
+  instance_type = "t2.micro"              # 免費方案執行個體類型
+  
+  # 資源標籤（重要：有助於成本管理和資源識別）
+  tags = {
+    Name        = "我的第一個魔法伺服器"
+    Environment = "學習"
+    ManagedBy   = "terraform"
+  }
+}`,
+                    emoji: '🧙‍♂️'
+                },
+                'state': {
+                    name: '魔法記憶水晶 (terraform.tfstate)',
+                    description: '您已掌握狀態管理的重要性！記憶水晶是 Terraform 的靈魂，包含敏感資訊且極其重要。',
+                    details: [
+                        '🔮 記錄所有由 Terraform 管理的資源狀態和元數據',
+                        '🔐 包含敏感資訊：資源 ID、IP 位址、密碼等機密資料',
+                        '💥 意外刪除會導致 Terraform 失去對資源的控制權',
+                        '🚨 手動修改可能造成基礎設施不一致和難以預測的錯誤',
+                        '☁️ 必須存放在安全的遠端後端（S3 + DynamoDB、Terraform Cloud）',
+                        '🛡️ 團隊協作時需要狀態鎖定機制防止衝突',
+                        '🔒 絕不可提交到 Git 版本控制系統'
+                    ],
+                    example: `{
+  "version": 4,
+  "terraform_version": "1.0.0",
+  "resources": [
+    {
+      "type": "aws_instance",
+      "name": "magic_server",
+      "provider": "provider.aws",
+      "instances": [{
+        "attributes": {
+          "id": "i-1234567890abcdef0",
+          "instance_type": "t2.micro",
+          "public_ip": "3.84.123.45"
+        }
+      }]
+    }
+  ]
+}`,
+                    emoji: '🔮'
+                },
+                'hcl': {
+                    name: 'HCL 魔法語言',
+                    description: '您已學會 HCL 語言的奧秘！這是撰寫基礎設施魔法的神聖語言。',
+                    details: [
+                        '📝 HashiCorp Configuration Language - 簡潔易讀',
+                        '🎯 宣告式語法 - 描述「想要什麼」而非「如何做」',
+                        '🔗 支援變數、函數、條件判斷',
+                        '📦 可重複使用的模組化設計'
+                    ],
+                    example: `# 變數定義
+variable "server_count" {
+  description = "伺服器數量"
+  type        = number
+  default     = 2
+}
+
+# 使用變數創建多個伺服器
+resource "aws_instance" "magic_servers" {
+  count         = var.server_count
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  
+  tags = {
+    Name = "魔法伺服器-\${count.index + 1}"
+  }
+}`,
+                    emoji: '📜'
+                },
+                'plan': {
+                    name: '魔法預視術 (terraform plan)',
+                    description: '您已掌握預視魔法！能夠預見每個魔法施展的結果，這是安全施法的關鍵！',
+                    details: [
+                        '👁️ 預覽所有即將執行的變更',
+                        '➕ 顯示將要新增的資源 (+ add)',
+                        '🔄 顯示將要修改的資源 (~ modify)',
+                        '❌ 顯示將要刪除的資源 (- destroy)'
+                    ],
+                    example: `$ terraform plan
+
+Terraform will perform the following actions:
+
+  # aws_instance.magic_server will be created
+  + resource "aws_instance" "magic_server" {
+      + ami           = "ami-0c55b159cbfafe1f0"
+      + instance_type = "t2.micro"
+      + id            = (known after apply)
+      + public_ip     = (known after apply)
+      + tags          = {
+          + "Name" = "我的第一個魔法伺服器"
+        }
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.`,
+                    emoji: '👁️'
+                },
+                'providers': {
+                    name: '魔法供應商 (Providers)',
+                    description: '您已掌握 Providers 的奧義！它們是連接不同雲端次元的魔法橋樑。',
+                    details: [
+                        '🌐 連接各大雲端平台：AWS、Azure、GCP、阿里雲等',
+                        '🔌 提供特定平台的資源類型和功能',
+                        '📦 由 HashiCorp 和社群共同維護',
+                        '🔄 需要在 terraform init 時下載安裝'
+                    ],
+                    example: `# 範例：設定 AWS 魔法供應商（含版本鎖定）
+terraform {
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"  # 鎖定主要版本，允許次要版本更新
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-west-2"
+  
+  # 為所有資源設定預設標籤
+  default_tags {
+    tags = {
+      Environment = "production"
+      Project     = "magic-academy"
+      ManagedBy   = "terraform"
+    }
+  }
+}`,
+                    emoji: '🌐'
+                },
+                'lifecycle': {
+                    name: '魔法生命週期',
+                    description: '您已理解 Terraform 工作流程的完整循環！這是成為專業魔法師的基石。',
+                    details: [
+                        '🌱 Init：初始化專案並下載 providers',
+                        '👁️ Plan：預覽變更，安全第一',
+                        '🚀 Apply：執行變更，創造資源',
+                        '🔄 Update：修改配置，重複循環',
+                        '💥 Destroy：清理資源，完成週期'
+                    ],
+                    example: `# 標準魔法工作流程
+$ terraform init
+  ↓ 初始化環境
+
+$ terraform plan
+  ↓ 檢視執行計畫
+
+$ terraform apply
+  ↓ 套用變更
+
+$ terraform show
+  ↓ 檢視當前狀態
+
+$ terraform destroy
+  ↓ 清理所有資源`,
+                    emoji: '🔄'
+                }
+            };
+
+            if (learnedConcepts.has(concept)) {
+                // 即使已經學過，也要打開 Modal 並顯示警告
+                setTimeout(() => {
+                    createNewPage();
+                    openCrystalModal();
+                    addCrystalLine(`⚠️ 您已經掌握了${concepts[concept].name}的奥義！`, 'warning');
+                    addCrystalLine(`💡 您可以嘗試其他魔法陣來學習新的知識！`, 'info');
+                }, 300);
+                return;
+            }
+
+            const conceptInfo = concepts[concept];
+            learnedConcepts.add(concept);
+            createMagicEffect(event.currentTarget, conceptInfo.emoji);
+            
+            // 開啟魔法記憶水晶 Modal
+            setTimeout(() => {
+                createNewPage();
+                openCrystalModal();
+                addCrystalLine(`✨ 開始學習：${conceptInfo.name}`, 'info');
+                
+                let delay = 800;
+                
+                // 顯示學習細節
+                conceptInfo.details.forEach((detail, index) => {
+                    setTimeout(() => {
+                        addCrystalLine(detail, 'info');
+                    }, delay + (index * 600));
+                });
+                
+                // 顯示程式碼範例（使用格式化區塊）
+                if (conceptInfo.example) {
+                    setTimeout(() => {
+                        // 一次性顯示整個程式碼區塊
+                        addCodeBlock(conceptInfo.example, false);
+                    }, delay + (conceptInfo.details.length * 600) + 800);
+                }
+                
+                // 最後的學習完成訊息
+                const finalDelay = delay + (conceptInfo.details.length * 600) + 
+                                  (conceptInfo.example ? 1200 : 800);
+                
+                setTimeout(() => {
+                    addCrystalLine(`🎓 ${conceptInfo.description}`, 'success');
+                    addCrystalLine(`🌟 魔法師等級提升！掌握了重要的基礎設施魔法知識！`, 'success');
+                    masteredSpells++;
+                    updateStats();
+                }, finalDelay);
+            }, 300);
+        }
+
+        // 學習進階奧義
+        function learnAdvanced(concept) {
+            // 建立新頁面來記錄這次的進階學習
+            createNewPage();
+            const advanced = {
+                'variables': {
+                    name: '魔法配方書 (Variables)',
+                    description: '您已掌握變數管理的奧義！安全的變數管理是防止機密洩漏的關鍵！',
+                    commands: [
+                        '# variables.tf - 定義變數（永遠不包含實際值）',
+                        'variable "instance_type" {',
+                        '  description = "EC2 執行個體類型"',
+                        '  type        = string',
+                        '  default     = "t2.micro"',
+                        '  validation {',
+                        '    condition = contains(["t2.micro", "t2.small", "t3.micro"], var.instance_type)',
+                        '    error_message = "只允許使用指定的執行個體類型。"',
+                        '  }',
+                        '}',
+                        '',
+                        '# 敏感變數定義',
+                        'variable "database_password" {',
+                        '  description = "資料庫管理員密碼"',
+                        '  type        = string',
+                        '  sensitive   = true  # 重要：標記為敏感資訊',
+                        '}',
+                        '',
+                        '# terraform.tfvars - 機密配方（加入 .gitignore！）',
+                        'instance_type = "t3.small"',
+                        'database_password = "super-secret-password"',
+                        '',
+                        '# .gitignore',
+                        '*.tfvars',
+                        '*.tfvars.json',
+                        '.terraform/',
+                        'terraform.tfstate*'
+                    ],
+                    emoji: '📋'
+                },
+                'environments': {
+                    name: '多重魔法學院 (Environments)', 
+                    description: '您已理解環境分離的智慧！開發院、測試院、正式院各司其職！',
+                    commands: [
+                        'terraform apply -var-file="dev.tfvars"',
+                        'terraform apply -var-file="prod.tfvars"',
+                        '每個學院都有獨立的魔法記憶水晶！'
+                    ],
+                    emoji: '🏛️'
+                },
+                'remote-backend': {
+                    name: '雲端記憶殿堂 (Remote Backend)',
+                    description: '您已學會雲端協作的奧義！安全的狀態管理是團隊協作的關鍵！',
+                    commands: [
+                        '# 安全的 S3 後端配置（含狀態鎖定）',
+                        'terraform {',
+                        '  required_version = ">= 1.0"',
+                        '',
+                        '  backend "s3" {',
+                        '    bucket         = "my-terraform-state-bucket"  # S3 儲存桶名稱',
+                        '    key            = "academy/terraform.tfstate"  # 狀態檔案路徑',
+                        '    region         = "us-west-2"                  # AWS 區域',
+                        '    encrypt        = true                         # 加密狀態檔案',
+                        '    dynamodb_table = "terraform-locks"           # DynamoDB 表格（狀態鎖定）',
+                        '  }',
+                        '',
+                        '  required_providers {',
+                        '    aws = {',
+                        '      source  = "hashicorp/aws"',
+                        '      version = "~> 5.0"',
+                        '    }',
+                        '  }',
+                        '}',
+                        '',
+                        '# 注意：S3 儲存桶和 DynamoDB 表格需要預先建立'
+                    ],
+                    emoji: '☁️'
+                },
+                'workspaces': {
+                    name: '平行次元工作空間',
+                    description: '您已掌握次元分離術！同一專案中創造多個平行宇宙！',
+                    commands: [
+                        'terraform workspace new production',
+                        'terraform workspace select development',
+                        'terraform workspace list'
+                    ],
+                    emoji: '🔮'
+                },
+                'outputs': {
+                    name: '魔法輸出寶典 (Outputs)',
+                    description: '您已學會輸出魔法的奧義！包含敏感資訊處理的重要技巧！',
+                    commands: [
+                        '# outputs.tf - 定義輸出值（含敏感資訊處理）',
+                        'output "server_ip" {',
+                        '  description = "伺服器的公開 IP 位址"',
+                        '  value       = aws_instance.web.public_ip',
+                        '}',
+                        '',
+                        'output "server_dns" {',
+                        '  description = "伺服器的 DNS 名稱"',
+                        '  value       = aws_instance.web.public_dns',
+                        '}',
+                        '',
+                        '# 敏感資訊輸出（不會顯示在控制台）',
+                        'output "database_password" {',
+                        '  description = "資料庫管理員密碼"',
+                        '  value       = random_password.db_password.result',
+                        '  sensitive   = true  # 重要：標記為敏感資訊',
+                        '}',
+                        '',
+                        '# 輸出複雜物件',
+                        'output "instance_details" {',
+                        '  description = "EC2 執行個體完整資訊"',
+                        '  value = {',
+                        '    id         = aws_instance.web.id',
+                        '    public_ip  = aws_instance.web.public_ip',
+                        '    private_ip = aws_instance.web.private_ip',
+                        '    az         = aws_instance.web.availability_zone',
+                        '  }',
+                        '}'
+                    ],
+                    emoji: '📤'
+                },
+                'locals': {
+                    name: '本地魔法計算術 (Locals)',
+                    description: '您已掌握本地值計算的智慧！讓魔法陣更加靈活和可維護！',
+                    commands: [
+                        '# locals.tf - 本地值定義',
+                        'locals {',
+                        '  common_tags = {',
+                        '    Environment = var.environment',
+                        '    Project     = "magic-academy"',
+                        '    Owner       = "terraform"',
+                        '  }',
+                        '',
+                        '  server_name = "${var.project_name}-${var.environment}-server"',
+                        '}'
+                    ],
+                    emoji: '🧮'
+                },
+                'modules': {
+                    name: '魔法模組術 (Modules)',
+                    description: '您已學會模組化魔法！創建可重複使用的魔法積木，成為真正的大魔法師！',
+                    commands: [
+                        '# 使用模組',
+                        'module "web_cluster" {',
+                        '  source = "./modules/web-cluster"',
+                        '',
+                        '  instance_count = 3',
+                        '  instance_type  = "t3.micro"',
+                        '  environment    = "production"',
+                        '}',
+                        '',
+                        '# 引用模組輸出',
+                        'output "web_ips" {',
+                        '  value = module.web_cluster.instance_ips',
+                        '}'
+                    ],
+                    emoji: '📦'
+                },
+                'data-sources': {
+                    name: '魔法探測術 (Data Sources)',
+                    description: '您已學會探測現有魔法造物的技術！與既有的基礎設施和諧共存！',
+                    commands: [
+                        '# 探測最新的 AMI',
+                        'data "aws_ami" "latest_amazon_linux" {',
+                        '  most_recent = true',
+                        '  owners      = ["amazon"]',
+                        '',
+                        '  filter {',
+                        '    name   = "name"',
+                        '    values = ["amzn2-ami-hvm-*-x86_64-gp2"]',
+                        '  }',
+                        '}',
+                        '',
+                        '# 使用探測到的資料',
+                        'resource "aws_instance" "web" {',
+                        '  ami = data.aws_ami.latest_amazon_linux.id',
+                        '}'
+                    ],
+                    emoji: '🔍'
+                },
+                'lifecycle': {
+                    name: '生命週期控制術 (Lifecycle)',
+                    description: '您已掌握精細的生命週期控制！能夠防止意外和優雅地管理資源變更！',
+                    commands: [
+                        '# 生命週期規則範例',
+                        'resource "aws_instance" "critical_server" {',
+                        '  ami           = var.ami_id',
+                        '  instance_type = var.instance_type',
+                        '',
+                        '  lifecycle {',
+                        '    # 防止意外刪除',
+                        '    prevent_destroy = true',
+                        '',
+                        '    # 忽略 AMI 變更',
+                        '    ignore_changes = [ami]',
+                        '',
+                        '    # 先創建新資源再刪除舊資源',
+                        '    create_before_destroy = true',
+                        '  }',
+                        '}'
+                    ],
+                    emoji: '🔄'
+                },
+                'project-structure': {
+                    name: '魔法書架整理術 (Project Structure)',
+                    description: '您已學會專案組織的智慧！清晰的結構是大型專案成功的基石！',
+                    commands: [
+                        '# 標準 Terraform 專案結構',
+                        'terraform-project/',
+                        '├── main.tf              # 主要資源定義',
+                        '├── variables.tf         # 輸入變數定義',
+                        '├── outputs.tf           # 輸出值定義',
+                        '├── versions.tf          # Provider 版本約束',
+                        '├── terraform.tfvars    # 變數值（不進 Git）',
+                        '├── .terraform.lock.hcl # Provider 鎖定檔案',
+                        '├── .gitignore           # Git 忽略規則',
+                        '├── README.md            # 專案說明文件',
+                        '├── modules/             # 自定義模組目錄',
+                        '│   └── web-server/',
+                        '│       ├── main.tf',
+                        '│       ├── variables.tf',
+                        '│       └── outputs.tf',
+                        '└── environments/        # 環境特定配置',
+                        '    ├── dev.tfvars',
+                        '    ├── staging.tfvars',
+                        '    └── prod.tfvars',
+                        '',
+                        '# .gitignore 範例',
+                        '*.tfvars',
+                        '*.tfvars.json',
+                        '.terraform/',
+                        'terraform.tfstate*',
+                        '.terraform.lock.hcl'
+                    ],
+                    emoji: '📂'
+                }
+            };
+
+            if (learnedConcepts.has(concept)) {
+                // 即使已經學過，也要打開 Modal 並顯示警告
+                setTimeout(() => {
+                    createNewPage();
+                    openCrystalModal();
+                    addCrystalLine(`⚠️ 您已經掌握了${advanced[concept].name}的奧義！`, 'warning');
+                    addCrystalLine(`🌟 您可以嘗試其他進階魔法陣來學習更多奧義！`, 'info');
+                }, 300);
+                return;
+            }
+
+            const advancedInfo = advanced[concept];
+            learnedConcepts.add(concept);
+            createMagicEffect(event.currentTarget, advancedInfo.emoji);
+            
+            // 開啟魔法記憶水晶 Modal
+            setTimeout(() => {
+                createNewPage();
+                openCrystalModal();
+                addCrystalLine(`🌟 深入學習：${advancedInfo.name}...`, 'info');
+                
+                // 將所有指令組合成一個程式碼區塊
+                const codeContent = advancedInfo.commands.join('\n');
+                
+                setTimeout(() => {
+                    // 使用程式碼區塊顯示所有指令
+                    addCodeBlock(codeContent, concept === 'environments' || concept === 'workspaces');
+                }, 800);
+
+                setTimeout(() => {
+                    addCrystalLine(`🎓 ${advancedInfo.description}`, 'success');
+                    masteredSpells++;
+                    updateStats();
+                }, 1600);
+            }, 300);
+        }
+
+        // 學習危險警告
+        function learnDanger(danger) {
+            // 建立新頁面來記錄這次的警告學習
+            createNewPage();
+            const dangers = {
+                'state-deletion': {
+                    name: '記憶水晶破壞禁忌',
+                    warning: '⚠️ 警告！手動刪除 terraform.tfstate 會導致魔法師失憶！',
+                    explanation: '如果記憶水晶被破壞，魔法師將無法知道哪些資源是自己創造的，可能導致重複創建或無法清理！',
+                    solution: '正確做法：使用 terraform destroy 安全清理所有資源',
+                    emoji: '💀'
+                },
+                'direct-apply': {
+                    name: '盲目施法禁忌',
+                    warning: '⚠️ 警告！直接使用 terraform apply 是極度危險的行為！',
+                    explanation: '不先預視就施法，可能會意外刪除重要資源或創建昂貴的服務！',
+                    solution: '正確做法：永遠先 terraform plan，確認無誤後再 apply',
+                    emoji: '⚠️'
+                },
+                'secrets-exposure': {
+                    name: '機密洩漏禁忌',
+                    warning: '⚠️ 警告！將機密寫入 .tf 檔案或狀態檔案會暴露給全世界！',
+                    explanation: '機密資訊會出現在多個地方：.tf 檔案、terraform.tfstate、終端機輸出、日誌檔案。一旦提交到 Git，就算刪除也會永遠留在歷史記錄中！',
+                    solution: '正確做法：1) 使用 sensitive = true 標記敏感變數/輸出 2) 機密存放在 .tfvars（加入 .gitignore）3) 使用 AWS Secrets Manager 或 HashiCorp Vault 4) 狀態檔案存放在加密的遠端後端',
+                    emoji: '🔐'
+                },
+                'concurrent-modification': {
+                    name: '多人施法衝突禁忌',
+                    warning: '⚠️ 警告！多人同時修改狀態會導致現實撕裂！',
+                    explanation: '如果兩個魔法師同時施展矛盾的魔法，會導致狀態衝突和資源錯亂！',
+                    solution: '正確做法：使用 Remote Backend 的 State Locking 機制',
+                    emoji: '🌪️'
+                }
+            };
+
+            const dangerInfo = dangers[danger];
+            createMagicEffect(event.currentTarget, dangerInfo.emoji);
+            
+            // 開啟魔法記憶水晶 Modal
+            setTimeout(() => {
+                createNewPage();
+                openCrystalModal();
+                addCrystalLine(`💀 危險警告：${dangerInfo.name}`, 'warning');
+                addCrystalLine(dangerInfo.warning, 'warning');
+                
+                setTimeout(() => {
+                    addCrystalLine(`📖 原因說明：${dangerInfo.explanation}`, 'info');
+                }, 1500);
+                
+                setTimeout(() => {
+                    addCrystalLine(`✅ ${dangerInfo.solution}`, 'success');
+                    addCrystalLine(`🧠 您已學會避免這個禁忌！魔法師等級 +1`, 'success');
+                    masteredSpells++;
+                    updateStats();
+                }, 3000);
+            }, 300);
+        }
+
+        // 練習法術
+        function practiceSpell(spell) {
+            // 法術練習會在 setTimeout 內建立新頁面
+            const spells = {
+                'init': {
+                    name: '魔法學院入學儀式',
+                    description: '初始化 Terraform 專案，建立魔法施展環境',
+                    commands: [
+                        '$ terraform init',
+                        '',
+                        'Initializing the backend...',
+                        '',
+                        'Initializing provider plugins...',
+                        '- Finding latest version of hashicorp/aws...',
+                        '- Installing hashicorp/aws v4.45.0...',
+                        '- Installed hashicorp/aws v4.45.0 (signed by HashiCorp)',
+                        '',
+                        'Terraform has been successfully initialized!',
+                        '',
+                        'You may now begin working with Terraform. Try running "terraform plan"',
+                        'to see any changes that are required for your infrastructure.'
+                    ],
+                    explanation: [
+                        '🌱 下載並安裝所需的 provider 外掛程式',
+                        '📁 建立 .terraform 目錄儲存外掛程式',
+                        '🔗 初始化後端狀態儲存',
+                        '✅ 驗證設定檔語法正確性'
+                    ],
+                    emoji: '🌱'
+                },
+                'apply': {
+                    name: '魔法顯現術',
+                    description: '將基礎設施程式碼轉化為真實的雲端資源',
+                    commands: [
+                        '$ terraform apply',
+                        '',
+                        'Terraform will perform the following actions:',
+                        '',
+                        '  # aws_instance.magic_server will be created',
+                        '  + resource "aws_instance" "magic_server" {',
+                        '      + ami                    = "ami-0c55b159cbfafe1f0"',
+                        '      + instance_type          = "t2.micro"',
+                        '      + id                     = (known after apply)',
+                        '      + public_ip              = (known after apply)',
+                        '    }',
+                        '',
+                        'Plan: 1 to add, 0 to change, 0 to destroy.',
+                        '',
+                        'Do you want to perform these actions? yes',
+                        '',
+                        'aws_instance.magic_server: Creating...',
+                        'aws_instance.magic_server: Still creating... [10s elapsed]',
+                        'aws_instance.magic_server: Still creating... [20s elapsed]',
+                        'aws_instance.magic_server: Creation complete after 32s [id=i-0abcd1234efgh5678]',
+                        '',
+                        'Apply complete! Resources: 1 added, 0 changed, 0 destroyed.',
+                        '',
+                        'Outputs:',
+                        'server_ip = "3.84.123.45"'
+                    ],
+                    explanation: [
+                        '✨ 在雲端創造真實的基礎設施資源',
+                        '🔍 先顯示執行計畫供確認',
+                        '⏰ 等待雲端服務商完成資源創建',
+                        '💾 更新 terraform.tfstate 記錄新狀態'
+                    ],
+                    emoji: '✨'
+                },
+                'destroy': {
+                    name: '魔法消散術',
+                    description: '安全地移除所有由 Terraform 管理的資源',
+                    commands: [
+                        '$ terraform destroy',
+                        '',
+                        'Terraform will perform the following actions:',
+                        '',
+                        '  # aws_instance.magic_server will be destroyed',
+                        '  - resource "aws_instance" "magic_server" {',
+                        '      - ami           = "ami-0c55b159cbfafe1f0"',
+                        '      - id            = "i-0abcd1234efgh5678"',
+                        '      - instance_type = "t2.micro"',
+                        '      - public_ip     = "3.84.123.45"',
+                        '    }',
+                        '',
+                        'Plan: 0 to add, 0 to change, 1 to destroy.',
+                        '',
+                        'Do you really want to destroy all resources? yes',
+                        '',
+                        'aws_instance.magic_server: Destroying... [id=i-0abcd1234efgh5678]',
+                        'aws_instance.magic_server: Still destroying... [id=i-0abcd1234efgh5678, 10s elapsed]',
+                        'aws_instance.magic_server: Destruction complete after 15s',
+                        '',
+                        'Destroy complete! Resources: 1 destroyed.'
+                    ],
+                    explanation: [
+                        '💥 完全移除所有 Terraform 管理的資源',
+                        '🛡️ 先顯示將被刪除的資源清單',
+                        '⚠️ 需要明確確認才會執行刪除',
+                        '🧹 清理雲端環境，避免產生不必要費用'
+                    ],
+                    emoji: '💥'
+                },
+                'validate': {
+                    name: '咒語檢驗術',
+                    description: '檢查 Terraform 設定檔的語法正確性',
+                    commands: [
+                        '$ terraform validate',
+                        '',
+                        'Success! The configuration is valid.'
+                    ],
+                    explanation: [
+                        '🔍 檢查 HCL 語法是否正確',
+                        '✅ 驗證變數引用和資源配置',
+                        '📝 在 apply 前先確保程式碼無誤',
+                        '⚡ 快速檢驗，不會實際接觸雲端資源'
+                    ],
+                    emoji: '🔍'
+                },
+                'fmt': {
+                    name: '魔法整理術',
+                    description: '自動整理魔法咒語格式，讓程式碼保持美觀一致',
+                    commands: [
+                        '$ terraform fmt',
+                        '',
+                        'main.tf',
+                        'variables.tf',
+                        'outputs.tf',
+                        '',
+                        '3 files formatted successfully!'
+                    ],
+                    explanation: [
+                        '✨ 自動格式化所有 .tf 檔案',
+                        '📏 統一縮排和間距風格',
+                        '🧹 移除多餘空行和空格',
+                        '👥 讓團隊程式碼風格一致'
+                    ],
+                    emoji: '✨'
+                },
+                'plan': {
+                    name: '預視魔法',
+                    description: '詳細預覽即將發生的變化，這是安全施法的黃金法則',
+                    commands: [
+                        '$ terraform plan',
+                        '',
+                        'Terraform will perform the following actions:',
+                        '',
+                        '  # aws_instance.web will be created',
+                        '  + resource "aws_instance" "web" {',
+                        '      + ami           = "ami-0c55b159cbfafe1f0"',
+                        '      + instance_type = "t2.micro"',
+                        '      + id            = (known after apply)',
+                        '    }',
+                        '',
+                        'Plan: 1 to add, 0 to change, 0 to destroy.',
+                        '',
+                        '────────────────────────────────────────',
+                        '',
+                        'Note: You didn\'t use the -out option to save this plan,',
+                        'so Terraform can\'t guarantee that exactly these actions',
+                        'will be performed if you run "terraform apply" now.'
+                    ],
+                    explanation: [
+                        '👁️ 預覽所有即將執行的變更',
+                        '➕ 顯示將要新增的資源 (+ add)',
+                        '🔄 顯示將要修改的資源 (~ modify)',
+                        '❌ 顯示將要刪除的資源 (- destroy)'
+                    ],
+                    emoji: '👁️'
+                },
+                'show': {
+                    name: '魔法狀態檢視術',
+                    description: '顯示目前狀態檔案的詳細內容，讓魔法師清楚了解所有資源的狀況',
+                    commands: [
+                        '$ terraform show',
+                        '',
+                        '# aws_instance.magic_server:',
+                        'resource "aws_instance" "magic_server" {',
+                        '    ami                    = "ami-0c55b159cbfafe1f0"',
+                        '    instance_type          = "t2.micro"',
+                        '    id                     = "i-0123456789abcdef0"',
+                        '    public_ip              = "3.84.123.45"',
+                        '    public_dns             = "ec2-3-84-123-45.compute-1.amazonaws.com"',
+                        '    private_ip             = "10.0.1.123"',
+                        '    vpc_security_group_ids = ["sg-12345678"]',
+                        '    subnet_id              = "subnet-12345678"',
+                        '    tags                   = {',
+                        '        "Environment" = "學習"',
+                        '        "Name"        = "我的第一個魔法伺服器"',
+                        '    }',
+                        '}'
+                    ],
+                    explanation: [
+                        '📋 顯示當前狀態的所有資源詳情',
+                        '🔍 包含資源 ID、屬性、標籤等資訊',
+                        '📊 幫助理解基礎設施的實際狀況',
+                        '🧭 在除錯時特別有用'
+                    ],
+                    emoji: '📋'
+                },
+                'output': {
+                    name: '魔法輸出術',
+                    description: '取得魔法陣的輸出值，如 IP 位址、DNS 名稱等重要資訊',
+                    commands: [
+                        '$ terraform output',
+                        '',
+                        'server_ip = "3.84.123.45"',
+                        'server_dns = "ec2-3-84-123-45.compute-1.amazonaws.com"',
+                        'vpc_id = "vpc-12345678"',
+                        '',
+                        '$ terraform output server_ip',
+                        '"3.84.123.45"',
+                        '',
+                        '$ terraform output -json',
+                        '{',
+                        '  "server_ip": {',
+                        '    "sensitive": false,',
+                        '    "type": "string",',
+                        '    "value": "3.84.123.45"',
+                        '  }',
+                        '}'
+                    ],
+                    explanation: [
+                        '📤 顯示所有定義的輸出值',
+                        '🎯 可指定特定輸出值查詢',
+                        '📋 支援 JSON 格式輸出',
+                        '🔗 常用於腳本和自動化流程'
+                    ],
+                    emoji: '📤'
+                },
+                'refresh': {
+                    name: '魔法同步術',
+                    description: '與雲端實際狀態同步，更新魔法記憶水晶的內容',
+                    commands: [
+                        '$ terraform refresh',
+                        '',
+                        'aws_instance.magic_server: Refreshing state... [id=i-0123456789abcdef0]',
+                        '',
+                        'Outputs:',
+                        '',
+                        'server_ip = "3.84.123.45"',
+                        'server_dns = "ec2-3-84-123-45.compute-1.amazonaws.com"',
+                        '',
+                        'Note: The -refresh-only option is available in Terraform 0.15.4',
+                        'and later to perform refresh operations more safely.'
+                    ],
+                    explanation: [
+                        '🔄 同步雲端實際狀態到本地狀態檔',
+                        '🧭 檢測外部變更（如手動修改資源）',
+                        '⚠️ 新版本建議使用 -refresh-only 選項',
+                        '🔍 在執行 plan 前確保狀態準確'
+                    ],
+                    emoji: '🔄'
+                }
+            };
+
+            if (practicedSpells.has(spell)) {
+                // 即使已經練習過，也要打開 Modal 並顯示警告
+                setTimeout(() => {
+                    createNewPage();
+                    openCrystalModal();
+                    addCrystalLine(`⚡ 您已經熟練掌握${spells[spell].name}！`, 'warning');
+                    addCrystalLine(`🎯 您可以嘗試其他魔法陣來練習新的法術。`, 'info');
+                }, 300);
+                return;
+            }
+
+            const spellInfo = spells[spell];
+            practicedSpells.add(spell);
+            createMagicEffect(event.currentTarget, spellInfo.emoji);
+            
+            // 開啟魔法記憶水晶 Modal
+            setTimeout(() => {
+                createNewPage();
+                openCrystalModal();
+                addCrystalLine(`🔮 施展魔法：${spellInfo.name}...`, 'info');
+                
+                // 延遲一下再顯示終端機輸出
+                setTimeout(() => {
+                    // 將所有命令組合成一個完整的終端機輸出
+                    const terminalOutput = spellInfo.commands.join('\n');
+                    addCodeBlock(terminalOutput, true); // 使用終端機樣式
+                    
+                    // 顯示完成訊息
+                    setTimeout(() => {
+                        addCrystalLine(`✨ 魔法施展完成！掌握了 ${spellInfo.name}`, 'success');
+                        masteredSpells++;
+                        if (spell === 'apply') infraCount++;
+                        updateStats();
+                    }, 1200);
+                }, 1000);
+            }, 300);
+        }
+
+        // 章節切換
+        function showChapter(chapterName) {
+            // 隱藏所有章節
+            document.querySelectorAll('.chapter').forEach(chapter => {
+                chapter.classList.remove('active');
+            });
+            
+            // 移除所有按鈕的active狀態
+            document.querySelectorAll('.chapter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 顯示選中的章節
+            document.getElementById(`chapter-${chapterName}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            currentChapter = chapterName;
+            addCrystalLine(`📖 切換到：${getChapterName(chapterName)}`, 'info');
+        }
+
+        function getChapterName(chapterName) {
+            const names = {
+                'basics': '基礎理論殿',
+                'practice': '魔法練習場',
+                'advanced': '進階奧義殿',
+                'dangers': '禁忌魔法警告'
+            };
+            return names[chapterName] || chapterName;
+        }
+
+        // 更新統計資訊
+        function updateStats() {
+            // 計算總進度
+            const totalConcepts = 4;
+            const totalSpells = 4;
+            const progress = Math.round(((learnedConcepts.size + practicedSpells.size) / (totalConcepts + totalSpells)) * 100);
+            
+            // 更新等級
+            if (masteredSpells >= 8) mageLevel = 4; // 大魔法師
+            else if (masteredSpells >= 6) mageLevel = 3; // 高級魔法師
+            else if (masteredSpells >= 3) mageLevel = 2; // 見習魔法師
+            else if (masteredSpells >= 1) mageLevel = 1; // 初學者
+
+            const levels = ['新手學徒', '初學者', '見習魔法師', '高級魔法師', '基礎設施大魔法師'];
+            
+            // 更新顯示
+            document.getElementById('mageLevel').textContent = `魔法師等級: ${levels[mageLevel]}`;
+            document.getElementById('masteredSpells').textContent = `掌握法術: ${masteredSpells}`;
+            document.getElementById('infraCount').textContent = `創造基礎設施: ${infraCount}`;
+            document.getElementById('progressText').textContent = `${progress}%`;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+
+            // 等級提升通知
+            if (mageLevel > 0) {
+                addCrystalLine(`🎊 恭喜！您已晉升為：${levels[mageLevel]}！`, 'success');
+            }
+        }
+
+        // 隨機魔法事件
+        function randomMagicEvent() {
+            const events = [
+                '✨ 魔法粒子在空氣中舞動...',
+                '🔮 記憶水晶發出微弱的光芒...',
+                '⚡ 感受到基礎設施魔法的力量流動...',
+                '🌟 雲端魔法陣保持穩定運行...',
+                '🧙‍♂️ 遠處傳來其他魔法師的咒語聲...'
+            ];
+            
+            if (Math.random() < 0.3) {
+                const event = events[Math.floor(Math.random() * events.length)];
+                addCrystalLine(event, 'info');
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            createMagicParticles();
+            initializeCrystalPages();
+            
+            // 歡迎訊息
+            setTimeout(() => {
+                addCrystalLine('🏰 歡迎來到 Terraform 基礎設施魔法學院！', 'success');
+                addCrystalLine('💡 提示：點擊魔法陣開始學習強大的基礎設施魔法', 'info');
+                addCrystalLine('📚 使用右上角按鈕控制記憶水晶的頁面翻閱', 'info');
+            }, 1500);
+            
+            // 定期隨機事件
+            setInterval(randomMagicEvent, 10000);
+        });
+    </script>
+
+    <!-- 版權資訊 -->
+    <div style="text-align: center; padding: 40px 20px; border-top: 2px solid rgba(251, 191, 36, 0.3); margin-top: 60px; background: rgba(15, 15, 35, 0.3);">
+        <p style="color: #cbd5e1; font-size: 1rem; margin-bottom: 10px;">
+            🏰 Terraform 基礎設施魔法學院 🏰
+        </p>
+        <p style="color: #fbbf24; font-size: 0.9rem;">
+            © 2025 Chris. All rights reserved.
+        </p>
+        <p style="color: #6b7280; font-size: 0.8rem; margin-top: 5px;">
+            「掌握雲端基礎設施魔法的終極奧義」
+        </p>
+    </div>
+</body>
+</html>
