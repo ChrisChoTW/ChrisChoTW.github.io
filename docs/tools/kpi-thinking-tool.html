@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KPI 指標分析工具</title>
+    <script src="../js/gemini-api-manager.js"></script>
     <style>
         * {
             margin: 0;
@@ -1421,13 +1422,8 @@
             const hackContent = document.getElementById('hackContent');
 
             hackButton.addEventListener('click', async () => {
-                const apiKey = document.getElementById('gemini-api-key').value.trim();
-
-                if (!apiKey) {
-                    alert('請先輸入 Google AI Studio API Key！');
-                    document.getElementById('gemini-api-key').focus();
-                    return;
-                }
+                const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
+                if (!apiKey) return;
 
                 // 切換展開/收合狀態
                 if (hackContent.classList.contains('show')) {
@@ -1562,7 +1558,11 @@ KPI 描述：${kpi.positive}
         }
 
         // DOM 載入完成後初始化
-        document.addEventListener('DOMContentLoaded', initKpiSystem);
+        document.addEventListener('DOMContentLoaded', () => {
+            initKpiSystem();
+            // 初始化 Gemini API 管理器
+            initGeminiAPIManager({ inputId: 'gemini-api-key' });
+        });
     </script>
 </body>
 </html>

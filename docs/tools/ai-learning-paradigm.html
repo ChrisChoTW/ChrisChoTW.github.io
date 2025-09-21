@@ -7,6 +7,7 @@
     <!-- 使用 Tailwind CSS 提供的優雅排版和響應式設計 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="../js/gemini-api-manager.js"></script>
     <style>
         /* 自定義 CSS 來處理翻轉卡片和動畫 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -242,12 +243,12 @@
 
             <!-- API Key Input -->
             <div class="max-w-2xl mx-auto mb-6">
-                <label for="api-key" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="gemini-api-key" class="block text-sm font-semibold text-gray-700 mb-2">
                     Google AI Studio API 金鑰
                 </label>
                 <input
                     type="password"
-                    id="api-key"
+                    id="gemini-api-key"
                     class="w-full rounded-xl p-4 border border-gray-300 focus:ring-purple-500 focus:border-purple-500 shadow-sm transition"
                     placeholder="貼上你的 API 金鑰"
                 >
@@ -468,18 +469,10 @@
 
         geminiForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const apiKey = document.getElementById('api-key').value.trim();
-            const oldFunctionText = oldFunctionInput.value.trim();
-            const apiErrorMessage = document.getElementById('api-error-message');
+            const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
+            if (!apiKey) return;
 
-            // 檢查 API 金鑰
-            if (!apiKey) {
-                apiErrorMessage.textContent = '請輸入你的 API 金鑰！';
-                apiErrorMessage.classList.remove('hidden');
-                return;
-            } else {
-                apiErrorMessage.classList.add('hidden');
-            }
+            const oldFunctionText = oldFunctionInput.value.trim();
 
             if (!oldFunctionText) {
                 showToastMessage('請輸入一個舊功能！');
@@ -635,6 +628,9 @@
                 }
             }
         }
+
+        // 初始化 Gemini API 管理器
+        initGeminiAPIManager({ inputId: 'gemini-api-key' });
     </script>
 </body>
 </html>

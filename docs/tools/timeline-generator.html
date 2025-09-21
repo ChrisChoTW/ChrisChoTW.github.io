@@ -13,6 +13,7 @@
 
       gtag('config', 'G-FV6ZHXEWMP');
     </script>
+    <script src="../js/gemini-api-manager.js"></script>
     <!-- Intro.js CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
     <style>
@@ -422,12 +423,12 @@
             
             <!-- API Key Input -->
             <div class="form-group">
-                <label for="api-key" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="gemini-api-key" class="block text-sm font-semibold text-gray-700 mb-2">
                     Google AI Studio API 金鑰
                 </label>
                 <input 
                     type="password" 
-                    id="api-key" 
+                    id="gemini-api-key" 
                     class="input-field" 
                     placeholder="貼上你的 API 金鑰"
                 >
@@ -999,19 +1000,14 @@
         // 使用 Gemini API 生成時間軸
         async function generateTimelineWithGemini() {
             // 取得 API Key 和主題
-            const apiKey = document.getElementById('api-key').value.trim();
+            const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
+            if (!apiKey) return;
             const topic = document.getElementById('aiTopic').value;
             const fineTunePrompt = document.getElementById('aiFineTunePrompt').value.trim();
             const errorMessage = document.getElementById('error-message');
 
-            // 檢查 API 金鑰和主題是否填寫
-            if (!apiKey) {
-                errorMessage.textContent = '請輸入你的 API 金鑰！';
-                errorMessage.classList.remove('hidden');
-                return;
-            } else {
-                 errorMessage.classList.add('hidden');
-            }
+            // API Key 已由 GeminiAPIManager 驗證
+            errorMessage.classList.add('hidden');
 
             if (!topic) {
                 alert('請輸入一個主題！');
@@ -1116,19 +1112,6 @@
             }
         }
 
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            generatePhaseHTML();
-            updatePreview();
-            
-            // 綁定標題變更事件
-            document.getElementById('timelineTitle').addEventListener('input', updatePreview);
-            document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
-        });
-    </script>
-    <!-- Intro.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
-    <script>
         // 初始化導覽功能
         function startGuide() {
             // 設定 intro.js
@@ -1153,6 +1136,22 @@
             // 開始導覽
             intro.start();
         }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化頁面內容
+            generatePhaseHTML();
+            updatePreview();
+
+            // 綁定標題變更事件
+            document.getElementById('timelineTitle').addEventListener('input', updatePreview);
+            document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
+
+            // 初始化 Gemini API 管理器
+            initGeminiAPIManager({ inputId: 'gemini-api-key' });
+        });
     </script>
+    <!-- Intro.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
 </body>
 </html>
