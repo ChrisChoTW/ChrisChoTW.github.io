@@ -38,6 +38,19 @@
       "tools": ["Gemini API", "Playwright MCP", "Claude Code", "JavaScript"],
       "summary": "為 KPI 指標分析工具新增 Gemini AI 整合功能，包含 API Key 管理、Modal 互動、狀態重置邏輯，並使用 Playwright 進行完整的端到端測試。",
       "file": "kpi-gemini-integration.md"
+    },
+    {
+      "id": "page-layout-shift-debugging",
+      "title": "頁面載入跳動問題：從模糊現象到精確解決方案",
+      "date": "2025-09-21",
+      "category": "CSS",
+      "tags": ["FOUC", "JavaScript載入", "Select2", "除錯技巧", "問題表達"],
+      "difficulty": "中級",
+      "duration": "45分鐘",
+      "solved": true,
+      "tools": ["Chrome DevTools", "Playwright", "CSS Transition"],
+      "summary": "解決工具集和經驗分享頁面載入時的視覺跳動問題，從模糊的「頁面有點跳」進化到精確定位 FOUC、Select2 初始化和動態載入的具體解決方案。",
+      "file": "page-layout-shift-debugging.md"
     }
   ],
   "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧", "產品開發", "AI整合"],
@@ -46,7 +59,8 @@
     "JavaScript", "React", "Vue", "Node.js",
     "架構設計", "微服務", "資料庫", "效能優化",
     "AI協作", "問題表達", "溝通技巧", "除錯方法", "需求分析", "文檔設計", "內容定位", "溝通效率",
-    "Gemini API", "Modal互動", "Playwright測試"
+    "Gemini API", "Modal互動", "Playwright測試",
+    "FOUC", "JavaScript載入", "Select2", "除錯技巧", "CSS Transition"
   ],
   "difficulties": ["初級", "中級", "高級"],
   "lastUpdated": "2025-09-21T16:00:00Z"

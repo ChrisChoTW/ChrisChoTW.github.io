@@ -136,6 +136,9 @@
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
+            min-height: 400px; /* 設定最小高度避免 layout shift */
+            opacity: 0; /* 初始化為透明，等待 JavaScript 載入 */
+            transition: opacity 0.3s ease;
         }
 
         .experience-card {

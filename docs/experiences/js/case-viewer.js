@@ -142,10 +142,16 @@ class ExperienceViewer {
                     <p style="font-size: 0.9rem;">試著調整篩選條件或搜尋關鍵字</p>
                 </div>
             `;
+            // 確保即使是空狀態也要顯示
+            container.style.opacity = '1';
             return;
         }
 
+        // 更新內容
         container.innerHTML = this.filteredCases.map(caseItem => this.createCaseCard(caseItem)).join('');
+
+        // 確保內容載入後顯示
+        container.style.opacity = '1';
     }
 
     // 創建案例卡片
