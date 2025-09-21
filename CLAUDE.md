@@ -148,7 +148,7 @@ def optimize_screenshot(input_path, output_path):
 ## AI 協作開發指南
 
 ### 問題表達參考
-專案根目錄的 `vibe-coding-issues.md` 提供完整的 AI 協作問題表達指南：
+`docs/ai-collaboration-guide.md` 提供完整的 AI 協作問題表達指南：
 - **有效 vs 無效**的問題描述模式
 - **技術問題分類模板**（CSS、JavaScript、響應式、效能）
 - **最佳實踐公式**：`[操作步驟] → [實際結果] ≠ [預期結果] + [請檢查XX]`
