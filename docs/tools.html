@@ -138,6 +138,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Theme script (before body to prevent flash) -->
+    <script src="js/theme.js"></script>
+
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- jQuery (Select2 dependency) -->
@@ -649,6 +652,16 @@
             }
         }
         
+        /* 防止頁面載入時的跳動 - 隱藏整個篩選區域 */
+        .tools-filters {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .tools-filters.loaded {
+            opacity: 1;
+        }
+
         /* Select2 Medium 風格樣式 */
         .select2-container--default .select2-selection--single {
             background-color: var(--bg-card);
@@ -831,7 +844,6 @@
             }
         }
     </style>
-    <script src="js/theme.js"></script>
 </head>
 <body>
     <div class="container">
@@ -861,7 +873,7 @@
                 </div>
             </div>
             
-            <div class="search-section">
+            <div class="search-section tools-filters">
                 <div class="search-container">
                     <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
@@ -1372,20 +1384,25 @@
                 allowClear: true,
                 width: '100%'
             });
-            
+
             $('#techFilter').select2({
                 placeholder: '選擇技術...',
                 allowClear: true,
                 width: '100%',
                 closeOnSelect: false
             });
-            
+
             $('#featureFilter').select2({
                 placeholder: '選擇特性...',
                 allowClear: true,
                 width: '100%',
                 closeOnSelect: false
             });
+
+            // 所有載入完成後顯示篩選區域
+            setTimeout(() => {
+                $('.tools-filters').addClass('loaded');
+            }, 150);
             
             // 搜尋輸入事件
             document.getElementById('searchInput').addEventListener('input', filterTools);

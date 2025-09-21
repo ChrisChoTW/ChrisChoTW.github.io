@@ -11,3 +11,6 @@ tmp/
 temp/
 
 venv/
+
+# Private data
+.private/
