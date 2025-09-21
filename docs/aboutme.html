@@ -71,7 +71,11 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
+
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
     <!-- Theme script (before body to prevent flash) -->
     <script src="js/theme.js"></script>
     
@@ -404,16 +408,16 @@
             </button>
         </div>
         
-        <div class="page-header">
+        <div class="page-header" data-aos="fade-up" data-aos-duration="800">
             <h1 class="page-title">關於我</h1>
             <p class="page-subtitle">帶領團隊的技術領導者 / 打造長期可維護的系統架構 / 推動工程文化與最佳實踐</p>
         </div>
-        
-        <div class="highlight-quote">
+
+        <div class="highlight-quote" data-aos="fade-up" data-aos-duration="800">
             <p>「真正的技術領導不僅建構系統，更培養人才；不僅解決問題，更創造可能。」</p>
         </div>
-        
-        <div class="image-container" style="width: 100%; max-width: 900px; margin: 32px auto 48px;">
+
+        <div class="image-container" style="width: 100%; max-width: 900px; margin: 32px auto 48px;" data-aos="fade-up" data-aos-duration="800">
             <div class="hero-image" style="margin: 0;">
                 <img src="images/work-environment.webp" alt="Chris Cho - 工作環境">
             </div>
@@ -423,7 +427,7 @@
             </div>
         </div>
         
-        <div class="content-section">
+        <div class="content-section" data-aos="fade-up" data-aos-duration="800">
             <h2>
                 <i class="section-icon far fa-lightbulb" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
                 技術背景
@@ -433,7 +437,7 @@
             <p>相信真正的技術領導不只是解決技術問題，而是透過<span class="highlight">系統性思維</span>與<span class="highlight">設計模式</span>建立可維護、可擴展的技術體系。在每一次重構與架構設計中，都旨在為團隊建立<span class="highlight">可複製的最佳實踐</span>。</p>
         </div>
         
-        <div class="content-section">
+        <div class="content-section" data-aos="fade-up" data-aos-duration="800">
             <h2>
                 <i class="section-icon far fa-compass" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
                 專業理念
@@ -446,7 +450,7 @@
         </div>
         
         
-        <div class="content-section">
+        <div class="content-section" data-aos="fade-up" data-aos-duration="800">
             <h2>
                 <i class="section-icon fas fa-heart" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
                 軟實力特質
@@ -471,7 +475,7 @@
             </div>
         </div>
         
-        <div class="content-section">
+        <div class="content-section" data-aos="fade-up" data-aos-duration="800">
             <h2>
                 <i class="section-icon fas fa-rocket" style="color: var(--accent-primary); font-size: 1.25rem; margin-right: 12px;"></i>
                 未來願景
@@ -491,5 +495,14 @@
         </div>
     </div>
 
+    <script>
+        // 初始化 AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    </script>
 </body>
 </html>

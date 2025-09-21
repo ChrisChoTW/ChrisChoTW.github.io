@@ -85,6 +85,10 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
     <!-- Theme script (before body to prevent flash) -->
     <script src="js/theme.js"></script>
@@ -283,14 +287,14 @@
         </div>
         
         <div class="resume-header">
-            <div class="image-container">
+            <div class="image-container" data-aos="fade-right" data-aos-duration="800" data-aos-delay="200">
                 <img src="images/resume.webp" alt="Chris Cho" class="resume-photo">
                 <div class="ai-badge">
                     AI
                     <div class="ai-tooltip">此圖片由 AI 生成，僅供視覺呈現</div>
                 </div>
             </div>
-            <div class="resume-info">
+            <div class="resume-info" data-aos="fade-left" data-aos-duration="800" data-aos-delay="400">
                 <h1>Chris Cho</h1>
                 <p class="title">資深後端工程師｜技術領導者</p>
                 <p><strong>專業領域：</strong>系統架構設計、微服務開發、技術團隊管理</p>
@@ -311,7 +315,7 @@
                 <i class="section-icon fas fa-briefcase"></i>
                 核心成就與經歷
             </h2>
-            <div class="achievement-list">
+            <div class="achievement-list" data-aos="fade-up">
                 <div class="achievement-category">
                     <h3>系統架構與重構</h3>
                     <ul>
@@ -321,7 +325,7 @@
                         <li>實作簡單工廠模式統一多家金流 API，減少重複開發工作</li>
                     </ul>
                 </div>
-                
+
                 <div class="achievement-category">
                     <h3>技術領導與團隊管理</h3>
                     <ul>
@@ -331,7 +335,7 @@
                         <li>建立技術分享機制與文檔標準，確保知識傳承與團隊成長</li>
                     </ul>
                 </div>
-                
+
                 <div class="achievement-category">
                     <h3>技術文化與流程建立</h3>
                     <ul>
@@ -418,7 +422,7 @@
                 <i class="section-icon fas fa-trophy"></i>
                 主要成就
             </h2>
-            <div class="achievement-grid">
+            <div class="achievement-grid" data-aos="fade-up">
                 <div class="achievement-item">
                     <div class="achievement-icon"><i class="fas fa-chart-line"></i></div>
                     <div class="achievement-content">
@@ -455,7 +459,7 @@
                 <i class="section-icon fas fa-code"></i>
                 核心技術能力
             </h2>
-            <div class="skills-grid">
+            <div class="skills-grid" data-aos="fade-up">
                 <div class="skill-item">
                     <h3>後端開發</h3>
                     <p>PHP/Laravel, Node.js, Python, RESTful API, 微服務架構</p>
@@ -485,5 +489,14 @@
         </div>
     </div>
 
+    <script>
+        // 初始化 AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    </script>
 </body>
 </html>

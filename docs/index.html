@@ -94,6 +94,10 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -447,14 +451,14 @@
         <div class="header">
             
             <div class="profile-section">
-                <div class="image-container">
+                <div class="image-container" data-aos="fade-right" data-aos-duration="800" data-aos-delay="200">
                     <img src="images/profile.webp" alt="Chris Cho" class="profile-photo">
                     <div class="ai-badge">
                         AI
                         <div class="ai-tooltip">此圖片由 AI 生成，僅供視覺呈現</div>
                     </div>
                 </div>
-                <div class="intro">
+                <div class="intro" data-aos="fade-left" data-aos-duration="800" data-aos-delay="400">
                     <h1>Chris Cho</h1>
                     <p>技術架構師 | 技術團隊領導者</p>
                     <p class="subtitle">專注建立可持續發展的技術體系，從系統重構到團隊文化，讓技術成為業務成長的穩固基石。擅長透過技術決策帶動團隊成長，建立高效的工程文化。</p>
@@ -474,7 +478,7 @@
                     <i class="fas fa-rocket" style="color: var(--accent-primary); margin-right: 12px;"></i>
                     核心專案成就
                 </h2>
-                <div class="project-grid">
+                <div class="project-grid" data-aos="fade-up">
                     <div class="project-item">
                         <h3>非同步報表系統設計</h3>
                         <p><strong>挑戰</strong>：大型報表生成阻塞用戶操作，影響系統整體穩定性</p>
@@ -503,7 +507,7 @@
                     <i class="fas fa-code" style="color: var(--accent-primary); margin-right: 12px;"></i>
                     技術專長領域
                 </h2>
-                <div class="tech-categories">
+                <div class="tech-categories" data-aos="fade-up">
                     <div class="tech-category">
                         <h3>後端開發</h3>
                         <div class="tech-tags">
@@ -535,7 +539,7 @@
             </div>
         </div>
         
-        <div class="cta-section">
+        <div class="cta-section" data-aos="fade-up">
             <h2>精選作品</h2>
             <p>探索我開發的專業工具集，包含財務規劃、專案管理與開發流程工具</p>
             <a href="tools.html" class="cta-button">
@@ -556,5 +560,14 @@
         </div>
     </div>
 
+    <script>
+        // 初始化 AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    </script>
 </body>
 </html>
