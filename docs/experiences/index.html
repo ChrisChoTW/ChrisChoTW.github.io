@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技術經驗分享 - Chris Cho</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Chris Cho 的技術經驗分享，記錄與 AI 協作開發過程中的問題解決經驗與表達技巧。">
+    <meta name="keywords" content="技術經驗, AI 協作, 問題解決, 程式開發, Chris Cho">
+    <meta name="author" content="Chris Cho">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://chrischottw.github.io/experiences/">
+
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/nav.css">
+    <link rel="stylesheet" href="../styles/pages.css">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Markdown 渲染庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css">
+
+    <!-- Theme script -->
+    <script src="../js/theme.js"></script>
+
+    <style>
+        /* 經驗分享頁面專用樣式 */
+        .experiences-header {
+            text-align: center;
+            margin-bottom: 60px;
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: 40px;
+        }
+
+        .experiences-header h1 {
+            font-family: 'Charter', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .experiences-header p {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* 搜尋與篩選區 */
+        .filter-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-muted);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 40px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 140px;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-muted);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .filter-tag {
+            padding: 4px 12px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tag:hover {
+            opacity: 0.8;
+        }
+
+        .filter-tag.active {
+            background: var(--text-primary);
+        }
+
+        /* 經驗卡片網格 */
+        .experiences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .experience-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-muted);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .experience-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .experience-card .category-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .experience-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            margin-right: 80px;
+            line-height: 1.3;
+        }
+
+        .experience-card .summary {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .experience-card .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .experience-card .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .experience-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .experience-card .tag {
+            padding: 3px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-muted);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal 樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            max-width: 1000px;
+            width: 90%;
+            margin: 40px auto;
+            border-radius: 12px;
+            position: relative;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 24px 24px 0 24px;
+            border-bottom: 1px solid var(--border-muted);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-family: 'Charter', Georgia, serif;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin: 0 40px 16px 0;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-body {
+            padding: 32px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .modal-body h1, .modal-body h2, .modal-body h3, .modal-body h4 {
+            color: var(--text-primary);
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .modal-body h1:first-child,
+        .modal-body h2:first-child,
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body h1 { font-size: 1.75rem; }
+        .modal-body h2 { font-size: 1.5rem; }
+        .modal-body h3 { font-size: 1.25rem; }
+
+        .modal-body p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .modal-body li {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .modal-body ul, .modal-body ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        .modal-body ul li {
+            list-style-type: disc;
+            margin-left: 0;
+        }
+
+        .modal-body ol li {
+            list-style-type: decimal;
+            margin-left: 0;
+        }
+
+        .modal-body code {
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .modal-body pre {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .modal-body pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .modal-body blockquote {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--text-accent, #3b82f6);
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        .modal-body blockquote p {
+            margin-bottom: 0;
+            color: var(--text-primary);
+        }
+
+        .modal-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .modal-body a {
+            color: var(--text-accent, #3b82f6);
+            text-decoration: none;
+        }
+
+        .modal-body a:hover {
+            text-decoration: underline;
+        }
+
+        /* 響應式 Modal 設計 */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                max-height: calc(100vh - 40px);
+            }
+
+            .modal-body {
+                padding: 20px;
+                font-size: 0.95rem;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Loading 樣式 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .experiences-header h1 {
+                font-size: 2rem;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .experiences-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .experience-card {
+                padding: 20px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                max-width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <nav class="nav-menu">
+                <a href="../index.html">首頁</a>
+                <a href="../aboutme.html">關於我</a>
+                <a href="../resume.html">履歷</a>
+                <a href="../tools.html">工具集</a>
+                <a href="index.html" class="active">經驗分享</a>
+            </nav>
+            <button class="theme-toggle" id="themeToggle" aria-label="切換主題">
+                <svg class="theme-icon light-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                </svg>
+                <svg class="theme-icon dark-icon" style="display: none;" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="experiences-header">
+            <h1>
+                <i class="fas fa-lightbulb" style="color: var(--accent-primary); margin-right: 12px;"></i>
+                技術經驗分享
+            </h1>
+            <p>記錄與 AI 協作開發過程中的問題解決經驗、有效溝通技巧與技術洞察</p>
+        </div>
+
+        <!-- 搜尋與篩選區 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="categoryFilter">問題類型</label>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">全部類型</option>
+                        <option value="CSS">CSS</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="React">React</option>
+                        <option value="架構設計">架構設計</option>
+                        <option value="協作技巧">協作技巧</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="difficultyFilter">難度等級</label>
+                    <select id="difficultyFilter" class="filter-select">
+                        <option value="">全部難度</option>
+                        <option value="初級">初級</option>
+                        <option value="中級">中級</option>
+                        <option value="高級">高級</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchInput">關鍵字搜尋</label>
+                    <input type="text" id="searchInput" class="filter-input" placeholder="搜尋標題或內容...">
+                </div>
+            </div>
+            <div class="filter-tags" id="activeTags"></div>
+        </div>
+
+        <!-- 經驗卡片網格 -->
+        <div class="experiences-grid" id="experiencesGrid">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>載入經驗案例中...</p>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal" id="caseModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">案例詳情</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>載入中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Chris Cho. 持續記錄技術成長的點點滴滴</p>
+            <div class="contact-links">
+                <a href="https://github.com/ChrisChoTW">GitHub</a>
+                <a href="https://www.linkedin.com/in/chris-cho-94ab12163/">LinkedIn</a>
+                <a href="../tools.html">工具集</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/case-viewer.js"></script>
+</body>
+</html>

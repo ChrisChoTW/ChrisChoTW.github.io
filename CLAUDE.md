@@ -85,3 +85,78 @@ docs/                    # GitHub Pages 根目錄
 - `tools.css`：工具專用樣式與互動效果
 
 字型系統：標題使用 Charter 字型，內文使用 Inter 字型，搭配系統字型備援。
+
+## 經驗分享系統
+
+### 架構說明
+經驗分享系統位於 `docs/experiences/` 目錄，採用 Markdown + JSON 索引的靜態架構：
+- `index.html`：主頁面，包含篩選、搜尋與 Modal 顯示功能
+- `data/cases-index.json`：案例索引，定義分類、難度、標籤等
+- `cases/`：Markdown 案例檔案，支援 Front Matter 元資料
+- `images/`：案例參考截圖與示意圖
+- `js/case-viewer.js`：動態載入與渲染 Markdown 內容
+
+### 截圖處理最佳實踐
+為確保快速載入與良好的使用者體驗，案例截圖必須遵循以下處理流程：
+
+#### 1. 截圖裁切原則
+- **聚焦核心問題**：裁切掉與問題無關的頁面區域
+- **移除多餘空白**：適度裁切上下邊距，保持內容緊湊
+- **保留關鍵元素**：確保問題相關的 UI 元件完整可見
+
+#### 2. 解析度優化
+- **目標寬度**：1200px（適合大部分螢幕顯示）
+- **保持比例**：等比例縮放，避免變形
+- **最大檔案**：建議不超過 200KB
+
+#### 3. 格式選擇
+- **截圖內容**：使用 JPEG 格式（品質 80-90）
+- **包含文字**：可考慮 PNG 格式保持清晰度
+- **目標大小**：50-150KB 為最佳範圍
+
+#### 4. 自動化處理腳本範例
+```python
+# 截圖優化處理流程
+from PIL import Image
+
+def optimize_screenshot(input_path, output_path):
+    with Image.open(input_path) as img:
+        # 1. 適度裁切 (依需求調整)
+        width, height = img.size
+        cropped = img.crop((0, int(height*0.05), width, int(height*0.85)))
+
+        # 2. 降低解析度
+        target_width = 1200
+        ratio = target_width / cropped.width
+        new_size = (target_width, int(cropped.height * ratio))
+        resized = cropped.resize(new_size, Image.Resampling.LANCZOS)
+
+        # 3. 儲存為 JPEG
+        resized.convert('RGB').save(output_path, 'JPEG',
+                                   quality=85, optimize=True)
+```
+
+#### 5. 案例中的圖片引用
+```markdown
+### 問題頁面截圖
+![頁面說明](images/case-screenshot.jpg)
+*圖：簡潔的圖片說明，描述截圖內容與問題關聯。*
+```
+
+此處理流程可將 4MB+ 的原始截圖優化至 50-100KB，大幅提升載入速度。
+
+## AI 協作開發指南
+
+### 問題表達參考
+專案根目錄的 `vibe-coding-issues.md` 提供完整的 AI 協作問題表達指南：
+- **有效 vs 無效**的問題描述模式
+- **技術問題分類模板**（CSS、JavaScript、響應式、效能）
+- **最佳實踐公式**：`[操作步驟] → [實際結果] ≠ [預期結果] + [請檢查XX]`
+
+### 協作原則
+1. **具體描述視覺現象**：避免「壞掉」、「有問題」等籠統說法
+2. **提供技術檢查方向**：指明用什麼工具檢查什麼屬性
+3. **考慮框架衝突**：現代開發常遇到 CSS 權重、依賴衝突等問題
+4. **分步驟驗證**：複雜問題拆解成可驗證的小步驟
+
+這套方法論已在經驗分享系統的案例中得到驗證，可大幅提升問題解決效率。

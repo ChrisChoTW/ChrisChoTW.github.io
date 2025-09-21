@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "css-flip-card-positioning-2025-01-21",
+      "title": "CSS 翻轉卡片位置問題",
+      "date": "2025-01-21",
+      "category": "CSS",
+      "tags": ["CSS", "Animation", "Tailwind", "Positioning", "權重衝突"],
+      "difficulty": "中級",
+      "duration": "30分鐘",
+      "solved": true,
+      "tools": ["Chrome DevTools", "Playwright MCP"],
+      "summary": "卡片翻轉後背面內容「掉到下面」，發現是 Tailwind CSS 權重覆蓋自定義 CSS 造成的定位問題。",
+      "file": "css-flip-card-positioning-2025-01-21.md"
+    }
+  ],
+  "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧"],
+  "tags": [
+    "CSS", "Animation", "Tailwind", "Positioning", "權重衝突",
+    "JavaScript", "React", "Vue", "Node.js",
+    "架構設計", "微服務", "資料庫", "效能優化",
+    "AI 協作", "問題表達", "溝通技巧", "除錯方法"
+  ],
+  "difficulties": ["初級", "中級", "高級"],
+  "lastUpdated": "2025-01-21T16:00:00Z"
+}
