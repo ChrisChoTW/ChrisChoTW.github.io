@@ -947,6 +947,10 @@
                             <i class="fas fa-external-link-alt"></i>
                             開啟工具
                         </a>
+                        <a href="#" id="modalPrdBtn" class="modal-btn modal-btn-secondary" style="display: none;">
+                            <i class="fas fa-file-alt"></i>
+                            產品文檔
+                        </a>
                         <button class="modal-btn modal-btn-secondary" onclick="closePreviewModal()">
                             <i class="fas fa-times"></i>
                             關閉
@@ -970,6 +974,7 @@
                 categoryLabel: '財務工具',
                 description: '專業房屋貸款計算工具，支援多筆貸款管理、買賣換屋損益分析、情境模擬等功能。內建互動式圖表與 PDF 報告匯出。',
                 url: 'tools/mortgage-calculator.html',
+                prd: 'tools/mortgage-calculator-prd.md',
                 tags: ['熱門', 'Vue.js', 'Chart.js', 'PDF匯出']
             },
             {
@@ -1367,12 +1372,21 @@
         function openPreviewModal(toolId) {
             const tool = toolsData.find(t => t.id === toolId);
             if (!tool) return;
-            
+
             // 更新 Modal 內容
             document.getElementById('modalTitle').textContent = tool.title;
             document.getElementById('modalCategory').textContent = tool.categoryLabel;
             document.getElementById('modalDescription').textContent = tool.description;
             document.getElementById('modalLaunchBtn').href = tool.url;
+
+            // 處理 PRD 按鈕顯示/隱藏
+            const prdBtn = document.getElementById('modalPrdBtn');
+            if (tool.prd) {
+                prdBtn.href = tool.prd;
+                prdBtn.style.display = 'inline-flex';
+            } else {
+                prdBtn.style.display = 'none';
+            }
             
             // 生成標籤
             const tagClass = (tag) => {
