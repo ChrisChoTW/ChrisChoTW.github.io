@@ -14,7 +14,7 @@
       "file": "ai-collaboration-guide-iteration.md"
     },
     {
-      "id": "css-flip-card-positioning-2025-01-21",
+      "id": "css-flip-card-positioning",
       "title": "CSS 翻轉卡片位置問題",
       "date": "2025-01-21",
       "category": "CSS",
@@ -24,15 +24,29 @@
       "solved": true,
       "tools": ["Chrome DevTools", "Playwright MCP"],
       "summary": "卡片翻轉後背面內容「掉到下面」，發現是 Tailwind CSS 權重覆蓋自定義 CSS 造成的定位問題。",
-      "file": "css-flip-card-positioning-2025-01-21.md"
+      "file": "css-flip-card-positioning.md"
+    },
+    {
+      "id": "kpi-gemini-integration",
+      "title": "KPI 工具 Gemini AI 整合：從功能設計到完整測試",
+      "date": "2025-09-21",
+      "category": "AI整合",
+      "tags": ["Gemini API", "JavaScript", "Modal互動", "Playwright測試"],
+      "difficulty": "中級",
+      "duration": "2小時",
+      "solved": true,
+      "tools": ["Gemini API", "Playwright MCP", "Claude Code", "JavaScript"],
+      "summary": "為 KPI 指標分析工具新增 Gemini AI 整合功能，包含 API Key 管理、Modal 互動、狀態重置邏輯，並使用 Playwright 進行完整的端到端測試。",
+      "file": "kpi-gemini-integration.md"
     }
   ],
-  "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧", "產品開發"],
+  "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧", "產品開發", "AI整合"],
   "tags": [
     "CSS", "Animation", "Tailwind", "Positioning", "權重衝突",
     "JavaScript", "React", "Vue", "Node.js",
     "架構設計", "微服務", "資料庫", "效能優化",
-    "AI協作", "問題表達", "溝通技巧", "除錯方法", "需求分析", "文檔設計", "內容定位", "溝通效率"
+    "AI協作", "問題表達", "溝通技巧", "除錯方法", "需求分析", "文檔設計", "內容定位", "溝通效率",
+    "Gemini API", "Modal互動", "Playwright測試"
   ],
   "difficulties": ["初級", "中級", "高級"],
   "lastUpdated": "2025-09-21T16:00:00Z"
