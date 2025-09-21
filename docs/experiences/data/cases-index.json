@@ -1,6 +1,19 @@
 {
   "cases": [
     {
+      "id": "ai-collaboration-guide-iteration",
+      "title": "AI 協作指南內容定位問題",
+      "date": "2025-09-21",
+      "category": "產品開發",
+      "tags": ["需求分析", "文檔設計", "AI協作", "內容定位", "溝通效率"],
+      "difficulty": "中級",
+      "duration": "20分鐘",
+      "solved": true,
+      "tools": ["Claude Code", "Markdown", "需求澄清"],
+      "summary": "在開發 AI 協作指南時，經歷了多次內容重寫和方向調整，最終才明確真正的需求是「提供案例分析模板」而非「高層次協作原則」。",
+      "file": "ai-collaboration-guide-iteration.md"
+    },
+    {
       "id": "css-flip-card-positioning-2025-01-21",
       "title": "CSS 翻轉卡片位置問題",
       "date": "2025-01-21",
@@ -14,13 +27,13 @@
       "file": "css-flip-card-positioning-2025-01-21.md"
     }
   ],
-  "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧"],
+  "categories": ["CSS", "JavaScript", "React", "架構設計", "協作技巧", "產品開發"],
   "tags": [
     "CSS", "Animation", "Tailwind", "Positioning", "權重衝突",
     "JavaScript", "React", "Vue", "Node.js",
     "架構設計", "微服務", "資料庫", "效能優化",
-    "AI 協作", "問題表達", "溝通技巧", "除錯方法"
+    "AI協作", "問題表達", "溝通技巧", "除錯方法", "需求分析", "文檔設計", "內容定位", "溝通效率"
   ],
   "difficulties": ["初級", "中級", "高級"],
-  "lastUpdated": "2025-01-21T16:00:00Z"
+  "lastUpdated": "2025-09-21T16:00:00Z"
 }
