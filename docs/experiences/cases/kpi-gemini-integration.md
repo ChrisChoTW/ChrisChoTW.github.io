@@ -16,10 +16,6 @@ tools: ["Gemini API", "Playwright MCP", "Claude Code", "JavaScript"]
 - 點擊後生成「工程師如何取巧規避這個 KPI」的正體中文內容
 - 切換 modal 時需要重置內容狀態
 
-### 功能頁面截圖
-![KPI工具AI整合功能](images/kpi-gemini-integration.jpg)
-*圖：KPI 工具成功整合 Gemini AI 功能，顯示取巧規避手段分析*
-
 ## 技術環境
 - Google Gemini API (gemini-1.5-flash)
 - 原生 JavaScript (ES6+)
