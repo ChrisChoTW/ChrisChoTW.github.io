@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI 指標分析工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            color: #4b5563;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            color: #4b5563;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dimension {
+            margin-bottom: 25px;
+        }
+        
+        .dimension-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .indicator {
+            background: #f3f4f6;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        .indicator:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        .indicator.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #4c1d95;
+            font-weight: 500;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            background: linear-gradient(to right, 
+                #10b981 0%, 
+                #10b981 33%, 
+                #f59e0b 33%, 
+                #f59e0b 66%, 
+                #ef4444 66%, 
+                #ef4444 100%);
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid #6366f1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid #6366f1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        .slider-value {
+            font-weight: 600;
+            color: #4b5563;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        
+        .diagnosis-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .diagnosis-empty {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px;
+        }
+        
+        .diagnosis-result {
+            display: none;
+        }
+        
+        .diagnosis-result.show {
+            display: block;
+        }
+        
+        .severity {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .severity.critical {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .severity.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .severity.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .diagnosis-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .diagnosis-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .diagnosis-desc {
+            color: #6b7280;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .diagnosis-action {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .diagnosis-action-title {
+            font-weight: 500;
+            color: #059669;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .diagnosis-action-text {
+            color: #374151;
+            font-size: 0.95em;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .score-label {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .score-value {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .reset-button {
+            padding: 10px 20px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .reset-button:hover {
+            background: #4b5563;
+        }
+
+        /* KPI 網格卡片樣式 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 30px 0;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .kpi-card.hidden {
+            display: none;
+        }
+
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .kpi-card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.3;
+        }
+
+        .kpi-card-category {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .kpi-card-preview {
+            color: #6b7280;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin-top: 8px;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .kpi-card:hover .click-hint {
+            background: #667eea;
+            color: white;
+            opacity: 1;
+        }
+
+        /* Modal 樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e5e7eb;
+            transform: scale(1.1);
+        }
+
+        .modal-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-right: 40px;
+        }
+
+        .modal-category {
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .modal-section {
+            margin-bottom: 25px;
+        }
+
+        .modal-section h4 {
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-content-block {
+            padding: 18px 22px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .positive-section .modal-content-block {
+            background: #ecfdf5;
+            border-left: 4px solid #22c55e;
+            color: #15803d;
+        }
+
+        .consideration-section .modal-content-block {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .suggestion-section .modal-content-block {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .modal-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-counter {
+            font-size: 0.9em;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* 篩選與搜尋樣式 */
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .search-bar {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 1em;
+            min-width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .analyze-button {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .analyze-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .analyze-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* 卡片區域樣式 */
+        .kpi-sections {
+            margin: 30px 0;
+        }
+
+        .selected-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            color: #4b5563;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selected-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 12px;
+            border: 2px dashed #22c55e;
+        }
+
+        .no-selection {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .candidate-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+        }
+
+        /* 分層卡片樣式 */
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .kpi-card.selected {
+            border-color: #667eea;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .kpi-card.hidden {
+            display: none;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .kpi-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1f2937;
+            flex: 1;
+        }
+
+        .category-tag {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .kpi-card.selected .category-tag {
+            background: #667eea;
+            color: white;
+        }
+
+        @keyframes slideToSelected {
+            from {
+                transform: translateX(0) translateY(0);
+            }
+            to {
+                transform: translateX(0) translateY(-10px);
+            }
+        }
+
+        .kpi-card.moving {
+            animation: slideToSelected 0.4s ease;
+        }
+        
+        /* TagCloud 標籤樣式 */
+        .tagcloud {
+            font-family: inherit;
+            cursor: pointer;
+        }
+        
+        .tagcloud--item {
+            color: #4b5563 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .tagcloud--item:hover {
+            color: #667eea !important;
+            transform: scale(1.1) !important;
+        }
+        
+        .tagcloud--item.selected {
+            color: #dc2626 !important;
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 KPI 指標分析工具</h1>
+        <p class="subtitle">選擇你們團隊表現良好的 KPI 指標，了解這些指標可能的問題與改善建議</p>
+        
+        <div class="main-content">
+            <!-- 篩選與搜尋區域 -->
+            <div class="filter-section">
+                <h2 style="color: #4b5563; margin-bottom: 15px; font-size: 1.3em;">💡 快速找到問題 KPI，理性對談主管</h2>
+                <p style="color: #6b7280; margin-bottom: 20px;">點擊任意指標查看潛在問題與改善建議</p>
+
+                <!-- 搜尋欄 -->
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜尋 KPI 指標名稱...">
+                </div>
+
+                <!-- 分類篩選按鈕 -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-category="all">全部類別</button>
+                    <button class="filter-btn" data-category="開發活動">開發活動</button>
+                    <button class="filter-btn" data-category="Bug與品質">Bug與品質</button>
+                    <button class="filter-btn" data-category="測試覆蓋">測試覆蓋</button>
+                    <button class="filter-btn" data-category="效率表現">效率表現</button>
+                    <button class="filter-btn" data-category="協作與溝通">協作與溝通</button>
+                    <button class="filter-btn" data-category="技術指標">技術指標</button>
+                    <button class="filter-btn" data-category="流程與管理">流程與管理</button>
+                    <button class="filter-btn" data-category="AI與新技術">AI與新技術</button>
+                </div>
+            </div>
+
+            <!-- KPI 網格區域 -->
+            <div class="kpi-grid" id="kpiGrid">
+                <!-- KPI 卡片將在這裡渲染 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal 彈窗 -->
+    <div id="kpiModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">
+                    <span id="modalTitleText"></span>
+                    <span class="modal-category" id="modalCategory"></span>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-section positive-section">
+                    <h4>✅ 正面意義</h4>
+                    <div class="modal-content-block" id="modalPositive"></div>
+                </div>
+
+                <div class="modal-section consideration-section">
+                    <h4>⚠️ 值得思考</h4>
+                    <div class="modal-content-block" id="modalConsideration"></div>
+                </div>
+
+                <div class="modal-section suggestion-section">
+                    <h4>💡 改善建議</h4>
+                    <div class="modal-content-block" id="modalSuggestion"></div>
+                </div>
+            </div>
+
+            <div class="modal-navigation">
+                <button class="nav-btn" id="prevBtn">← 上一個</button>
+                <span class="modal-counter" id="modalCounter">1 / 20</span>
+                <button class="nav-btn" id="nextBtn">下一個 →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // KPI 深度思考數據 - 統一JSON結構
+        const kpiData = [
+            {
+                id: 1,
+                name: "Commit 數量很高",
+                category: "開發活動",
+                title: "提交頻率的雙面性",
+                positive: "高頻率提交顯示團隊積極開發，快速迭代，有良好的版本控制習慣",
+                consideration: "值得思考的是：提交是否有意義？是否因為缺乏計畫而頻繁修正？",
+                suggestion: "建立提交規範，確保每次提交都有明確目的，平衡開發速度與程式碼品質",
+                severity: "info"
+            },
+            {
+                id: 2,
+                name: "PR 合併快速",
+                category: "開發活動",
+                title: "Code Review 效率的平衡",
+                positive: "快速合併顯示團隊溝通順暢，程式碼品質可能已經很好，流程效率高",
+                consideration: "需要確認：審核是否足夠深入？是否有遺漏重要的技術討論？",
+                suggestion: "建立審核清單，在效率與品質間找到適當平衡，重要變更需要更仔細的檢視",
+                severity: "info"
+            },
+            {
+                id: 3,
+                name: "代碼量增長",
+                category: "開發活動", 
+                title: "程式碼成長的價值評估",
+                positive: "代碼量增長顯示專案規模擴大，功能豐富，團隊產出活躍",
+                consideration: "需要評估：是否有重複代碼？架構是否越來越複雜？",
+                suggestion: "定期進行代碼重構，保持架構簡潔，重質不重量",
+                severity: "warning"
+            },
+            {
+                id: 4,
+                name: "Bug 修復快速",
+                category: "Bug與品質",
+                title: "Bug 修復效率的雙刃劍", 
+                positive: "快速修復顯示團隊反應敏捷，技術能力強，問題解決效率高",
+                consideration: "需要思考：是否只是治標不治本？是否有進行根因分析？",
+                suggestion: "在快速修復的同時，建立根因分析流程，確保真正解決問題根源",
+                severity: "info"
+            },
+            {
+                id: 5,
+                name: "很少發現 Bug",
+                category: "Bug與品質",
+                title: "低錯誤率的深層含義",
+                positive: "Bug 少顯示程式碼品質可能很高，測試充分，開發謹慎", 
+                consideration: "需要思考：測試是否夠全面？用戶是否有管道回報問題？",
+                suggestion: "增加探索性測試，建立多元回饋管道，主動尋找潛在問題",
+                severity: "warning"
+            },
+            {
+                id: 6,
+                name: "測試覆蓋率高",
+                category: "測試覆蓋",
+                title: "測試覆蓋的質量思考",
+                positive: "高覆蓋率顯示團隊重視品質，測試文化良好，風險控制嚴格",
+                consideration: "需要確認：測試是否真正有效？是否為了數字而寫無意義的測試？", 
+                suggestion: "關注測試品質而非僅是覆蓋率，確保測試能真正捕捉問題",
+                severity: "warning"
+            },
+            {
+                id: 7,
+                name: "Velocity 很高",
+                category: "效率表現",
+                title: "開發速度的平衡藝術",
+                positive: "高 Velocity 顯示團隊生產力強，交付能力優秀，敏捷實施良好",
+                consideration: "值得確認：是否犧牲了程式碼品質？Story Point 估算是否準確？",
+                suggestion: "在維持高效率的同時，定期檢視品質指標，調整估算標準以確保永續發展",
+                severity: "critical"
+            },
+            {
+                id: 8,
+                name: "Code Review 快",
+                category: "協作與溝通",
+                title: "程式碼審查的深度",
+                positive: "快速 Review 顯示團隊效率高，溝通順暢，標準明確",
+                consideration: "要評估：審查是否夠仔細？是否發現了潛在問題？",
+                suggestion: "制定 Review 檢查清單，確保速度和品質並重",
+                severity: "critical"
+            },
+            {
+                id: 9,
+                name: "系統穩定性高", 
+                category: "技術指標",
+                title: "穩定性的壓力測試",
+                positive: "高穩定性保障業務連續，用戶體驗好，維護成本低",
+                consideration: "要確認：是否經過壓力測試？異常情況處理如何？",
+                suggestion: "定期壓力測試和混沌工程，主動發現和解決潛在問題",
+                severity: "warning"
+            },
+            {
+                id: 10,
+                name: "KPI 都在綠燈",
+                category: "流程與管理", 
+                title: "完美指標的思考",
+                positive: "全面的綠燈顯示團隊在多個面向都表現良好，系統運作順暢",
+                consideration: "值得反思：指標設定是否過於寬鬆？是否遺漏了重要的風險信號？",
+                suggestion: "定期檢討 KPI 設定標準，確保指標能真實反映系統健康狀況", 
+                severity: "warning"
+            },
+            {
+                id: 11,
+                name: "微服務架構",
+                category: "AI與新技術",
+                title: "架構選擇的適配性", 
+                positive: "微服務提供靈活性，獨立部署，技術多樣性",
+                consideration: "要確認：複雜度是否值得？團隊能力是否匹配？",
+                suggestion: "根據業務需求和團隊能力選擇合適的架構模式",
+                severity: "info"
+            },
+            {
+                id: 12,
+                name: "Git 提交頻繁",
+                category: "開發活動",
+                title: "版本控制的節奏把握",
+                positive: "頻繁提交代表開發活躍，版本控制意識強，追蹤變更容易",
+                consideration: "要思考：是否每次提交都有完整性？是否造成版本歷史混亂？",
+                suggestion: "制定提交準則，確保每個提交都是有意義的功能單元",
+                severity: "info"
+            },
+            {
+                id: 13,
+                name: "分支管理順暢",
+                category: "開發活動",
+                title: "分支策略的適配性",
+                positive: "順暢的分支管理顯示團隊協作有序，版本控制流程成熟",
+                consideration: "需要檢視：流程是否過於複雜？是否增加了不必要的開銷？",
+                suggestion: "根據團隊規模和專案特性調整分支策略，保持簡單有效",
+                severity: "info"
+            },
+            {
+                id: 14,
+                name: "版本發布快速",
+                category: "開發活動",
+                title: "發布節奏的風險平衡",
+                positive: "快速發布展現團隊敏捷性，能快速回應市場需求，持續交付價值",
+                consideration: "要確認：是否有充分測試？用戶是否準備好接受頻繁更新？",
+                suggestion: "建立完整的發布檢查清單，在速度和穩定性間找到平衡",
+                severity: "critical"
+            },
+            {
+                id: 15,
+                name: "Hotfix 減少",
+                category: "Bug與品質",
+                title: "緊急修復頻率的解讀",
+                positive: "Hotfix 減少可能代表品質提升，測試更完善，問題預防做得好",
+                consideration: "要確認：是否問題被延後處理？用戶回報管道是否暢通？",
+                suggestion: "建立問題分級機制，確保重要問題及時處理，保持回饋管道暢通",
+                severity: "warning"
+            },
+            {
+                id: 16,
+                name: "程式碼錯誤少",
+                category: "Bug與品質",
+                title: "錯誤率的真實性評估",
+                positive: "錯誤少顯示開發品質高，團隊技術能力強，流程管控良好",
+                consideration: "要確認：監控是否全面？錯誤定義是否合理？",
+                suggestion: "完善錯誤監控系統，擴大錯誤定義範圍，包含性能和用戶體驗問題",
+                severity: "warning"
+            },
+            {
+                id: 17,
+                name: "上線很穩定",
+                category: "Bug與品質",
+                title: "上線穩定性的全面觀",
+                positive: "穩定上線顯示流程成熟，測試充分，團隊經驗豐富",
+                consideration: "需要評估：是否只上線簡單功能？是否避免了必要的技術升級？",
+                suggestion: "在保持穩定的同時，適度接受技術挑戦，推動系統演進",
+                severity: "info"
+            },
+            {
+                id: 18,
+                name: "回測通過率高",
+                category: "Bug與品質",
+                title: "回測成功率的意義",
+                positive: "高通過率顯示系統穩定，變更管理良好，向後相容性佳",
+                consideration: "要思考：測試案例是否夠嚴格？是否涵蓋所有重要場景？",
+                suggestion: "定期更新測試案例，增加邊界和異常測試，確保測試有效性",
+                severity: "warning"
+            },
+            {
+                id: 19,
+                name: "單元測試充足",
+                category: "測試覆蓋",
+                title: "單元測試的平衡點",
+                positive: "充足的單元測試顯示代碼品質意識強，重構安全，維護性好",
+                consideration: "要評估：是否忽略了整合測試？測試是否過於細碎？",
+                suggestion: "平衡各層級測試，避免過度單元測試，確保系統級問題能被發現",
+                severity: "info"
+            },
+            {
+                id: 20,
+                name: "測試案例豐富",
+                category: "測試覆蓋",
+                title: "測試數量與品質的權衡",
+                positive: "豐富的測試案例顯示測試完整，場景覆蓋廣，品質把關嚴格",
+                consideration: "需要思考：是否有重複測試？維護成本是否過高？",
+                suggestion: "定期審查和優化測試案例，保留高價值測試，提高測試效率",
+                severity: "info"
+            }
+        ];
+
+        // 全域變數
+        let currentFilter = 'all';
+        let searchTerm = '';
+        let currentModalIndex = 0;
+        let filteredKpiData = [...kpiData];
+
+        // 初始化系統
+        function initKpiSystem() {
+            generateKpiGrid();
+            setupFilterButtons();
+            setupSearchInput();
+            setupModalSystem();
+        }
+
+        // 產生 KPI 網格
+        function generateKpiGrid() {
+            const kpiGrid = document.getElementById('kpiGrid');
+            kpiGrid.innerHTML = '';
+
+            filteredKpiData.forEach((kpi, index) => {
+                const kpiCard = document.createElement('div');
+                kpiCard.className = 'kpi-card';
+                kpiCard.dataset.id = kpi.id;
+                kpiCard.dataset.index = index;
+                kpiCard.dataset.category = kpi.category;
+
+                const severityClass = getSeverityClass(kpi.severity);
+
+                kpiCard.innerHTML = `
+                    <div class="card-header">
+                        <div class="kpi-title">${kpi.name}</div>
+                        <div class="category-tag">${kpi.category}</div>
+                    </div>
+                    <div class="severity ${severityClass}">${getSeverityText(kpi.severity)}</div>
+                `;
+
+                // 添加點擊事件開啟 Modal
+                kpiCard.addEventListener('click', () => openModal(index));
+
+                kpiGrid.appendChild(kpiCard);
+            });
+        }
+
+        // 取得嚴重程度樣式類別
+        function getSeverityClass(severity) {
+            const severityMap = {
+                'critical': 'critical',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            return severityMap[severity] || 'info';
+        }
+
+        // 取得嚴重程度文字
+        function getSeverityText(severity) {
+            const severityMap = {
+                'critical': '🔴 需重視',
+                'warning': '🟡 需注意',
+                'info': '🔵 參考'
+            };
+            return severityMap[severity] || '🔵 參考';
+        }
+
+        // 設置 Modal 系統
+        function setupModalSystem() {
+            const modal = document.getElementById('kpiModal');
+            const closeBtn = document.getElementById('modalClose');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // 關閉 Modal
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            // 鍵盤導航
+            document.addEventListener('keydown', (e) => {
+                if (!modal.style.display || modal.style.display === 'none') return;
+
+                switch(e.key) {
+                    case 'Escape':
+                        closeModal();
+                        break;
+                    case 'ArrowLeft':
+                        navigateModal(-1);
+                        break;
+                    case 'ArrowRight':
+                        navigateModal(1);
+                        break;
+                }
+            });
+
+            // 導航按鈕
+            prevBtn.addEventListener('click', () => navigateModal(-1));
+            nextBtn.addEventListener('click', () => navigateModal(1));
+        }
+
+        // 開啟 Modal
+        function openModal(index) {
+            currentModalIndex = index;
+            const kpi = filteredKpiData[index];
+            if (!kpi) return;
+
+            // 更新 Modal 內容
+            document.getElementById('modalTitleText').textContent = kpi.name;
+            document.getElementById('modalCategory').textContent = kpi.category;
+            document.getElementById('modalPositive').textContent = kpi.positive;
+            document.getElementById('modalConsideration').textContent = kpi.consideration;
+            document.getElementById('modalSuggestion').textContent = kpi.suggestion;
+
+            // 更新導航狀態
+            updateModalNavigation();
+
+            // 顯示 Modal
+            const modal = document.getElementById('kpiModal');
+            modal.style.display = 'flex';
+
+            // 防止背景滾動
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 關閉 Modal
+        function closeModal() {
+            const modal = document.getElementById('kpiModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Modal 導航
+        function navigateModal(direction) {
+            const newIndex = currentModalIndex + direction;
+
+            if (newIndex >= 0 && newIndex < filteredKpiData.length) {
+                openModal(newIndex);
+            }
+        }
+
+        // 更新 Modal 導航狀態
+        function updateModalNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const counter = document.getElementById('modalCounter');
+
+            // 更新計數器
+            counter.textContent = `${currentModalIndex + 1} / ${filteredKpiData.length}`;
+
+            // 更新按鈕狀態
+            prevBtn.disabled = currentModalIndex <= 0;
+            nextBtn.disabled = currentModalIndex >= filteredKpiData.length - 1;
+        }
+
+        // 設置篩選按鈕
+        function setupFilterButtons() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // 更新按鈕狀態
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // 應用篩選
+                    const category = e.target.dataset.category;
+                    currentFilter = category;
+                    applyFilters();
+                });
+            });
+        }
+
+        // 設置搜尋輸入框
+        function setupSearchInput() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                searchTerm = e.target.value.toLowerCase();
+                applyFilters();
+            });
+        }
+
+        // 應用篩選（包含分類和搜尋）
+        function applyFilters() {
+            // 篩選數據
+            filteredKpiData = kpiData.filter(kpi => {
+                // 檢查分類篩選
+                const categoryMatch = currentFilter === 'all' || kpi.category === currentFilter;
+
+                // 檢查搜尋關鍵字
+                const searchMatch = searchTerm === '' ||
+                                  kpi.name.toLowerCase().includes(searchTerm) ||
+                                  kpi.category.toLowerCase().includes(searchTerm);
+
+                return categoryMatch && searchMatch;
+            });
+
+            // 重新產生網格
+            generateKpiGrid();
+        }
+
+        // DOM 載入完成後初始化
+        document.addEventListener('DOMContentLoaded', initKpiSystem);
+    </script>
+</body>
+</html>
