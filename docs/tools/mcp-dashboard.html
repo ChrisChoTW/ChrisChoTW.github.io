@@ -13,7 +13,6 @@
 
       gtag('config', 'G-FV6ZHXEWMP');
     </script>
-    <script src="../js/gemini-api-manager.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -625,9 +624,6 @@
                 <div id="data-query-tab" class="scenario-tab" onclick="loadScenario('data-query')">
                     📊 數據查詢與分析
                 </div>
-                <div id="custom-scenario-tab" class="scenario-tab" onclick="loadCustomScenario()">
-                    🚀 自定義情境
-                </div>
             </div>
         </div>
 
@@ -742,18 +738,6 @@
                     }
                 }
             },
-            'custom-scenario': {
-                title: '自定義工作流',
-                description: '輸入任何任務，讓 AI 為你分析並生成一個高效的協作工作流。',
-                before: {
-                    workflow: [],
-                    metrics: {}
-                },
-                after: {
-                    workflow: [],
-                    metrics: {}
-                }
-            }
         };
 
         // 函數來計算效率提升
@@ -903,225 +887,11 @@
                 </div>
             `;
         }
-        
-        // 渲染自定義情境表單
-        function loadCustomScenario() {
-            const contentDiv = document.getElementById('dashboard-content');
-            
-            // 更新 Tab 的 active 狀態
-            document.querySelectorAll('.scenario-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.getElementById(`custom-scenario-tab`).classList.add('active');
-
-            contentDiv.innerHTML = `
-                <div class="max-w-3xl mx-auto py-8">
-                    <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold mb-4 text-gray-900">建立你的自定義工作流 🚀</h2>
-                        <p class="text-gray-600 text-lg">描述你的工作任務，讓 AI 為你生成一個高效的人機協作工作流</p>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <!-- API Key Input -->
-                        <div>
-                            <label for="gemini-api-key" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Google AI Studio API 金鑰
-                            </label>
-                            <input 
-                                type="password" 
-                                id="gemini-api-key" 
-                                class="input-field" 
-                                placeholder="貼上你的 API 金鑰"
-                            >
-                            <p class="mt-2 text-xs text-gray-500">
-                                從 
-                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline font-semibold">
-                                    Google AI Studio
-                                </a>
-                                獲取你的免費 API 金鑰
-                            </p>
-                        </div>
-                        
-                        <!-- Task Description -->
-                        <div>
-                            <label for="task-description" class="block text-sm font-semibold text-gray-700 mb-2">
-                                任務描述
-                            </label>
-                            <textarea 
-                                id="task-description" 
-                                class="input-field" 
-                                placeholder="例如：為新的內部工具撰寫文件，包括產品手冊、API 文檔和使用範例..."
-                            ></textarea>
-                        </div>
-                        
-                        <!-- Submit Button -->
-                        <div class="text-center pt-4">
-                            <button onclick="generateCustomWorkflow()" class="btn-primary">
-                                <span>生成智慧工作流 ✨</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Loading Indicator -->
-                        <div id="loading-indicator" class="hidden text-center py-8">
-                            <div class="loading-spinner mx-auto mb-4"></div>
-                            <p class="text-gray-600 font-medium">AI 正在分析你的任務並生成最佳工作流...</p>
-                        </div>
-                        
-                        <!-- Error Message -->
-                        <div id="error-message" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center"></div>
-                    </div>
-                </div>
-            `;
-
-            // 重新初始化 API 管理器（因為 innerHTML 會重置輸入框）
-            setTimeout(() => {
-                console.log('[MCP Dashboard] Re-initializing API manager after loadScenario');
-                initGeminiAPIManager({ inputId: 'gemini-api-key' });
-            }, 0);
-        }
-        
-        // 函數來調用 Gemini API 生成自定義工作流
-        async function generateCustomWorkflow() {
-            console.log('[MCP Dashboard] generateCustomWorkflow called');
-            const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
-            if (!apiKey) {
-                console.error('[MCP Dashboard] No valid API key available');
-                return;
-            }
-            console.log('[MCP Dashboard] Valid API key obtained');
-
-            const description = document.getElementById('task-description').value;
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const errorMessage = document.getElementById('error-message');
-
-            if (!description.trim()) {
-                errorMessage.textContent = '請輸入任務描述！';
-                errorMessage.classList.remove('hidden');
-                return;
-            }
-
-            loadingIndicator.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            
-            try {
-                const prompt = `分析以下任務並設計一個高效的「AI協作工作流」。請提供分步流程和與傳統手動工作流相比的估計時間和效率提升。
-
-任務：${description}
-
-請以 JSON 格式回應，嚴格遵循以下格式。總耗時和步驟數應明顯低於傳統工作流。
-傳統工作流的總耗時大約是AI工作流的3-4倍，步驟數是AI工作流的2-3倍，上下文切換是AI工作流的3-5倍。
-`;
-                
-                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-                const payload = {
-                    contents: chatHistory,
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "title": { "type": "STRING" },
-                                "description": { "type": "STRING" },
-                                "before": {
-                                    "type": "OBJECT",
-                                    "properties": {
-                                        "workflow": {
-                                            "type": "ARRAY",
-                                            "items": {
-                                                "type": "OBJECT",
-                                                "properties": {
-                                                    "step": { "type": "NUMBER" },
-                                                    "type": { "type": "STRING", "enum": ["human"] },
-                                                    "label": { "type": "STRING" },
-                                                    "desc": { "type": "STRING" }
-                                                }
-                                            }
-                                        },
-                                        "metrics": {
-                                            "type": "OBJECT",
-                                            "properties": {
-                                                "totalTime": { "type": "NUMBER" },
-                                                "steps": { "type": "NUMBER" },
-                                                "context": { "type": "NUMBER" }
-                                            }
-                                        }
-                                    }
-                                },
-                                "after": {
-                                    "type": "OBJECT",
-                                    "properties": {
-                                        "workflow": {
-                                            "type": "ARRAY",
-                                            "items": {
-                                                "type": "OBJECT",
-                                                "properties": {
-                                                    "step": { "type": "NUMBER" },
-                                                    "type": { "type": "STRING", "enum": ["human", "ai"] },
-                                                    "label": { "type": "STRING" },
-                                                    "desc": { "type": "STRING" },
-                                                    "tools": {
-                                                        "type": "ARRAY",
-                                                        "items": { "type": "STRING" }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "metrics": {
-                                            "type": "OBJECT",
-                                            "properties": {
-                                                "totalTime": { "type": "NUMBER" },
-                                                "steps": { "type": "NUMBER" },
-                                                "context": { "type": "NUMBER" }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "propertyOrdering": ["title", "description", "before", "after"]
-                        }
-                    }
-                };
-                
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    
-                    const jsonString = result.candidates[0].content.parts[0].text;
-                    const parsedData = JSON.parse(jsonString);
-
-                    scenarios['custom-scenario'] = parsedData;
-                    loadScenario('custom-scenario');
-                    
-                } else {
-                    errorMessage.textContent = 'API 響應格式錯誤或內容為空，請檢查 API 金鑰是否正確。';
-                    errorMessage.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error("生成工作流時出錯:", error);
-                errorMessage.textContent = '生成工作流時發生錯誤，請檢查 API 金鑰並再試一次。';
-                errorMessage.classList.remove('hidden');
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        }
 
         // 初始載入
         window.onload = () => {
             console.log('[MCP Dashboard] Window loaded, initializing page');
             loadScenario('bugfix');
-            // 初始化 Gemini API 管理器
-            console.log('[MCP Dashboard] Initial API manager setup');
-            initGeminiAPIManager({ inputId: 'gemini-api-key' });
         };
     </script>
 </body>

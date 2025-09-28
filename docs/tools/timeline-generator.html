@@ -13,7 +13,6 @@
 
       gtag('config', 'G-FV6ZHXEWMP');
     </script>
-    <script src="../js/gemini-api-manager.js"></script>
     <!-- Intro.js CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
     <style>
@@ -387,8 +386,6 @@
                 <!-- 階段會動態生成 -->
             </div>
             <button class="btn btn-success" onclick="addPhase()" data-intro="點擊這裡新增更多階段" data-step="7">+ 新增階段</button>
-            
-            <button class="btn btn-ai-generate" onclick="showAIModal()" data-intro="想要快速開始？點擊這裡讓 AI 根據您的主題自動生成完整的時間軸！只需要輸入主題和 Google AI API 金鑰即可" data-step="8">✨ AI 自動生成時間軸</button>
 
             <!-- 匯出與匯入按鈕 -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;" data-intro="完成編輯後，您可以匯出成 JSON 檔案保存，或匯出成獨立的 HTML 網頁" data-step="9">
@@ -414,55 +411,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- AI 生成主題的彈窗 -->
-    <div id="aiModal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeAIModal()">&times;</span>
-            <h2 style="text-align: center; border-bottom: none;">輸入主題，讓 AI 幫您生成！</h2>
-            
-            <!-- API Key Input -->
-            <div class="form-group">
-                <label for="gemini-api-key" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Google AI Studio API 金鑰
-                </label>
-                <input 
-                    type="password" 
-                    id="gemini-api-key" 
-                    class="input-field" 
-                    placeholder="貼上你的 API 金鑰"
-                >
-                <p class="mt-2 text-xs text-gray-500">
-                    從 
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline font-semibold">
-                        Google AI Studio
-                    </a>
-                    獲取你的免費 API 金鑰
-                </p>
-                <p id="error-message" class="text-red-500 mt-2 hidden">請輸入你的 API 金鑰！</p>
-            </div>
-            
-            <p style="text-align: center; color: #6c757d;">例如：`AI 技術發展史`, `太空探索`, `手機演進史`</p>
-            <div class="form-group">
-                <label for="aiTopic">主題：</label>
-                <input type="text" id="aiTopic" placeholder="請輸入您感興趣的主題">
-            </div>
-            
-            <!-- 新增的微調輸入框 -->
-            <div class="form-group">
-                <label for="aiFineTunePrompt">額外指令/微調提示 (可選)：</label>
-                <textarea id="aiFineTunePrompt" placeholder="例如：強調音樂發展、多談電影作品等"></textarea>
-            </div>
-
-            <div class="loader" id="aiLoader"></div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="generateTimelineWithGemini()">生成時間軸</button>
-        </div>
-    </div>
 
     <script>
-        // Use a relative path so Canvas can proxy the request
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
-
         let phases = [
             {
                 name: '第一階段',
@@ -986,131 +936,6 @@
             
             reader.readAsText(file);
         }
-        
-        // 顯示 AI 彈窗
-        function showAIModal() {
-            document.getElementById('aiModal').style.display = 'flex';
-        }
-        
-        // 隱藏 AI 彈窗
-        function closeAIModal() {
-            document.getElementById('aiModal').style.display = 'none';
-        }
-
-        // 使用 Gemini API 生成時間軸
-        async function generateTimelineWithGemini() {
-            // 取得 API Key 和主題
-            const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
-            if (!apiKey) return;
-            const topic = document.getElementById('aiTopic').value;
-            const fineTunePrompt = document.getElementById('aiFineTunePrompt').value.trim();
-            const errorMessage = document.getElementById('error-message');
-
-            // API Key 已由 GeminiAPIManager 驗證
-            errorMessage.classList.add('hidden');
-
-            if (!topic) {
-                alert('請輸入一個主題！');
-                return;
-            }
-            
-            const aiButton = document.querySelector('.modal-content .btn');
-            const loader = document.getElementById('aiLoader');
-            aiButton.disabled = true;
-            aiButton.style.opacity = 0.5;
-            aiButton.textContent = '生成中...';
-            loader.style.display = 'block';
-
-            // 更新後的 systemInstruction
-            const systemInstruction = `請根據用戶提供的單一主題，生成一個包含三個階段的時間軸。每個階段都必須包含獨特的 Emoji、顏色（Hex Code）、簡潔的階段名稱，以及一個包含三個事件的陣列。每個事件都必須包含一個描述性的時間字串、一個非常簡短的標題（不超過20個字），以及一個簡潔的描述（包含所有詳細內容）。請確保所有內容都與主題相關，並以繁體中文回應。你的回應必須是一個單一的 JSON 物件，嚴格遵循以下格式，不需要額外的說明或註釋。`;
-
-            // 根據是否有額外指令來建構 prompt
-            let prompt = `生成一個關於 "${topic}" 的時間軸。`;
-            if (fineTunePrompt) {
-                prompt += ` 請特別注意：${fineTunePrompt}。`;
-            }
-
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: {
-                    parts: [{ text: systemInstruction }]
-                },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            "title": { "type": "STRING", "description": "時間軸的主標題。" },
-                            "subtitle": { "type": "STRING", "description": "時間軸的副標題。" },
-                            "phases": {
-                                "type": "ARRAY",
-                                "items": {
-                                    "type": "OBJECT",
-                                    "properties": {
-                                        "name": { "type": "STRING" },
-                                        "emoji": { "type": "STRING" },
-                                        "color": { "type": "STRING" },
-                                        "events": {
-                                            "type": "ARRAY",
-                                            "items": {
-                                                "type": "OBJECT",
-                                                "properties": {
-                                                    "date": { "type": "STRING" },
-                                                    "title": { "type": "STRING" },
-                                                    "description": { "type": "STRING" }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "propertyOrdering": ["name", "emoji", "color", "events"]
-                                }
-                            }
-                        },
-                        "propertyOrdering": ["title", "subtitle", "phases"]
-                    }
-                }
-            };
-
-            try {
-                const response = await fetch(API_URL + apiKey, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorResponse = await response.json();
-                    const errorMessage = errorResponse?.error?.message || response.statusText;
-                    throw new Error(`API 請求失敗: ${errorMessage}`);
-                }
-
-                const result = await response.json();
-                
-                // 檢查 API 回應結構是否正確
-                if (!result.candidates || !result.candidates[0] || !result.candidates[0].content || !result.candidates[0].content.parts[0] || !result.candidates[0].content.parts[0].text) {
-                    throw new Error('API 回應格式不正確');
-                }
-                
-                const jsonText = result.candidates[0].content.parts[0].text;
-                const timelineData = JSON.parse(jsonText);
-
-                document.getElementById('timelineTitle').value = timelineData.title;
-                document.getElementById('timelineSubtitle').value = timelineData.subtitle;
-                phases = timelineData.phases;
-
-                generatePhaseHTML();
-                updatePreview();
-                closeAIModal();
-            } catch (error) {
-                alert(`生成失敗: ${error.message}`);
-                console.error('AI生成錯誤:', error);
-            } finally {
-                aiButton.disabled = false;
-                aiButton.style.opacity = 1;
-                aiButton.textContent = '生成時間軸';
-                loader.style.display = 'none';
-            }
-        }
 
         // 初始化導覽功能
         function startGuide() {
@@ -1146,9 +971,6 @@
             // 綁定標題變更事件
             document.getElementById('timelineTitle').addEventListener('input', updatePreview);
             document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
-
-            // 初始化 Gemini API 管理器
-            initGeminiAPIManager({ inputId: 'gemini-api-key' });
         });
     </script>
     <!-- Intro.js CDN -->

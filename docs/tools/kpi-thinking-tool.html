@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KPI 指標分析工具</title>
-    <script src="../js/gemini-api-manager.js"></script>
     <style>
         * {
             margin: 0;
@@ -915,20 +914,6 @@
         <h1>📊 KPI 指標分析工具</h1>
         <p class="subtitle">選擇你們團隊表現良好的 KPI 指標，了解這些指標可能的問題與改善建議</p>
 
-        <!-- API Key 輸入區域 -->
-        <div class="api-key-section">
-            <div class="api-key-container">
-                <label for="gemini-api-key" class="api-key-label">Google AI Studio API Key</label>
-                <input type="password"
-                       id="gemini-api-key"
-                       class="api-key-input"
-                       placeholder="輸入你的 API Key 來解鎖工程師取巧規避智慧">
-                <a href="https://aistudio.google.com/app/apikey"
-                   target="_blank"
-                   class="api-key-link">取得 API Key →</a>
-            </div>
-        </div>
-
         <div class="main-content">
             <!-- 篩選與搜尋區域 -->
             <div class="filter-section">
@@ -987,16 +972,6 @@
                 <div class="modal-section suggestion-section">
                     <h4>💡 改善建議</h4>
                     <div class="modal-content-block" id="modalSuggestion"></div>
-                </div>
-
-                <!-- 工程師取巧規避區域 -->
-                <div class="hack-section">
-                    <button class="hack-button" id="hackButton">
-                        <span>🎯 工程師如何取巧規避這個 KPI</span>
-                    </button>
-                    <div class="hack-content" id="hackContent">
-                        <!-- 取巧規避內容將在這裡動態生成 -->
-                    </div>
                 </div>
             </div>
 
@@ -1225,7 +1200,6 @@
             setupFilterButtons();
             setupSearchInput();
             setupModalSystem();
-            setupHackButton();
         }
 
         // 產生 KPI 網格
@@ -1325,9 +1299,6 @@
             document.getElementById('modalConsideration').textContent = kpi.consideration;
             document.getElementById('modalSuggestion').textContent = kpi.suggestion;
 
-            // 重置取巧規避區域
-            resetHackSection();
-
             // 更新導航狀態
             updateModalNavigation();
 
@@ -1351,8 +1322,6 @@
             const newIndex = currentModalIndex + direction;
 
             if (newIndex >= 0 && newIndex < filteredKpiData.length) {
-                // 在切換之前重置取巧規避區域
-                resetHackSection();
                 openModal(newIndex);
             }
         }
@@ -1416,152 +1385,9 @@
             generateKpiGrid();
         }
 
-        // 設置取巧規避按鈕
-        function setupHackButton() {
-            const hackButton = document.getElementById('hackButton');
-            const hackContent = document.getElementById('hackContent');
-
-            hackButton.addEventListener('click', async () => {
-                const apiKey = GeminiAPIManager.getValidApiKey('gemini-api-key');
-                if (!apiKey) return;
-
-                // 切換展開/收合狀態
-                if (hackContent.classList.contains('show')) {
-                    hackContent.classList.remove('show');
-                    return;
-                }
-
-                // 取得當前 KPI 資料
-                const kpi = filteredKpiData[currentModalIndex];
-                if (!kpi) return;
-
-                // 顯示載入中
-                hackButton.disabled = true;
-                hackButton.innerHTML = '<span class="loading-spinner"></span> 正在產生取巧規避祕籍...';
-
-                try {
-                    const hackData = await generateHackContent(kpi, apiKey);
-                    displayHackContent(hackData);
-                    hackContent.classList.add('show');
-                } catch (error) {
-                    console.error('生成取巧規避內容失敗:', error);
-                    alert('生成失敗，請檢查 API Key 或稍後再試');
-                } finally {
-                    hackButton.disabled = false;
-                    hackButton.innerHTML = '<span>🎯 工程師如何取巧規避這個 KPI</span>';
-                }
-            });
-        }
-
-        // 生成取巧規避內容
-        async function generateHackContent(kpi, apiKey) {
-            const prompt = `
-你是一位資深工程師，熱情的 KPI 策略專家。請務必使用正體中文（繁體中文）回應。
-
-給定的 KPI：${kpi.name}
-KPI 描述：${kpi.positive}
-
-請以幽默但實用的方式，提供工程師如何「取巧規避」這個 KPI 的方法。
-
-請以 JSON 格式回應：
-{
-  "tricks": [
-    "取巧規避手段1",
-    "取巧規避手段2",
-    "取巧規避手段3"
-  ],
-  "story": "一個簡短的真實（或看似真實）故事，描述某個工程師如何成功操作這個 KPI",
-  "warning": "這樣做的風險和後果"
-}
-
-重點：
-1. 取巧規避手段要具體、可操作，但不要真的鼓勵不道德行為
-2. 故事要有趣、真實感
-3. 警告要中肯、實用
-4. 保持幽默但專業的語氣
-5. 務必使用正體中文（繁體中文），不要使用簡體中文
-            `;
-
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.9,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 1024,
-                        responseMimeType: "application/json"
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`API 請求失敗: ${response.status}`);
-            }
-
-            const result = await response.json();
-            const content = result.candidates[0].content.parts[0].text;
-            return JSON.parse(content);
-        }
-
-        // 重置取巧規避區域
-        function resetHackSection() {
-            const hackContent = document.getElementById('hackContent');
-            const hackButton = document.getElementById('hackButton');
-
-            // 清空內容並隱藏
-            hackContent.classList.remove('show');
-            hackContent.innerHTML = '';
-
-            // 重置按鈕狀態
-            hackButton.disabled = false;
-            hackButton.innerHTML = '<span>🎯 工程師如何取巧規避這個 KPI</span>';
-        }
-
-        // 顯示取巧規避內容
-        function displayHackContent(data) {
-            const hackContent = document.getElementById('hackContent');
-
-            const tricksHtml = data.tricks.map(trick =>
-                `<li>${trick}</li>`
-            ).join('');
-
-            hackContent.innerHTML = `
-                <div class="hack-title">
-                    <span>🎯 取巧規避手段</span>
-                </div>
-                <ul class="hack-tricks">
-                    ${tricksHtml}
-                </ul>
-
-                <div class="hack-title">
-                    <span>📚 真實故事</span>
-                </div>
-                <div style="padding: 12px; background: white; border-radius: 8px; color: #451a03; font-size: 0.95em; line-height: 1.6;">
-                    ${data.story}
-                </div>
-
-                <div class="hack-warning">
-                    <strong>⚠️ 風險警告：</strong> ${data.warning}
-                </div>
-            `;
-        }
-
         // DOM 載入完成後初始化
         document.addEventListener('DOMContentLoaded', () => {
             initKpiSystem();
-            // 初始化 Gemini API 管理器
-            initGeminiAPIManager({ inputId: 'gemini-api-key' });
         });
     </script>
 </body>
