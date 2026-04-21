@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chris Web Tools — 純前端網頁小工具集</title>
+  <meta name="description" content="Chris Cho 的純前端網頁工具集：房貸試算、時間軸產生器、生涯決策平衡單。零後端、開瀏覽器即用。">
+  <link rel="canonical" href="https://chrischotw.github.io/tools/">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Chris Web Tools">
+  <meta property="og:description" content="Chris Cho 的純前端網頁工具集：房貸試算、時間軸產生器、生涯決策平衡單。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://chrischotw.github.io/tools/">
+  <meta property="og:locale" content="zh_TW">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FV6ZHXEWMP');
+  </script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      padding: 4rem 1.5rem;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    header { margin-bottom: 3rem; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.5rem; letter-spacing: 0.02em; }
+    .tagline { color: var(--muted); font-size: 15px; }
+    .tools { display: grid; gap: 1rem; }
+    .tool {
+      display: block;
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: inherit;
+      text-decoration: none;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .tool:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .tool h2 { font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--accent); }
+    .tool p { color: var(--muted); font-size: 14px; }
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Chris Web Tools</h1>
+      <p class="tagline">純前端網頁工具集，零後端、開瀏覽器即用。</p>
+    </header>
+
+    <div class="tools">
+      <a class="tool" href="./mortgage-calculator/">
+        <h2>房貸試算系統</h2>
+        <p>貸款、利率、寬限期、換屋等多情境比較，附圖表與 PDF 匯出。</p>
+      </a>
+      <a class="tool" href="./timeline-generator/">
+        <h2>時間軸生成工具</h2>
+        <p>互動式建立並匯出專案/歷史時間軸。</p>
+      </a>
+      <a class="tool" href="./career-decision/">
+        <h2>生涯決策平衡單</h2>
+        <p>多選項加權評分，輔助職涯/人生重大決策。</p>
+      </a>
+    </div>
+
+    <footer>
+      由 <a href="https://chrischotw.com/">Chris Cho 卓南旭</a> 維護 ·
+      <a href="https://github.com/ChrisChoTW/ChrisChoTW.github.io">GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>

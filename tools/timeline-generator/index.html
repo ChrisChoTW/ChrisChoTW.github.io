@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時間軸生成工具</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-FV6ZHXEWMP');
+    </script>
+    <!-- Intro.js CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
+    <style>
+        /* This is for the main application layout and UI. The timeline styles are dynamically generated. */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: 100vh;
+        }
+
+        .editor-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .guide-button {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
+        }
+        
+        .guide-button:hover {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .guide-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e1e8ed;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        input[type="text"], input[type="password"], input[type="color"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .phase-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+
+        .phase-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .events-container {
+            margin-top: 20px;
+        }
+
+        .event-item {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .event-controls {
+            display: grid;
+            grid-template-columns: 150px 1fr 1fr 40px;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .btn:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 8px;
+            width: 40px;
+            height: 40px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-export {
+            background: #34495e;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-export:hover {
+            background: #2c3e50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn-ai-generate {
+            background: #8e44ad;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .btn-ai-generate:hover {
+            background: #7a3699;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        #aiModal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .modal-content label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .text-xs { font-size: 0.75rem; }
+        .text-gray-500 { color: #6b7280; }
+        .text-blue-600 { color: #2563eb; }
+        .hover\:underline:hover { text-decoration: underline; }
+        .font-semibold { font-weight: 600; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .hidden { display: none; }
+        .block { display: block; }
+        .text-red-500 { color: #ef4444; }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .preview-section {
+                position: static;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .event-controls {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .phase-header {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 編輯器區域 -->
+        <div class="editor-section">
+            <h1 data-intro="歡迎使用時間軸生成工具！這個工具可以幫助您快速建立美觀的時間軸。" data-step="1">
+                🎨 時間軸生成工具
+                <button class="guide-button" onclick="startGuide()">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    功能導覽
+                </button>
+            </h1>
+            
+            <!-- 基本設定 -->
+            <h2 data-intro="在這裡設定您的時間軸基本資訊" data-step="2">📋 基本設定</h2>
+            <div class="form-group" data-intro="輸入時間軸的主標題，這將顯示在最上方" data-step="3">
+                <label for="timelineTitle">時間軸標題：</label>
+                <input type="text" id="timelineTitle" value="我的時間軸" placeholder="輸入時間軸標題">
+            </div>
+            <div class="form-group" data-intro="副標題可以提供更多描述資訊" data-step="4">
+                <label for="timelineSubtitle">副標題：</label>
+                <input type="text" id="timelineSubtitle" value="重要事件記錄" placeholder="輸入副標題">
+            </div>
+
+            <!-- 階段設定 -->
+            <h2 data-intro="時間軸可以有多個階段，每個階段包含多個事件" data-step="5">🎭 階段設定</h2>
+            <div id="phasesContainer" data-intro="在這裡管理所有的階段和事件。您可以設定階段名稱、顏色和 Emoji" data-step="6">
+                <!-- 階段會動態生成 -->
+            </div>
+            <button class="btn btn-success" onclick="addPhase()" data-intro="點擊這裡新增更多階段" data-step="7">+ 新增階段</button>
+
+            <!-- 匯出與匯入按鈕 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;" data-intro="完成編輯後，您可以匯出成 JSON 檔案保存，或匯出成獨立的 HTML 網頁" data-step="9">
+                <button class="btn btn-export" onclick="exportJSON()" style="background: #2c3e50;">💾 匯出 JSON</button>
+                <button class="btn btn-export" onclick="exportHTML()">📥 匯出完整 HTML</button>
+            </div>
+            
+            <!-- JSON 匯入區域 -->
+            <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;" data-intro="您可以匯入之前儲存的 JSON 檔案來繼續編輯" data-step="10">
+                <label for="jsonImport">📂 匯入 JSON 資料：</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="jsonImport" accept=".json" style="flex: 1; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
+                    <button class="btn btn-primary" onclick="importJSON()">匯入</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 預覽區域 -->
+        <div class="preview-section" data-intro="這裡會即時顯示您編輯的時間軸效果，所有修改都會立即反映在預覽中" data-step="11">
+            <h2>👀 即時預覽</h2>
+            <div id="timelinePreview">
+                <!-- 預覽內容會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let phases = [
+            {
+                name: '第一階段',
+                emoji: '🚀',
+                color: '#3498db',
+                events: [
+                    { date: '2024年1月', title: '專案啟動', description: '開始規劃整個專案的架構與目標。' }
+                ]
+            },
+            {
+                name: '第二階段',
+                emoji: '💡',
+                color: '#2ecc71',
+                events: [
+                    { date: '2024年3月', title: '原型開發', description: '完成初版功能與介面設計。' }
+                ]
+            }
+        ];
+        
+        // 核心樣式生成函式，確保預覽和匯出樣式一致
+        function generateTimelineStyles() {
+            let styles = `
+                .timeline-wrapper {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: #f8f9fa;
+                    border-radius: 15px;
+                    box-sizing: border-box;
+                }
+
+                .timeline-header {
+                    text-align: center;
+                    margin-bottom: 40px;
+                }
+
+                .timeline-header h2 {
+                    color: #2c3e50;
+                    font-size: 1.8rem;
+                    margin-bottom: 8px;
+                    font-weight: bold;
+                }
+
+                .timeline-header p {
+                    color: #6c757d;
+                    font-size: 1rem;
+                    margin: 0;
+                }
+
+                .timeline-container {
+                    position: relative;
+                    padding-left: 30px;
+                }
+
+                .timeline-container::before {
+                    content: '';
+                    position: absolute;
+                    left: 15px;
+                    top: 0;
+                    bottom: 0;
+                    width: 4px;
+                    background: #d1d5db;
+                    border-radius: 2px;
+                }
+
+                .phase-divider {
+                    margin: 40px 0 20px 0;
+                    position: relative;
+                }
+
+                .phase-divider h3 {
+                    background: white;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-size: 1rem;
+                    font-weight: bold;
+                    display: inline-block;
+                    border: 2px solid;
+                    margin: 0 0 0 5px;
+                    position: relative;
+                    z-index: 2;
+                }
+
+                .timeline-event {
+                    margin: 20px 0;
+                    position: relative;
+                    display: block;
+                    clear: both;
+                }
+
+                .timeline-dot {
+                    position: absolute;
+                    left: -22px;
+                    top: 15px;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    z-index: 1;
+                }
+
+                .timeline-card {
+                    background: white;
+                    border-radius: 10px;
+                    padding: 20px;
+                    margin-left: 15px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                    border-left: 4px solid #e9ecef;
+                    transition: all 0.3s ease;
+                    position: relative;
+                }
+
+                .timeline-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                }
+
+                .event-date {
+                    background: #f0f2f5;
+                    color: #34495e;
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    font-weight: bold;
+                    font-size: 0.8rem;
+                    display: inline-block;
+                    margin-bottom: 10px;
+                }
+
+                .event-title {
+                    color: #2c3e50;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                    line-height: 1.3;
+                }
+
+                .event-description {
+                    color: #5a6c7d;
+                    line-height: 1.5;
+                    font-size: 0.9rem;
+                    margin: 0;
+                }
+
+                /* 響應式設計 */
+                @media (max-width: 768px) {
+                    .timeline-wrapper {
+                        padding: 15px;
+                        margin: 10px;
+                    }
+
+                    .timeline-header h2 {
+                        font-size: 1.5rem;
+                    }
+
+                    .timeline-container {
+                        padding-left: 25px;
+                    }
+
+                    .timeline-container::before {
+                        left: 12px;
+                        width: 3px;
+                    }
+
+                    .timeline-dot {
+                        left: -18px;
+                        width: 10px;
+                        height: 10px;
+                        border-width: 2px;
+                    }
+
+                    .timeline-card {
+                        margin-left: 10px;
+                        padding: 15px;
+                    }
+
+                    .phase-divider h3 {
+                        font-size: 0.9rem;
+                        padding: 6px 12px;
+                        margin-left: -12px;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .timeline-wrapper {
+                        padding: 10px;
+                        margin: 5px;
+                    }
+
+                    .timeline-header h2 {
+                        font-size: 1.3rem;
+                    }
+
+                    .timeline-container {
+                        padding-left: 20px;
+                    }
+
+                    .timeline-container::before {
+                        left: 10px;
+                        width: 2px;
+                    }
+
+                    .timeline-dot {
+                        left: -15px;
+                        width: 8px;
+                        height: 8px;
+                        border-width: 2px;
+                    }
+
+                    .timeline-card {
+                        margin-left: 8px;
+                        padding: 12px;
+                    }
+
+                    .event-title {
+                        font-size: 1rem;
+                    }
+
+                    .event-description {
+                        font-size: 0.85rem;
+                    }
+                }
+            `;
+            return styles; // Return the generated styles string
+        }
+
+        // 函式用於生成階段 HTML
+        function generatePhaseHTML() {
+            const container = document.getElementById('phasesContainer');
+            container.innerHTML = '';
+
+            phases.forEach((phase, phaseIndex) => {
+                const phaseDiv = document.createElement('div');
+                phaseDiv.className = 'phase-section';
+                phaseDiv.innerHTML = `
+                    <div class="phase-header">
+                        <div class="form-group">
+                            <label>階段名稱：</label>
+                            <input type="text" value="${phase.name}" onchange="updatePhase(${phaseIndex}, 'name', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Emoji：</label>
+                            <input type="text" value="${phase.emoji}" onchange="updatePhase(${phaseIndex}, 'emoji', this.value)" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label>顏色：</label>
+                            <input type="color" value="${phase.color}" onchange="updatePhase(${phaseIndex}, 'color', this.value)">
+                        </div>
+                    </div>
+                    <div class="events-container" id="events-${phaseIndex}">
+                        <h4>📅 該階段事件：</h4>
+                    </div>
+                    <button class="btn btn-primary" onclick="addEvent(${phaseIndex})">+ 新增事件</button>
+                    ${phases.length > 1 ? `<button class="btn btn-danger" onclick="removePhase(${phaseIndex})" style="margin-left: 10px;">🗑️</button>` : ''}
+                `;
+                container.appendChild(phaseDiv);
+
+                // 生成該階段的事件
+                generateEventsHTML(phaseIndex);
+            });
+        }
+
+        // 函式用於生成事件 HTML
+        function generateEventsHTML(phaseIndex) {
+            const eventsContainer = document.getElementById(`events-${phaseIndex}`);
+            const eventsHTML = phases[phaseIndex].events.map((event, eventIndex) => `
+                <div class="event-item">
+                    <div class="event-controls">
+                        <div class="form-group">
+                            <label>時間：</label>
+                            <input type="text" value="${event.date}" onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'date', this.value)" placeholder="例：2024年1月">
+                        </div>
+                        <div class="form-group">
+                            <label>標題：</label>
+                            <input type="text" value="${event.title}" onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'title', this.value)" placeholder="事件標題">
+                        </div>
+                        <div class="form-group">
+                            <label>內容：</label>
+                            <textarea onchange="updateEvent(${phaseIndex}, ${eventIndex}, 'description', this.value)" placeholder="詳細描述">${event.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger" onclick="removeEvent(${phaseIndex}, ${eventIndex})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            eventsContainer.innerHTML = `<h4>📅 該階段事件：</h4>` + eventsHTML;
+        }
+
+        // 函式用於更新階段資料
+        function updatePhase(phaseIndex, field, value) {
+            phases[phaseIndex][field] = value;
+            updatePreview();
+        }
+
+        // 函式用於更新事件資料
+        function updateEvent(phaseIndex, eventIndex, field, value) {
+            phases[phaseIndex].events[eventIndex][field] = value;
+            updatePreview();
+        }
+
+        // 函式用於新增階段
+        function addPhase() {
+            phases.push({
+                name: `第${phases.length + 1}階段`,
+                emoji: '⭐',
+                color: '#f1c40f',
+                events: [
+                    { date: '2024年', title: '新事件', description: '描述這個事件的詳細內容。' }
+                ]
+            });
+            generatePhaseHTML();
+            updatePreview();
+        }
+
+        // 函式用於移除階段
+        function removePhase(phaseIndex) {
+            if (phases.length > 1) {
+                phases.splice(phaseIndex, 1);
+                generatePhaseHTML();
+                updatePreview();
+            }
+        }
+
+        // 函式用於新增事件
+        function addEvent(phaseIndex) {
+            phases[phaseIndex].events.push({
+                date: '2024年',
+                title: '新事件',
+                description: '描述這個事件的詳細內容。'
+            });
+            generateEventsHTML(phaseIndex);
+            updatePreview();
+        }
+
+        // 函式用於移除事件
+        function removeEvent(phaseIndex, eventIndex) {
+            if (phases[phaseIndex].events.length > 1) {
+                phases[phaseIndex].events.splice(eventIndex, 1);
+                generateEventsHTML(phaseIndex);
+                updatePreview();
+            }
+        }
+
+        // 函式用於更新預覽區域
+        function updatePreview() {
+            const title = document.getElementById('timelineTitle').value;
+            const subtitle = document.getElementById('timelineSubtitle').value;
+            
+            let eventsHTML = '';
+            phases.forEach((phase) => {
+                eventsHTML += `
+                    <div class="phase-divider">
+                        <h3 style="border-color: ${phase.color}; color: ${phase.color};">${phase.emoji} ${phase.name}</h3>
+                    </div>
+                `;
+
+                phase.events.forEach(event => {
+                    eventsHTML += `
+                        <div class="timeline-event">
+                            <div class="timeline-dot" style="background: ${phase.color};"></div>
+                            <div class="timeline-card" style="border-left-color: ${phase.color};">
+                                <div class="event-date">${event.date}</div>
+                                <div class="event-title">${event.title}</div>
+                                <div class="event-description">${event.description || ''}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            document.getElementById('timelinePreview').innerHTML = `
+                <div class="timeline-preview">
+                    <style>
+                        ${generateTimelineStyles()}
+                    </style>
+                    <div class="timeline-header">
+                        <h2>${title}</h2>
+                        <p>${subtitle}</p>
+                    </div>
+                    <div class="timeline-container">
+                        ${eventsHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 函式用於匯出 HTML 文件
+        function exportHTML() {
+            const title = document.getElementById('timelineTitle').value;
+            const subtitle = document.getElementById('timelineSubtitle').value;
+            
+            let eventsHTML = '';
+            phases.forEach(phase => {
+                eventsHTML += `
+            <!-- ${phase.name} -->
+            <div class="phase-divider">
+                <h3 style="border-color: ${phase.color}; color: ${phase.color};">${phase.emoji} ${phase.name}</h3>
+            </div>
+                `;
+
+                phase.events.forEach(event => {
+                    eventsHTML += `
+            <div class="timeline-event">
+                <div class="timeline-dot" style="background: ${phase.color};"></div>
+                <div class="timeline-card" style="border-left-color: ${phase.color};">
+                    <div class="event-date">${event.date}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-description">${event.description || ''}</div>
+                </div>
+            </div>
+                    `;
+                });
+            });
+
+            const fullHTML = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        ${generateTimelineStyles()}
+    </style>
+</head>
+<body>
+    <div class="timeline-wrapper">
+        <div class="timeline-header">
+            <h2>${title}</h2>
+            <p>${subtitle}</p>
+        </div>
+
+        <div class="timeline-container">
+            ${eventsHTML}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // 下載 HTML 文件
+            const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}_timeline.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // JSON 匯出功能
+        function exportJSON() {
+            // 準備要匯出的資料
+            const exportData = {
+                title: document.getElementById('timelineTitle').value,
+                subtitle: document.getElementById('timelineSubtitle').value,
+                phases: phases
+            };
+            
+            // 轉換為 JSON 字串
+            const jsonString = JSON.stringify(exportData, null, 2);
+            
+            // 下載 JSON 檔案
+            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${exportData.title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}_timeline.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // JSON 匯入功能
+        function importJSON() {
+            const fileInput = document.getElementById('jsonImport');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('請先選擇一個 JSON 檔案');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // 解析 JSON 資料
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // 驗證資料格式
+                    if (!importedData.phases || !Array.isArray(importedData.phases)) {
+                        throw new Error('無效的 JSON 格式：缺少 phases 陣列');
+                    }
+                    
+                    // 更新標題和副標題
+                    if (importedData.title) {
+                        document.getElementById('timelineTitle').value = importedData.title;
+                    }
+                    
+                    if (importedData.subtitle) {
+                        document.getElementById('timelineSubtitle').value = importedData.subtitle;
+                    }
+                    
+                    // 更新階段資料
+                    phases = importedData.phases;
+                    
+                    // 重新生成 UI
+                    generatePhaseHTML();
+                    updatePreview();
+                    
+                    alert('JSON 資料匯入成功！');
+                } catch (error) {
+                    alert(`匯入失敗：${error.message}`);
+                    console.error('JSON 匯入錯誤:', error);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('讀取檔案時發生錯誤');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 初始化導覽功能
+        function startGuide() {
+            // 設定 intro.js
+            const intro = introJs();
+            
+            intro.setOptions({
+                // 設定選項
+                nextLabel: '下一步 →',
+                prevLabel: '← 上一步',
+                skipLabel: '跳過',
+                doneLabel: '完成',
+                tooltipPosition: 'auto',
+                exitOnOverlayClick: false,
+                showProgress: true,
+                showBullets: true,
+                scrollToElement: true,
+                scrollPadding: 30,
+                overlayOpacity: 0.7,
+                disableInteraction: false
+            });
+            
+            // 開始導覽
+            intro.start();
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化頁面內容
+            generatePhaseHTML();
+            updatePreview();
+
+            // 綁定標題變更事件
+            document.getElementById('timelineTitle').addEventListener('input', updatePreview);
+            document.getElementById('timelineSubtitle').addEventListener('input', updatePreview);
+        });
+    </script>
+    <!-- Intro.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
+</body>
+</html>
