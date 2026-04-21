@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生存成本計算機 Pro — Chris Web Tools</title>
+    <meta name="description" content="把每筆固定支出換算成日均成本與工時代價，支援分攤人數、用途分類、投資/儲蓄獨立統計與 4% FIRE 目標試算。資料只存在你的瀏覽器。">
+    <link rel="canonical" href="https://chrischotw.github.io/tools/cost-of-living/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="生存成本計算機 Pro">
+    <meta property="og:description" content="把每筆固定支出換算成日均成本與工時代價，幫你看清月光的真相。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chrischotw.github.io/tools/cost-of-living/">
+    <meta property="og:locale" content="zh_TW">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FV6ZHXEWMP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FV6ZHXEWMP');
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 2.5rem;
+            border: 1px solid white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 共用輸入框容器 */
+        .input-container {
+            display: flex;
+            align-items: center;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            padding: 0 1.25rem;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .input-container:focus-within {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .input-container input {
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 1rem 0.75rem;
+            width: 100%;
+            font-size: 1.125rem;
+        }
+
+        .input-container i {
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .input-container:focus-within i {
+            color: #4f46e5;
+            transform: scale(1.1);
+        }
+
+        /* 頻率切換按鈕 */
+        .toggle-btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .toggle-active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .toggle-inactive {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .toggle-inactive:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Emoji 按鈕 */
+        .emoji-btn {
+            width: 3.25rem;
+            height: 3.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1.125rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 2px solid transparent;
+            background-color: white;
+            line-height: 1;
+            position: relative;
+        }
+
+        .emoji-btn:hover { transform: scale(1.08); background-color: #f8fafc; }
+
+        .emoji-active {
+            background-color: #4f46e5;
+            border-color: #4338ca;
+            box-shadow: 0 8px 14px -3px rgba(79, 70, 229, 0.4);
+            transform: scale(1.12);
+            z-index: 10;
+        }
+
+        /* 智慧建議的金色光暈 */
+        .emoji-suggested::after {
+            content: '✨';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            font-size: 0.8rem;
+            background: #fbbf24;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.5);
+        }
+
+        /* Emoji 分類 tab */
+        .cat-tab {
+            padding: 0.45rem 0.95rem;
+            border-radius: 0.875rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px solid transparent;
+            flex-shrink: 0;
+        }
+        .cat-tab:hover { background-color: #e2e8f0; }
+        .cat-tab.active {
+            background-color: white;
+            color: #4f46e5;
+            border-color: #c7d2fe;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Emoji grid 滾動樣式 */
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
+            gap: 0.4rem;
+            max-height: 16rem;
+            overflow-y: auto;
+            padding: 0.5rem;
+            scrollbar-width: thin;
+        }
+        .emoji-grid::-webkit-scrollbar { width: 6px; }
+        .emoji-grid::-webkit-scrollbar-track { background: transparent; }
+        .emoji-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* 項目列表的 action 按鈕 */
+        .item-action {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .item-action:hover { transform: scale(1.08); }
+
+        .item-paused {
+            opacity: 0.45;
+            filter: grayscale(0.6);
+        }
+
+        /* 拖曳排序 */
+        .drag-handle { cursor: grab; color: #cbd5e1; transition: color 0.15s; }
+        .drag-handle:hover { color: #64748b; }
+        .dragging { opacity: 0.35; transform: scale(0.98); }
+        .drag-over-top { border-top: 3px solid #4f46e5 !important; }
+        .drag-over-bottom { border-bottom: 3px solid #4f46e5 !important; }
+
+        /* Grid 卡片 */
+        .grid-card {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.75rem;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .grid-card:hover { box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12); transform: translateY(-2px); }
+        .grid-card.type-investment { border-left: 4px solid #10b981; }
+        .grid-card.type-savings { border-left: 4px solid #0ea5e9; }
+
+        /* 檢視切換按鈕 */
+        .view-btn {
+            padding: 0.4rem 0.7rem;
+            border-radius: 0.625rem;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .view-btn-active { background: white; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .view-btn-inactive { color: #94a3b8; }
+        .view-btn-inactive:hover { color: #475569; }
+
+        /* 步驟條可點擊 */
+        .step-bar { cursor: pointer; transition: all 0.3s; }
+        .step-bar:hover { opacity: 0.75; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-pop { animation: slideIn 0.3s ease-out; }
+
+        /* 比例橫條（堆疊長條） */
+        .breakdown-segment {
+            height: 100%;
+            display: inline-block;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .breakdown-segment:hover { filter: brightness(1.15); }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+    <!-- 訊息提示 -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-8 py-4 bg-slate-900/95 backdrop-blur-md text-white rounded-full text-sm font-bold shadow-2xl transition-all duration-300 opacity-0 translate-y-10 z-[100] pointer-events-none border border-white/10"></div>
+
+    <div class="max-w-3xl mx-auto">
+        <!-- 頂部標題 -->
+        <header class="mb-10 flex justify-between items-center px-2">
+            <div class="flex items-center gap-4">
+                <div class="p-3.5 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-200">
+                    <i data-lucide="calculator" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">生存成本計算機</h1>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="p-3 bg-white rounded-2xl border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm" title="下載備份">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                </button>
+                <label class="p-3 bg-white rounded-2xl border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm cursor-pointer" title="上傳備份">
+                    <i data-lucide="upload" class="w-5 h-5"></i>
+                    <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
+        </header>
+
+        <!-- 數據儀表板 -->
+        <div class="glass-card p-10 mb-6 border-b-[12px] border-indigo-600">
+            <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-8">
+                <div class="flex-1 text-center md:text-left">
+                    <div class="text-[11px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-2">今日生存代償</div>
+                    <div class="flex items-baseline justify-center md:justify-start gap-3">
+                        <span class="text-7xl font-black text-slate-900 tracking-tighter" id="todayTotalText">$0</span>
+                        <span class="text-slate-400 font-bold text-xl" id="percentageText">/ 0%</span>
+                    </div>
+                    <div class="mt-3 text-xs font-bold text-slate-500" id="hoursText">≈ 0 小時工時</div>
+                    <div class="mt-6">
+                        <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden shadow-inner border border-slate-200">
+                            <div id="progressFill" class="bg-indigo-600 h-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-3 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                            <span>低支出餘裕</span>
+                            <span id="amortizedDetailText" class="font-bold">固定分攤: $0</span>
+                            <span>高薪資佔比</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-64 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 shadow-inner flex flex-col justify-between">
+                    <div class="mb-4">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">我的月薪設定</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-bold text-slate-300">$</span>
+                            <input type="number" id="salaryInput" class="w-full text-3xl font-black bg-transparent border-none p-0 focus:ring-0 text-slate-800" value="40000" onchange="updateSalary()">
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-200 grid grid-cols-2 gap-2">
+                        <div>
+                            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">平均日薪</div>
+                            <div class="text-lg font-bold text-slate-700">$<span id="dailySalaryText">0</span></div>
+                        </div>
+                        <div class="text-right border-l border-slate-200 pl-2">
+                            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">月預算總計</div>
+                            <div class="text-lg font-bold text-indigo-600">$<span id="monthlyFixedTotalText">0</span></div>
+                        </div>
+                    </div>
+                    <!-- 月工時設定（工時換算用） -->
+                    <div class="pt-3 mt-3 border-t border-slate-200 flex items-center justify-between">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">月工時</span>
+                        <input type="number" id="hoursInput" value="176" onchange="updateHours()" class="w-16 text-right text-sm font-black bg-transparent border-b border-slate-200 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投資 / FIRE / 緊急金 三張小卡 -->
+        <div id="investCards" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div class="glass-card p-5 border-l-4 border-emerald-500">
+                <div class="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-emerald-600 mb-1">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                    每月投入資產
+                </div>
+                <div class="text-2xl font-black text-slate-800">$<span id="investAmount">0</span></div>
+                <div class="text-[11px] text-slate-400 mt-1 font-bold">儲蓄率 <span id="savingsRate" class="text-emerald-600 font-black">0</span>% · 投資+儲蓄</div>
+            </div>
+            <div class="glass-card p-5 border-l-4 border-indigo-500">
+                <div class="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-indigo-600 mb-1">
+                    <i data-lucide="target" class="w-3.5 h-3.5"></i>
+                    FIRE 目標 (4% 法則)
+                </div>
+                <div class="text-2xl font-black text-slate-800">$<span id="fireTarget">0</span></div>
+                <div class="text-[11px] text-slate-400 mt-1 font-bold">年消費 × 25 · 預估 <span id="fireYears" class="text-indigo-600 font-black">∞</span> 年</div>
+            </div>
+            <div class="glass-card p-5 border-l-4 border-amber-500">
+                <div class="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-amber-600 mb-1">
+                    <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                    緊急預備金
+                </div>
+                <div class="text-2xl font-black text-slate-800">$<span id="emergencyFund">0</span></div>
+                <div class="text-[11px] text-slate-400 mt-1 font-bold">6 個月消費 · 失業緩衝</div>
+            </div>
+        </div>
+
+        <!-- 比例橫條圖（兩條：依項目 / 依用途） -->
+        <div id="breakdownSection" class="hidden glass-card p-5 mb-4 space-y-5">
+            <div class="flex justify-between items-center">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">月支出組成</span>
+                <span id="breakdownCount" class="text-[10px] font-black text-slate-400 uppercase tracking-widest"></span>
+            </div>
+
+            <!-- 依項目分色 -->
+            <div>
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">依項目</div>
+                <div class="w-full h-5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 flex" id="breakdownBarItem"></div>
+                <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold" id="breakdownLegendItem"></div>
+            </div>
+
+            <!-- 依用途分色 -->
+            <div>
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">依用途</div>
+                <div class="w-full h-5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 flex" id="breakdownBarPurpose"></div>
+                <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold" id="breakdownLegendPurpose"></div>
+            </div>
+        </div>
+
+        <!-- 內容區域 -->
+        <div class="space-y-4">
+            <button id="addToggleBtn" onclick="openAddForm()" class="w-full py-6 bg-white border-4 border-dashed border-slate-100 rounded-[2.5rem] text-slate-400 font-bold hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-3 group active:scale-95 shadow-sm">
+                <div class="p-2 bg-slate-50 rounded-xl group-hover:bg-indigo-100 transition-colors">
+                    <i data-lucide="plus" class="w-6 h-6 text-slate-400 group-hover:text-indigo-600"></i>
+                </div>
+                <span class="text-lg">新增支出明細</span>
+            </button>
+
+            <!-- 建議瀏覽 modal（隱藏，從表單裡的連結觸發） -->
+            <div id="suggestionsPanel" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this)toggleSuggestions()"></div>
+
+            <!-- 檢視切換 + 提示 -->
+            <div id="viewToolbar" class="hidden flex items-center justify-between px-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    拖曳卡片 ⇅ 即可排序
+                </span>
+                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
+                    <button onclick="setViewMode('grid')" id="viewGridBtn" class="view-btn view-btn-active" title="格狀檢視">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="setViewMode('list')" id="viewListBtn" class="view-btn view-btn-inactive" title="列表檢視">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 新增/編輯表單（步驟式） -->
+            <div id="addForm" class="hidden glass-card p-8 md:p-10 animate-pop space-y-7 border-2 border-indigo-100">
+                <!-- 步驟指示列 -->
+                <div class="flex items-center justify-between">
+                    <div class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">
+                        <span id="formModeLabel">新增支出</span>
+                        <span class="text-slate-300 mx-2">·</span>
+                        步驟 <span id="currentStepText" class="text-indigo-600">1</span> / <span id="totalStepText">4</span>
+                    </div>
+                    <button onclick="closeAddForm()" class="text-slate-300 hover:text-rose-500 transition-colors" title="關閉">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <div class="step-bar h-2 flex-1 rounded-full bg-indigo-600" data-step="1" onclick="jumpToStep(1)"></div>
+                    <div class="step-bar h-2 flex-1 rounded-full bg-slate-200" data-step="2" onclick="jumpToStep(2)"></div>
+                    <div class="step-bar h-2 flex-1 rounded-full bg-slate-200" data-step="3" onclick="jumpToStep(3)"></div>
+                    <div class="step-bar h-2 flex-1 rounded-full bg-slate-200" data-step="4" onclick="jumpToStep(4)"></div>
+                </div>
+
+                <!-- Step 1: 項目名稱（含 autocomplete 建議） -->
+                <div class="step-content space-y-5 animate-pop" data-step="1">
+                    <div class="text-center">
+                        <div class="text-2xl font-black text-slate-800 mb-2">項目名稱是？</div>
+                        <div class="text-sm text-slate-400 font-medium">打字會出現建議 💡，點一下整筆預填</div>
+                    </div>
+                    <div class="relative">
+                        <div class="input-container">
+                            <i data-lucide="tag" class="w-5 h-5 flex-shrink-0"></i>
+                            <input type="text" id="itemName" autocomplete="off" placeholder="例如：奶粉、房租、Netflix..." oninput="renderAutocomplete()">
+                        </div>
+                        <div id="autocompleteList" class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-amber-200 rounded-2xl shadow-2xl z-30 max-h-72 overflow-y-auto"></div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" onclick="toggleSuggestions()" class="text-xs font-bold text-slate-400 hover:text-amber-600 transition-colors inline-flex items-center gap-1">
+                            <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>
+                            想不到？瀏覽全部建議範本 ▾
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: 金額 -->
+                <div class="step-content hidden space-y-5" data-step="2">
+                    <div class="text-center">
+                        <div class="text-2xl font-black text-slate-800 mb-2">單筆金額多少？</div>
+                        <div class="text-sm text-slate-400 font-medium">輸入單次的支出金額</div>
+                    </div>
+                    <div class="input-container">
+                        <i data-lucide="dollar-sign" class="w-5 h-5 flex-shrink-0"></i>
+                        <input type="number" id="itemAmount" placeholder="輸入金額" inputmode="decimal">
+                    </div>
+                </div>
+
+                <!-- Step 3: 類型 / 頻率 / 次數 / 分攤 -->
+                <div class="step-content hidden space-y-6" data-step="3">
+                    <div class="text-center">
+                        <div class="text-2xl font-black text-slate-800 mb-2">支出細節</div>
+                        <div class="text-sm text-slate-400 font-medium">類型、頻率、分攤人數</div>
+                    </div>
+                    <!-- 類型 -->
+                    <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-500 ml-3 uppercase tracking-widest">
+                            項目類型 <span class="text-slate-300 normal-case tracking-normal font-bold ml-1">（投資 / 儲蓄不算進「生存代償」）</span>
+                        </label>
+                        <div class="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 gap-1">
+                            <button onclick="setType('consumption')" id="typeConsume" class="toggle-btn toggle-active flex-1">💸 消費</button>
+                            <button onclick="setType('investment')" id="typeInvest" class="toggle-btn toggle-inactive flex-1">📈 投資</button>
+                            <button onclick="setType('savings')" id="typeSave" class="toggle-btn toggle-inactive flex-1">🏦 儲蓄</button>
+                        </div>
+                    </div>
+                    <!-- 用途次要分類（只在消費類顯示） -->
+                    <div id="purposeSection" class="space-y-3">
+                        <label class="text-xs font-black text-slate-500 ml-3 uppercase tracking-widest">
+                            用途 <span class="text-slate-300 normal-case tracking-normal font-bold ml-1">（幫你判斷哪些可砍）</span>
+                        </label>
+                        <div class="flex flex-wrap gap-2" id="purposePicker"></div>
+                    </div>
+                    <!-- 頻率 -->
+                    <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-500 ml-3 uppercase tracking-widest">支出頻率</label>
+                        <div class="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 gap-1">
+                            <button onclick="setFreq('day')" id="freqDay" class="toggle-btn toggle-active flex-1">每日計價</button>
+                            <button onclick="setFreq('month')" id="freqMonth" class="toggle-btn toggle-inactive flex-1">每月固定</button>
+                            <button onclick="setFreq('period')" id="freqPeriod" class="toggle-btn toggle-inactive flex-1">每 N 月</button>
+                        </div>
+                        <div id="freqHint" class="text-[10px] text-slate-400 ml-3 font-bold">每日計價 → 每月發生 N 天</div>
+                    </div>
+                    <!-- 次數 / 週期 -->
+                    <div class="space-y-3">
+                        <label id="countLabel" class="text-xs font-black text-slate-500 ml-3 uppercase tracking-widest">每月發生天數</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="itemCount" value="22" min="1" oninput="updatePreview()" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-center font-black text-2xl shadow-inner outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <span class="text-sm font-black text-slate-400 whitespace-nowrap" id="unitLabel">天 / 月</span>
+                        </div>
+                    </div>
+                    <!-- 分攤 -->
+                    <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-500 ml-3 uppercase tracking-widest">
+                            分攤人數 <span class="text-slate-300 normal-case tracking-normal font-bold ml-1">（1 = 自己全包）</span>
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="itemSplit" value="1" min="1" oninput="updatePreview()" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-center font-black text-2xl shadow-inner outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <span class="text-sm font-black text-slate-400 whitespace-nowrap">人（含自己）</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: 選擇 Emoji -->
+                <div class="step-content hidden space-y-5" data-step="4">
+                    <div class="text-center">
+                        <div class="text-2xl font-black text-slate-800 mb-2">選個代表圖示</div>
+                        <div class="text-sm text-slate-400 font-medium">支援搜尋、自由輸入，或使用智慧建議 ✨</div>
+                    </div>
+
+                    <!-- 搜尋 + 自由輸入列 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="input-container">
+                            <i data-lucide="search" class="w-5 h-5 flex-shrink-0"></i>
+                            <input type="text" id="emojiSearch" placeholder="搜尋（咖啡、房租、coffee）" oninput="renderEmojiPicker()">
+                        </div>
+                        <div class="input-container">
+                            <i data-lucide="edit-3" class="w-5 h-5 flex-shrink-0"></i>
+                            <input type="text" id="emojiCustom" placeholder="貼上任何 Emoji 或字元" maxlength="4" oninput="useCustomEmoji()">
+                        </div>
+                    </div>
+
+                    <!-- 分類 tab -->
+                    <div class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" id="emojiCatTabs"></div>
+
+                    <!-- Emoji grid -->
+                    <div class="bg-slate-50 rounded-[1.5rem] border border-slate-200">
+                        <div class="emoji-grid" id="emojiPicker"></div>
+                    </div>
+
+                    <!-- 預覽摘要 -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-2xl shadow-inner" id="previewEmoji">🍱</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-extrabold text-slate-800 truncate" id="previewName">未填寫</div>
+                            <div class="text-[11px] font-black text-indigo-500 uppercase tracking-widest mt-0.5" id="previewDetail">$0 × 0</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">月小計</div>
+                            <div class="text-lg font-black text-indigo-600" id="previewTotal">$0</div>
+                        </div>
+                    </div>
+
+                    <!-- 連續新增切換 -->
+                    <label class="flex items-center gap-3 cursor-pointer select-none px-2" id="continuousLabel">
+                        <input type="checkbox" id="continuousMode" class="w-5 h-5 rounded-md text-indigo-600 focus:ring-indigo-500/20">
+                        <span class="text-sm font-bold text-slate-600">連續新增（送出後直接開新一筆）</span>
+                    </label>
+                </div>
+
+                <!-- 導覽按鈕 -->
+                <div class="flex gap-3 pt-6 border-t border-slate-100">
+                    <button id="prevStepBtn" onclick="prevStep()" class="flex-1 md:flex-none px-8 py-4 rounded-2xl font-bold bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all hidden">上一步</button>
+                    <button id="nextStepBtn" onclick="nextStep()" class="flex-1 px-10 py-4 rounded-2xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-200 active:scale-95 transition-all">下一步</button>
+                </div>
+            </div>
+
+            <!-- 清單 -->
+            <ul id="itemList" class="space-y-4 pb-10"></ul>
+        </div>
+
+        <footer class="mt-10 mb-20 text-center">
+            <div class="inline-flex items-center gap-2 px-6 py-2.5 bg-white rounded-full shadow-sm border border-slate-100">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">個人隱私資料僅儲存於本地瀏覽器</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ============ Emoji 資料 ============
+        // 常用清單（顯示在「常用」分類）
+        const COMMON_EMOJIS = ['🏠','🍱','☕','🚌','🛒','💊','📱','🎮','💡','⛽','🏋️','📈','🍔','🍵','💼','✈️','🐈','🛍️','📚','🎬','💄','🍰','🚗','💳'];
+
+        // emoji 主資料：e=emoji, k=搜尋與智慧建議關鍵字, c=分類
+        const EMOJI_DATA = [
+            // 居家
+            {e:'🏠',k:'房租 住宿 家 房屋 居家 home house rent',c:'居家'},
+            {e:'🛋️',k:'沙發 家具 客廳 furniture',c:'居家'},
+            {e:'🛏️',k:'床 寢具 床墊 bed',c:'居家'},
+            {e:'🚿',k:'淋浴 洗澡 shower',c:'居家'},
+            {e:'🚽',k:'廁所 馬桶 toilet',c:'居家'},
+            {e:'🧻',k:'衛生紙 紙巾 toilet paper',c:'居家'},
+            {e:'🧼',k:'肥皂 洗手 soap',c:'居家'},
+            {e:'🧴',k:'瓶 沐浴 洗髮 shampoo lotion',c:'居家'},
+            {e:'🧹',k:'打掃 掃把 清潔 broom clean',c:'居家'},
+            {e:'🧺',k:'籃子 洗衣 laundry',c:'居家'},
+            {e:'💡',k:'電費 燈泡 照明 electricity light',c:'居家'},
+            {e:'🔌',k:'插頭 電器 plug',c:'居家'},
+            {e:'🪴',k:'植物 盆栽 plant',c:'居家'},
+            {e:'🛁',k:'浴缸 泡澡 bath',c:'居家'},
+            {e:'💧',k:'水費 水 water',c:'居家'},
+            {e:'🔥',k:'瓦斯 暖氣 gas heat',c:'居家'},
+            {e:'🪑',k:'椅子 家具 chair',c:'居家'},
+            // 飲食
+            {e:'🍱',k:'便當 午餐 晚餐 飯 lunch dinner',c:'飲食'},
+            {e:'🍔',k:'漢堡 速食 burger fast',c:'飲食'},
+            {e:'🍕',k:'披薩 pizza',c:'飲食'},
+            {e:'🍣',k:'壽司 日料 sushi',c:'飲食'},
+            {e:'🍜',k:'拉麵 麵 noodle ramen',c:'飲食'},
+            {e:'🍝',k:'義大利麵 pasta',c:'飲食'},
+            {e:'🍛',k:'咖哩 飯 curry',c:'飲食'},
+            {e:'🍙',k:'飯糰 onigiri',c:'飲食'},
+            {e:'🥗',k:'沙拉 salad',c:'飲食'},
+            {e:'🌮',k:'墨西哥 taco',c:'飲食'},
+            {e:'🥪',k:'三明治 sandwich',c:'飲食'},
+            {e:'🍳',k:'蛋 早餐 breakfast egg',c:'飲食'},
+            {e:'🥩',k:'牛排 肉 steak meat',c:'飲食'},
+            {e:'🍗',k:'雞腿 炸雞 chicken',c:'飲食'},
+            {e:'🌭',k:'熱狗 hotdog',c:'飲食'},
+            {e:'🥖',k:'麵包 bread baguette',c:'飲食'},
+            {e:'🧀',k:'起司 cheese',c:'飲食'},
+            {e:'🍩',k:'甜甜圈 donut',c:'飲食'},
+            {e:'🍪',k:'餅乾 cookie',c:'飲食'},
+            {e:'🍰',k:'蛋糕 甜點 cake dessert',c:'飲食'},
+            {e:'🎂',k:'生日蛋糕 birthday cake',c:'飲食'},
+            {e:'🧁',k:'杯子蛋糕 cupcake',c:'飲食'},
+            {e:'🍦',k:'冰淇淋 ice cream',c:'飲食'},
+            {e:'🍫',k:'巧克力 chocolate',c:'飲食'},
+            {e:'🍿',k:'爆米花 popcorn',c:'飲食'},
+            {e:'🍎',k:'蘋果 水果 apple fruit',c:'飲食'},
+            {e:'🍌',k:'香蕉 banana',c:'飲食'},
+            {e:'🍇',k:'葡萄 grape',c:'飲食'},
+            {e:'🍉',k:'西瓜 watermelon',c:'飲食'},
+            {e:'🍓',k:'草莓 strawberry',c:'飲食'},
+            {e:'🥑',k:'酪梨 avocado',c:'飲食'},
+            // 飲料
+            {e:'☕',k:'咖啡 拿鐵 美式 coffee latte',c:'飲料'},
+            {e:'🍵',k:'茶 抹茶 tea matcha',c:'飲料'},
+            {e:'🧋',k:'珍奶 手搖 boba bubble tea',c:'飲料'},
+            {e:'🥤',k:'飲料 汽水 soda',c:'飲料'},
+            {e:'🧃',k:'果汁 juice',c:'飲料'},
+            {e:'🥛',k:'牛奶 milk',c:'飲料'},
+            {e:'🍺',k:'啤酒 beer',c:'飲料'},
+            {e:'🍻',k:'乾杯 喝酒 cheers',c:'飲料'},
+            {e:'🍷',k:'紅酒 wine',c:'飲料'},
+            {e:'🍸',k:'調酒 cocktail',c:'飲料'},
+            {e:'🥂',k:'香檳 慶祝 champagne',c:'飲料'},
+            {e:'🍶',k:'清酒 sake',c:'飲料'},
+            {e:'🥃',k:'威士忌 whisky',c:'飲料'},
+            // 交通
+            {e:'🚌',k:'公車 bus',c:'交通'},
+            {e:'🚗',k:'汽車 開車 car',c:'交通'},
+            {e:'🚕',k:'計程車 taxi',c:'交通'},
+            {e:'🚇',k:'捷運 地鐵 mrt subway',c:'交通'},
+            {e:'🚆',k:'火車 高鐵 train',c:'交通'},
+            {e:'🏍️',k:'機車 重機 motorcycle',c:'交通'},
+            {e:'🛵',k:'摩托車 速可達 scooter',c:'交通'},
+            {e:'🚲',k:'腳踏車 ubike bike',c:'交通'},
+            {e:'⛽',k:'加油 油錢 汽油 gas fuel',c:'交通'},
+            {e:'🅿️',k:'停車費 parking',c:'交通'},
+            {e:'✈️',k:'機票 飛機 飛行 flight plane',c:'交通'},
+            {e:'⛵',k:'船 sailing boat',c:'交通'},
+            {e:'🚀',k:'火箭 rocket',c:'交通'},
+            {e:'🛺',k:'三輪車 嘟嘟車 tuktuk',c:'交通'},
+            // 健康
+            {e:'💊',k:'藥 保健品 藥丸 medicine pill',c:'健康'},
+            {e:'🩺',k:'看診 醫生 doctor',c:'健康'},
+            {e:'💉',k:'打針 疫苗 vaccine injection',c:'健康'},
+            {e:'🩹',k:'OK 繃 創可貼 bandage',c:'健康'},
+            {e:'🦷',k:'牙醫 看牙 dental tooth',c:'健康'},
+            {e:'👁️',k:'眼科 視力 eye',c:'健康'},
+            {e:'🧠',k:'心理 諮商 brain therapy',c:'健康'},
+            {e:'🧴',k:'保養 lotion',c:'健康'},
+            {e:'🏥',k:'醫院 hospital',c:'健康'},
+            {e:'🩸',k:'抽血 捐血 blood',c:'健康'},
+            // 工作
+            {e:'💼',k:'公事包 上班 工作 briefcase work',c:'工作'},
+            {e:'📊',k:'報表 數據 chart',c:'工作'},
+            {e:'📈',k:'投資 股票 stock invest',c:'工作'},
+            {e:'📉',k:'下跌 虧損 loss',c:'工作'},
+            {e:'💰',k:'金錢 收入 income money',c:'工作'},
+            {e:'💸',k:'花錢 支出 expense',c:'工作'},
+            {e:'💳',k:'信用卡 刷卡 credit card',c:'工作'},
+            {e:'💵',k:'現金 鈔票 cash',c:'工作'},
+            {e:'🧾',k:'發票 收據 receipt invoice',c:'工作'},
+            {e:'🏢',k:'辦公室 公司 office',c:'工作'},
+            {e:'📝',k:'筆記 寫作 note',c:'工作'},
+            {e:'🖊️',k:'筆 文具 pen',c:'工作'},
+            // 3C
+            {e:'📱',k:'手機 通訊 電信 phone mobile',c:'3C'},
+            {e:'💻',k:'筆電 電腦 laptop computer',c:'3C'},
+            {e:'🖥️',k:'桌機 螢幕 desktop monitor',c:'3C'},
+            {e:'⌨️',k:'鍵盤 keyboard',c:'3C'},
+            {e:'🖱️',k:'滑鼠 mouse',c:'3C'},
+            {e:'🖨️',k:'印表機 列印 printer',c:'3C'},
+            {e:'📷',k:'相機 拍照 camera',c:'3C'},
+            {e:'🎧',k:'耳機 音樂 headphone',c:'3C'},
+            {e:'🤖',k:'ai 機器人 chatgpt claude robot',c:'3C'},
+            {e:'🪪',k:'證件 id',c:'3C'},
+            {e:'🔋',k:'電池 行動電源 battery',c:'3C'},
+            {e:'📡',k:'網路 wifi 訊號 internet',c:'3C'},
+            // 娛樂
+            {e:'🎮',k:'遊戲 電玩 game',c:'娛樂'},
+            {e:'🕹️',k:'搖桿 街機 arcade',c:'娛樂'},
+            {e:'🎲',k:'桌遊 骰子 board game',c:'娛樂'},
+            {e:'🎯',k:'目標 飛鏢 target',c:'娛樂'},
+            {e:'🎳',k:'保齡球 bowling',c:'娛樂'},
+            {e:'🎬',k:'電影 看電影 movie cinema',c:'娛樂'},
+            {e:'📺',k:'電視 追劇 tv drama',c:'娛樂'},
+            {e:'🎤',k:'KTV 唱歌 karaoke',c:'娛樂'},
+            {e:'🎵',k:'音樂 串流 spotify music',c:'娛樂'},
+            {e:'🎸',k:'吉他 樂器 guitar',c:'娛樂'},
+            {e:'🎹',k:'鋼琴 piano',c:'娛樂'},
+            {e:'🎨',k:'畫畫 美術 art painting',c:'娛樂'},
+            {e:'📚',k:'書 閱讀 book reading',c:'娛樂'},
+            {e:'🎭',k:'表演 劇場 theater',c:'娛樂'},
+            // 服飾美容
+            {e:'👔',k:'領帶 西裝 上衣 shirt tie',c:'服飾'},
+            {e:'👕',k:'T恤 上衣 tshirt',c:'服飾'},
+            {e:'👖',k:'褲子 牛仔褲 jeans pants',c:'服飾'},
+            {e:'👗',k:'洋裝 連衣裙 dress',c:'服飾'},
+            {e:'👟',k:'運動鞋 球鞋 sneakers',c:'服飾'},
+            {e:'👠',k:'高跟鞋 heels',c:'服飾'},
+            {e:'👜',k:'包包 handbag',c:'服飾'},
+            {e:'🎒',k:'背包 後背包 backpack',c:'服飾'},
+            {e:'🧥',k:'外套 大衣 coat jacket',c:'服飾'},
+            {e:'🧣',k:'圍巾 scarf',c:'服飾'},
+            {e:'🎩',k:'帽子 hat',c:'服飾'},
+            {e:'🛍️',k:'購物 血拼 shopping',c:'服飾'},
+            {e:'💄',k:'口紅 化妝 lipstick makeup',c:'服飾'},
+            {e:'💅',k:'美甲 指甲 nail',c:'服飾'},
+            {e:'💈',k:'剪頭髮 美髮 barber',c:'服飾'},
+            {e:'🧖',k:'美容 spa 按摩 facial',c:'服飾'},
+            {e:'💍',k:'戒指 飾品 ring jewelry',c:'服飾'},
+            {e:'🧦',k:'襪子 socks',c:'服飾'},
+            // 寵物與親友
+            {e:'🐈',k:'貓 cat',c:'寵物'},
+            {e:'🐕',k:'狗 dog',c:'寵物'},
+            {e:'🐹',k:'倉鼠 hamster',c:'寵物'},
+            {e:'🐇',k:'兔子 rabbit',c:'寵物'},
+            {e:'🐢',k:'烏龜 turtle',c:'寵物'},
+            {e:'🐠',k:'魚 fish',c:'寵物'},
+            {e:'🦜',k:'鸚鵡 parrot',c:'寵物'},
+            {e:'👶',k:'寶寶 嬰兒 baby',c:'寵物'},
+            {e:'👨‍👩‍👧',k:'家人 family',c:'寵物'},
+            {e:'🎁',k:'禮物 送禮 gift',c:'寵物'},
+            {e:'💐',k:'花束 鮮花 flowers',c:'寵物'},
+            // 旅遊
+            {e:'🏖️',k:'海邊 度假 beach',c:'旅遊'},
+            {e:'🏔️',k:'山 登山 mountain',c:'旅遊'},
+            {e:'🏕️',k:'露營 camping',c:'旅遊'},
+            {e:'🏞️',k:'國家公園 park',c:'旅遊'},
+            {e:'🏝️',k:'小島 度假 island',c:'旅遊'},
+            {e:'🗺️',k:'地圖 旅遊 map travel',c:'旅遊'},
+            {e:'🧳',k:'行李 旅行 luggage',c:'旅遊'},
+            {e:'🏨',k:'飯店 旅館 hotel',c:'旅遊'},
+            {e:'🎡',k:'摩天輪 樂園 ferris',c:'旅遊'},
+            {e:'🎢',k:'雲霄飛車 樂園 amusement',c:'旅遊'},
+            // 運動健身
+            {e:'🏋️',k:'健身房 重訓 gym workout',c:'其他'},
+            {e:'🏃',k:'跑步 慢跑 running',c:'其他'},
+            {e:'🚴',k:'騎車 cycling',c:'其他'},
+            {e:'🏊',k:'游泳 swimming',c:'其他'},
+            {e:'🧘',k:'瑜伽 冥想 yoga',c:'其他'},
+            {e:'⚽',k:'足球 soccer',c:'其他'},
+            {e:'🏀',k:'籃球 basketball',c:'其他'},
+            {e:'🎾',k:'網球 tennis',c:'其他'},
+            // 其他
+            {e:'🛒',k:'購物車 雜貨 grocery shopping',c:'其他'},
+            {e:'🎓',k:'學費 教育 課程 tuition education',c:'其他'},
+            {e:'⛪',k:'宗教 信仰 教會 church',c:'其他'},
+            {e:'🪙',k:'代幣 加密貨幣 coin crypto',c:'其他'},
+            {e:'🎟️',k:'門票 票券 ticket',c:'其他'},
+            {e:'📦',k:'包裹 網購 package',c:'其他'},
+            {e:'🌧️',k:'雨天 weather',c:'其他'},
+            {e:'🎉',k:'派對 慶祝 party',c:'其他'},
+            {e:'❤️',k:'喜歡 愛 love heart',c:'其他'},
+            {e:'⭐',k:'星星 收藏 star',c:'其他'}
+        ];
+
+        const EMOJI_CATS = ['常用','居家','飲食','飲料','交通','健康','工作','3C','娛樂','服飾','寵物','旅遊','其他'];
+
+        // ============ 次要分類「用途」（只用在消費類，幫忙判斷哪些可砍） ============
+        // cuttable: low=不該砍 / mid=可斟酌 / high=可砍
+        const PURPOSES = [
+            {id: 'essential',     label: '必需',    icon: '🏠', color: '#64748b', cuttable: 'low'},
+            {id: 'work',          label: '工作必需', icon: '💼', color: '#4f46e5', cuttable: 'low'},
+            {id: 'health',        label: '健康',    icon: '💊', color: '#e11d48', cuttable: 'low'},
+            {id: 'growth',        label: '自我投資', icon: '📚', color: '#10b981', cuttable: 'mid'},
+            {id: 'social',        label: '社交',    icon: '🤝', color: '#0ea5e9', cuttable: 'mid'},
+            {id: 'entertainment', label: '娛樂',    icon: '🎮', color: '#f59e0b', cuttable: 'high'},
+            {id: 'lifestyle',     label: '享受',    icon: '✨', color: '#ec4899', cuttable: 'high'},
+            {id: 'other',         label: '其他',    icon: '📦', color: '#9ca3af', cuttable: 'mid'}
+        ];
+        const PURPOSE_MAP = Object.fromEntries(PURPOSES.map(p => [p.id, p]));
+
+        // ============ 建議項目清單（容易忘記的常見支出，金額為台北常見參考） ============
+        const SUGGESTIONS = [
+            // 保險稅金（年繳/數月繳，最常漏）
+            {cat:'保險稅金', name:'機車牌照稅+燃料稅', amount:1500,  freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🛡️'},
+            {cat:'保險稅金', name:'機車強制險+任意險', amount:3000,  freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🏍️'},
+            {cat:'保險稅金', name:'房屋稅',            amount:5000,  freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🏠'},
+            {cat:'保險稅金', name:'地價稅',            amount:3000,  freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🏠'},
+            {cat:'保險稅金', name:'房屋火險',          amount:2000,  freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🏠'},
+            {cat:'保險稅金', name:'醫療險',            amount:12000, freq:'period', count:12, type:'consumption', purpose:'health',    emoji:'💊'},
+            {cat:'保險稅金', name:'壽險',              amount:24000, freq:'period', count:12, type:'consumption', purpose:'essential', emoji:'🛡️'},
+            // 訂閱
+            {cat:'訂閱',   name:'iCloud / Google One', amount:90,  freq:'month', count:1, type:'consumption', purpose:'essential',     emoji:'☁️'},
+            {cat:'訂閱',   name:'ChatGPT Plus',        amount:600, freq:'month', count:1, type:'consumption', purpose:'work',          emoji:'🤖'},
+            {cat:'訂閱',   name:'Spotify',             amount:149, freq:'month', count:1, type:'consumption', purpose:'entertainment', emoji:'🎵'},
+            {cat:'訂閱',   name:'Netflix',             amount:390, freq:'month', count:1, type:'consumption', purpose:'entertainment', emoji:'📺'},
+            {cat:'訂閱',   name:'Disney+',             amount:270, freq:'month', count:1, type:'consumption', purpose:'entertainment', emoji:'📺'},
+            {cat:'訂閱',   name:'Steam / 遊戲訂閱',     amount:300, freq:'month', count:1, type:'consumption', purpose:'entertainment', emoji:'🎮'},
+            // 身體保養
+            {cat:'身體',   name:'理髮',               amount:400,  freq:'month',  count:1,  type:'consumption', purpose:'essential', emoji:'💈'},
+            {cat:'身體',   name:'洗牙(半年一次)',     amount:800,  freq:'period', count:6,  type:'consumption', purpose:'health',    emoji:'🦷'},
+            {cat:'身體',   name:'保健品 / 維他命',     amount:1500, freq:'month',  count:1,  type:'consumption', purpose:'health',    emoji:'💊'},
+            // 家庭社交
+            {cat:'家庭社交', name:'孝親費',         amount:5000, freq:'month', count:1, type:'consumption', purpose:'essential', emoji:'❤️'},
+            {cat:'家庭社交', name:'紅包/送禮預算',  amount:1500, freq:'month', count:1, type:'consumption', purpose:'social',    emoji:'🎁'},
+            {cat:'家庭社交', name:'朋友聚餐應酬',   amount:1500, freq:'month', count:1, type:'consumption', purpose:'social',    emoji:'🍻'},
+            {cat:'家庭社交', name:'寵物飼料',       amount:800,  freq:'month', count:1, type:'consumption', purpose:'essential', emoji:'🐈'},
+            // 機車相關
+            {cat:'機車',   name:'機車加油',         amount:200,  freq:'day',    count:22, type:'consumption', purpose:'essential', emoji:'⛽'},
+            {cat:'機車',   name:'機車保養(每3月)',  amount:1500, freq:'period', count:3,  type:'consumption', purpose:'essential', emoji:'🔧'},
+            // 雜支
+            {cat:'雜支',   name:'日用品(衛生紙等)', amount:1000,  freq:'month',  count:1,  type:'consumption', purpose:'essential', emoji:'🧻'},
+            {cat:'雜支',   name:'衣服/鞋子預算',    amount:2000,  freq:'month',  count:1,  type:'consumption', purpose:'lifestyle', emoji:'👕'},
+            {cat:'雜支',   name:'年度旅遊',         amount:30000, freq:'period', count:12, type:'consumption', purpose:'lifestyle', emoji:'✈️'},
+            // 育兒（多數預設 split=2 雙親分攤；如單親請改 1）
+            {cat:'育兒', name:'紙尿布',           amount:50,    freq:'day',    count:30, split:2, type:'consumption', purpose:'essential', emoji:'👶'},
+            {cat:'育兒', name:'濕紙巾',           amount:600,   freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'🧻'},
+            {cat:'育兒', name:'配方奶粉',         amount:1500,  freq:'month',  count:2,  split:2, type:'consumption', purpose:'essential', emoji:'🍼'},
+            {cat:'育兒', name:'副食品/食材',      amount:3000,  freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'🥕'},
+            {cat:'育兒', name:'屁屁膏/沐浴用品',  amount:400,   freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'🧴'},
+            {cat:'育兒', name:'嬰兒衣物預算',     amount:1500,  freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'👕'},
+            {cat:'育兒', name:'托嬰中心 / 保母',  amount:25000, freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'🤱'},
+            {cat:'育兒', name:'兒童醫療險',       amount:8000,  freq:'period', count:12, split:2, type:'consumption', purpose:'health',    emoji:'🛡️'},
+            {cat:'育兒', name:'兒童意外險',       amount:3000,  freq:'period', count:12, split:2, type:'consumption', purpose:'health',    emoji:'🛡️'},
+            {cat:'育兒', name:'自費疫苗(平均)',   amount:2000,  freq:'month',  count:1,  split:2, type:'consumption', purpose:'health',    emoji:'💉'},
+            {cat:'育兒', name:'兒科診所/掛號',    amount:500,   freq:'month',  count:2,  split:2, type:'consumption', purpose:'health',    emoji:'🩺'},
+            {cat:'育兒', name:'玩具/繪本',        amount:1000,  freq:'month',  count:1,  split:2, type:'consumption', purpose:'growth',    emoji:'🧸'},
+            {cat:'育兒', name:'親子館/早教',      amount:1500,  freq:'month',  count:1,  split:2, type:'consumption', purpose:'growth',    emoji:'🎨'},
+            {cat:'育兒', name:'兒童儲蓄險',       amount:30000, freq:'period', count:12, split:2, type:'investment',                       emoji:'🏦'},
+            {cat:'育兒', name:'寶寶生日/節慶',    amount:500,   freq:'month',  count:1,  split:2, type:'consumption', purpose:'social',    emoji:'🎂'},
+            {cat:'育兒', name:'攝影/成長紀念',    amount:300,   freq:'month',  count:1,  split:2, type:'consumption', purpose:'lifestyle', emoji:'📷'},
+            {cat:'育兒', name:'幼兒園學費',       amount:15000, freq:'month',  count:1,  split:2, type:'consumption', purpose:'essential', emoji:'🎓'}
+        ];
+        const SUGGESTION_CATS = ['保險稅金', '訂閱', '身體', '家庭社交', '機車', '雜支', '育兒'];
+        // 列表 chip 樣式（靜態 class，避免 Tailwind CDN 掃不到動態組合）
+        const PURPOSE_CHIP_CLASS = {
+            essential:     'text-slate-600 bg-slate-100',
+            work:          'text-indigo-600 bg-indigo-50',
+            health:        'text-rose-600 bg-rose-50',
+            growth:        'text-emerald-600 bg-emerald-50',
+            social:        'text-sky-600 bg-sky-50',
+            entertainment: 'text-amber-600 bg-amber-50',
+            lifestyle:     'text-pink-600 bg-pink-50',
+            other:         'text-gray-600 bg-gray-100'
+        };
+
+        // ============ 全域狀態 ============
+        let state = {
+            salary: 40000,
+            monthlyHours: 176,
+            items: [],
+            viewMode: 'grid' // 'grid' | 'list'
+        };
+        let draggedId = null;
+
+        // ============ 共用計算 ============
+        // 算一筆項目的「我每月實付金額」（已分攤後）
+        function monthlyTotal(item) {
+            const sp = item.split || 1;
+            const cnt = item.count || 1;
+            const base = item.freq === 'period' ? item.amount / cnt : item.amount * cnt;
+            return base / sp;
+        }
+        // 取項目類型：consumption / investment / savings
+        function itemType(item) { return item.type || 'consumption'; }
+        // 取項目原始（未分攤前）月帳面金額
+        function monthlyTotalRaw(item) {
+            const cnt = item.count || 1;
+            return item.freq === 'period' ? item.amount / cnt : item.amount * cnt;
+        }
+        let selectedEmoji = '🍱';
+        let currentFreq = 'day';
+        let currentType = 'consumption';
+        let currentPurpose = 'essential';
+        let currentStep = 1;
+        let currentCategory = '常用';
+        let editingId = null;
+        const TOTAL_STEPS = 4;
+
+        // ============ Toast ============
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-10');
+            t.classList.add('opacity-100', 'translate-y-0');
+            if (window.toastTimer) clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                t.classList.remove('opacity-100', 'translate-y-0');
+                t.classList.add('opacity-0', 'translate-y-10');
+            }, 3000);
+        }
+
+        // ============ Emoji 選擇器 ============
+        function renderEmojiCatTabs() {
+            const tabs = document.getElementById('emojiCatTabs');
+            tabs.innerHTML = EMOJI_CATS.map(c =>
+                `<div class="cat-tab ${c === currentCategory ? 'active' : ''}" onclick="switchCategory('${c}')">${c}</div>`
+            ).join('');
+        }
+
+        function switchCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('emojiSearch').value = '';
+            renderEmojiCatTabs();
+            renderEmojiPicker();
+        }
+
+        // 取得目前要顯示的 emoji 清單（依分類 + 搜尋過濾）
+        function getDisplayEmojis() {
+            const query = (document.getElementById('emojiSearch')?.value || '').trim().toLowerCase();
+            if (query) {
+                return EMOJI_DATA.filter(item =>
+                    item.e.includes(query) || item.k.toLowerCase().includes(query)
+                );
+            }
+            if (currentCategory === '常用') {
+                return COMMON_EMOJIS.map(e => EMOJI_DATA.find(d => d.e === e) || {e, k: '', c: '常用'});
+            }
+            return EMOJI_DATA.filter(item => item.c === currentCategory);
+        }
+
+        function renderEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            if (!picker) return;
+            const items = getDisplayEmojis();
+            const suggested = suggestEmoji(document.getElementById('itemName').value);
+            if (items.length === 0) {
+                picker.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-sm font-bold">找不到符合的 Emoji</div>`;
+                return;
+            }
+            picker.innerHTML = items.map(item =>
+                `<div class="emoji-btn ${item.e === selectedEmoji ? 'emoji-active' : ''} ${item.e === suggested && item.e !== selectedEmoji ? 'emoji-suggested' : ''}"
+                      onclick="pickEmoji('${item.e}')" title="${item.k}">
+                    ${item.e}
+                </div>`
+            ).join('');
+        }
+
+        function pickEmoji(e) {
+            selectedEmoji = e;
+            document.getElementById('emojiCustom').value = '';
+            renderEmojiPicker();
+            updatePreview();
+        }
+
+        function useCustomEmoji() {
+            const v = document.getElementById('emojiCustom').value.trim();
+            if (v) {
+                selectedEmoji = v;
+                renderEmojiPicker();
+                updatePreview();
+            }
+        }
+
+        // 智慧建議：依名稱關鍵字找 emoji
+        function suggestEmoji(name) {
+            if (!name) return null;
+            const lower = name.toLowerCase().trim();
+            for (const item of EMOJI_DATA) {
+                const keywords = item.k.toLowerCase().split(/\s+/).filter(k => k.length >= 1);
+                for (const kw of keywords) {
+                    if (kw && lower.includes(kw)) return item.e;
+                }
+            }
+            return null;
+        }
+
+        // ============ 狀態持久化 ============
+        function loadState() {
+            const saved = localStorage.getItem('finance_state_v10');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = {
+                        salary: parsed.salary ?? 40000,
+                        monthlyHours: parsed.monthlyHours ?? 176,
+                        items: (parsed.items || []).map(i => ({
+                            ...i,
+                            paused: i.paused || false,
+                            split: i.split || 1,
+                            type: i.type || 'consumption',
+                            // 既有資料無 purpose 預設「必需」
+                            purpose: i.purpose || ((i.type || 'consumption') === 'consumption' ? 'essential' : undefined)
+                        })),
+                        viewMode: parsed.viewMode || 'grid'
+                    };
+                    document.getElementById('salaryInput').value = state.salary;
+                    document.getElementById('hoursInput').value = state.monthlyHours;
+                } catch(err) { console.error(err); }
+            }
+            applyViewModeUI();
+            renderAll();
+        }
+
+        function saveState() {
+            localStorage.setItem('finance_state_v10', JSON.stringify(state));
+            calculateAll();
+        }
+
+        function updateSalary() {
+            state.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
+            saveState();
+            renderAll();
+            showToast('薪資基準已更新');
+        }
+
+        function updateHours() {
+            state.monthlyHours = parseFloat(document.getElementById('hoursInput').value) || 176;
+            saveState();
+            renderAll();
+            showToast('月工時已更新');
+        }
+
+        // ============ 建議項目（autocomplete + 瀏覽 modal） ============
+        function getSuggestionMonthly(s) {
+            return s.freq === 'period' ? s.amount / s.count : s.amount * s.count;
+        }
+
+        // === Step 1 名稱欄位的即時建議 ===
+        function renderAutocomplete() {
+            const input = document.getElementById('itemName');
+            const list = document.getElementById('autocompleteList');
+            if (!input || !list) return;
+            const q = input.value.trim().toLowerCase();
+            if (!q) { list.classList.add('hidden'); return; }
+            const matches = SUGGESTIONS
+                .filter(s => s.name.toLowerCase().includes(q) || s.cat.toLowerCase().includes(q))
+                .slice(0, 8);
+            if (matches.length === 0) { list.classList.add('hidden'); return; }
+            const existing = new Set(state.items.map(i => i.name));
+            list.innerHTML = matches.map(s => {
+                const idx = SUGGESTIONS.indexOf(s);
+                const monthly = getSuggestionMonthly(s);
+                const isAdded = existing.has(s.name);
+                const splitNote = s.split && s.split > 1 ? ` · /${s.split}人` : '';
+                return `<button type="button" onmousedown="event.preventDefault();addFromSuggestion(${idx})"
+                    class="w-full px-4 py-3 flex items-center gap-3 hover:bg-amber-50 transition-colors text-left border-b border-slate-100 last:border-0 ${isAdded ? 'opacity-50' : ''}">
+                    <span class="text-2xl flex-shrink-0">${s.emoji}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-slate-800 truncate ${isAdded ? 'line-through' : ''}">${s.name}</div>
+                        <div class="text-[11px] text-slate-400 font-bold">${s.cat}${splitNote}</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="font-black text-amber-600 text-sm">$${Math.round(monthly).toLocaleString()}</div>
+                        <div class="text-[9px] text-slate-300 font-black uppercase">/月</div>
+                    </div>
+                </button>`;
+            }).join('');
+            list.classList.remove('hidden');
+        }
+
+        // 失焦時延遲收起，避免點擊建議前就消失
+        document.addEventListener('focusout', (e) => {
+            if (e.target && e.target.id === 'itemName') {
+                setTimeout(() => {
+                    const list = document.getElementById('autocompleteList');
+                    if (list) list.classList.add('hidden');
+                }, 200);
+            }
+        });
+        document.addEventListener('focusin', (e) => {
+            if (e.target && e.target.id === 'itemName' && e.target.value.trim()) renderAutocomplete();
+        });
+
+        // === 瀏覽全部 modal ===
+        function toggleSuggestions() {
+            const panel = document.getElementById('suggestionsPanel');
+            const isHidden = panel.classList.contains('hidden');
+            if (isHidden) {
+                renderSuggestionsModal('');
+                panel.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => {
+                    const s = document.getElementById('suggestSearch');
+                    if (s) s.focus();
+                }, 50);
+            } else {
+                panel.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderSuggestionsModal(query) {
+            const panel = document.getElementById('suggestionsPanel');
+            const existing = new Set(state.items.map(i => i.name));
+            const q = (query || '').toLowerCase().trim();
+            const filtered = q
+                ? SUGGESTIONS.filter(s => s.name.toLowerCase().includes(q) || s.cat.toLowerCase().includes(q))
+                : SUGGESTIONS;
+
+            const renderRow = (s) => {
+                const idx = SUGGESTIONS.indexOf(s);
+                const monthly = getSuggestionMonthly(s);
+                const isAdded = existing.has(s.name);
+                const purposeInfo = s.purpose ? PURPOSE_MAP[s.purpose] : null;
+                const typeBadge = s.type === 'investment' ? '📈' : s.type === 'savings' ? '🏦' : '';
+                const splitNote = s.split && s.split > 1 ? ` · /${s.split}人` : '';
+                const subInfo = purposeInfo ? `${purposeInfo.icon} ${purposeInfo.label}` : s.cat;
+                return `<button type="button" onclick="addFromSuggestion(${idx});toggleSuggestions()"
+                    class="w-full px-3 py-2.5 rounded-xl flex items-center gap-3 text-left transition-all border
+                           ${isAdded ? 'bg-slate-50 border-slate-100 opacity-50' : 'bg-white border-slate-100 hover:border-amber-300 hover:bg-amber-50 active:scale-[0.98]'}">
+                    <span class="text-xl flex-shrink-0">${s.emoji}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-slate-800 text-sm truncate ${isAdded ? 'line-through' : ''}">${s.name}${typeBadge ? ' ' + typeBadge : ''}</div>
+                        <div class="text-[10px] text-slate-400 font-bold">${subInfo}${splitNote}</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="font-black text-amber-600 text-sm">$${Math.round(monthly).toLocaleString()}</div>
+                        <div class="text-[9px] text-slate-300 font-black uppercase">/月</div>
+                    </div>
+                </button>`;
+            };
+
+            let contentHtml;
+            if (q) {
+                contentHtml = filtered.length === 0
+                    ? `<div class="py-16 text-center text-slate-300 font-black">沒有符合的建議</div>`
+                    : `<div class="space-y-1.5">${filtered.map(renderRow).join('')}</div>`;
+            } else {
+                contentHtml = SUGGESTION_CATS.map(cat => {
+                    const items = SUGGESTIONS.filter(s => s.cat === cat);
+                    if (items.length === 0) return '';
+                    return `<div class="mb-5">
+                        <div class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 px-1">${cat}</div>
+                        <div class="space-y-1.5">${items.map(renderRow).join('')}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            panel.innerHTML = `
+                <div class="bg-white rounded-3xl max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-pop">
+                    <div class="p-5 border-b border-slate-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="text-lg font-black text-slate-800">💡 建議範本</div>
+                                <div class="text-[11px] text-slate-400 font-bold mt-0.5">點一下預填表單；金額為參考值</div>
+                            </div>
+                            <button onclick="toggleSuggestions()" class="text-slate-300 hover:text-rose-500 p-1" title="關閉">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                        <div class="input-container">
+                            <i data-lucide="search" class="w-5 h-5 flex-shrink-0"></i>
+                            <input type="text" id="suggestSearch" placeholder="搜尋（奶粉 / 訂閱 / 保險...）" autocomplete="off"
+                                   oninput="renderSuggestionsModal(this.value)">
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-5">${contentHtml}</div>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function addFromSuggestion(idx) {
+            const s = SUGGESTIONS[idx];
+            if (!s) return;
+            openAddForm();
+            // 預填所有欄位
+            document.getElementById('itemName').value = s.name;
+            document.getElementById('itemAmount').value = s.amount;
+            currentFreq = s.freq;
+            currentType = s.type;
+            currentPurpose = s.purpose || 'essential';
+            selectedEmoji = s.emoji;
+            setType(currentType);
+            setPurpose(currentPurpose);
+            setFreq(currentFreq);
+            // setFreq 預設值會覆蓋 count，所以設完 setFreq 才覆寫
+            document.getElementById('itemCount').value = s.count;
+            // 分攤人數（candidate 沒指定就保持 1）
+            document.getElementById('itemSplit').value = s.split || 1;
+            // 直接跳到 step 4 review，使用者只要按確認
+            goToStep(TOTAL_STEPS);
+            showToast(`${s.emoji} ${s.name} 已預填，按下方確認即可`);
+        }
+
+        // ============ 表單開關 ============
+        function openAddForm() {
+            editingId = null;
+            selectedEmoji = COMMON_EMOJIS[Math.floor(Math.random() * COMMON_EMOJIS.length)];
+            currentFreq = 'day';
+            currentType = 'consumption';
+            currentPurpose = 'essential';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemAmount').value = '';
+            document.getElementById('itemCount').value = 22;
+            document.getElementById('itemSplit').value = 1;
+            document.getElementById('emojiSearch').value = '';
+            document.getElementById('emojiCustom').value = '';
+            document.getElementById('formModeLabel').innerText = '新增支出';
+            currentCategory = '常用';
+            setType('consumption');
+            setPurpose('essential');
+            setFreq('day');
+            showForm(true);
+            goToStep(1);
+        }
+
+        function openEditForm(id) {
+            const item = state.items.find(i => i.id === id);
+            if (!item) return;
+            editingId = id;
+            selectedEmoji = item.emoji || '🍱';
+            currentFreq = item.freq || 'day';
+            currentType = item.type || 'consumption';
+            currentPurpose = item.purpose || 'essential';
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemAmount').value = item.amount;
+            document.getElementById('itemCount').value = item.count;
+            document.getElementById('itemSplit').value = item.split || 1;
+            document.getElementById('emojiSearch').value = '';
+            document.getElementById('emojiCustom').value = '';
+            document.getElementById('formModeLabel').innerText = '編輯支出';
+            currentCategory = '常用';
+            setType(currentType);
+            setPurpose(currentPurpose);
+            setFreq(currentFreq);
+            document.getElementById('itemCount').value = item.count;
+            document.getElementById('itemSplit').value = item.split || 1;
+            showForm(true);
+            goToStep(1);
+        }
+
+        function closeAddForm() {
+            showForm(false);
+            editingId = null;
+        }
+
+        function showForm(show) {
+            const form = document.getElementById('addForm');
+            const btn = document.getElementById('addToggleBtn');
+            if (show) {
+                form.classList.remove('hidden');
+                btn.classList.add('hidden');
+            } else {
+                form.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        }
+
+        // ============ 步驟導覽 ============
+        function goToStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.step-content').forEach(el => {
+                const isCurrent = parseInt(el.dataset.step) === step;
+                el.classList.toggle('hidden', !isCurrent);
+                if (isCurrent) {
+                    el.classList.remove('animate-pop');
+                    void el.offsetWidth;
+                    el.classList.add('animate-pop');
+                }
+            });
+            document.querySelectorAll('.step-bar').forEach(el => {
+                const s = parseInt(el.dataset.step);
+                el.classList.toggle('bg-indigo-600', s <= step);
+                el.classList.toggle('bg-slate-200', s > step);
+            });
+            document.getElementById('currentStepText').innerText = step;
+            document.getElementById('prevStepBtn').classList.toggle('hidden', step === 1);
+            const nextBtn = document.getElementById('nextStepBtn');
+            nextBtn.innerText = (step === TOTAL_STEPS) ? (editingId ? '儲存變更' : '確認新增') : '下一步';
+
+            if (step === TOTAL_STEPS) {
+                renderEmojiCatTabs();
+                renderEmojiPicker();
+                updatePreview();
+            }
+
+            setTimeout(() => {
+                const focusable = document.querySelector(`.step-content[data-step="${step}"]:not(.hidden) input[type="text"]:not([id="emojiCustom"]), .step-content[data-step="${step}"]:not(.hidden) input[type="number"]`);
+                if (focusable) focusable.focus();
+            }, 50);
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function jumpToStep(step) {
+            // 只允許跳到已驗證過的步驟（含當前+1）
+            for (let s = 1; s < step; s++) {
+                if (!validateStep(s)) { goToStep(s); return; }
+            }
+            goToStep(step);
+        }
+
+        function prevStep() { if (currentStep > 1) goToStep(currentStep - 1); }
+
+        function nextStep() {
+            if (!validateStep(currentStep)) return;
+            if (currentStep < TOTAL_STEPS) goToStep(currentStep + 1);
+            else confirmAdd();
+        }
+
+        function validateStep(step) {
+            if (step === 1) {
+                const name = document.getElementById('itemName').value.trim();
+                if (!name) { showToast('請輸入項目名稱'); return false; }
+            }
+            if (step === 2) {
+                const amount = parseFloat(document.getElementById('itemAmount').value);
+                if (isNaN(amount) || amount <= 0) { showToast('請輸入有效金額'); return false; }
+            }
+            return true;
+        }
+
+        // ============ 頻率切換 ============
+        function setFreq(type) {
+            currentFreq = type;
+            const btns = {
+                day: document.getElementById('freqDay'),
+                month: document.getElementById('freqMonth'),
+                period: document.getElementById('freqPeriod')
+            };
+            ['day','month','period'].forEach(k => {
+                btns[k].className = 'toggle-btn ' + (k === type ? 'toggle-active' : 'toggle-inactive') + ' flex-1';
+            });
+            const countLabel = document.getElementById('countLabel');
+            const unitLabel = document.getElementById('unitLabel');
+            const countInput = document.getElementById('itemCount');
+            const hint = document.getElementById('freqHint');
+            if (type === 'day') {
+                countLabel.innerText = '每月發生天數';
+                unitLabel.innerText = '天 / 月';
+                hint.innerText = '每日計價 → 月攤 = 金額 × 天數（例：午餐 $100 × 22 天）';
+                if (!editingId) countInput.value = 22;
+            } else if (type === 'month') {
+                countLabel.innerText = '每月發生次數';
+                unitLabel.innerText = '次 / 月';
+                hint.innerText = '每月固定 → 月攤 = 金額 × 次數（例：房租 $15000 × 1 次）';
+                if (!editingId) countInput.value = 1;
+            } else { // period
+                countLabel.innerText = '週期（每 N 個月一次）';
+                unitLabel.innerText = '月 / 次';
+                hint.innerText = '每 N 月 → 月攤 = 金額 ÷ N（例：兩月電費 $1800 ÷ 2 = $900）';
+                if (!editingId) countInput.value = 2;
+            }
+            if (currentStep === TOTAL_STEPS) updatePreview();
+        }
+
+        // ============ 類型切換 ============
+        function setType(t) {
+            currentType = t;
+            const map = {consumption: 'typeConsume', investment: 'typeInvest', savings: 'typeSave'};
+            Object.keys(map).forEach(k => {
+                const el = document.getElementById(map[k]);
+                el.className = 'toggle-btn ' + (k === t ? 'toggle-active' : 'toggle-inactive') + ' flex-1';
+            });
+            // 投資/儲蓄不需要用途分類
+            const purposeSection = document.getElementById('purposeSection');
+            if (purposeSection) purposeSection.classList.toggle('hidden', t !== 'consumption');
+            if (currentStep === TOTAL_STEPS) updatePreview();
+        }
+
+        // ============ 用途切換 ============
+        function setPurpose(p) {
+            currentPurpose = p;
+            renderPurposePicker();
+            if (currentStep === TOTAL_STEPS) updatePreview();
+        }
+
+        function renderPurposePicker() {
+            const picker = document.getElementById('purposePicker');
+            if (!picker) return;
+            picker.innerHTML = PURPOSES.map(p => {
+                const active = p.id === currentPurpose;
+                const ringStyle = active
+                    ? `background:${p.color};color:white;border-color:${p.color};box-shadow:0 4px 8px -2px ${p.color}66`
+                    : `background:white;color:${p.color};border-color:#e2e8f0`;
+                return `<button type="button" onclick="setPurpose('${p.id}')"
+                    class="px-3 py-2 rounded-xl text-xs font-black transition-all border-2 active:scale-95"
+                    style="${ringStyle}">${p.icon} ${p.label}</button>`;
+            }).join('');
+        }
+
+        // ============ 預覽 ============
+        function updatePreview() {
+            const name = document.getElementById('itemName').value.trim() || '未填寫';
+            const amount = parseFloat(document.getElementById('itemAmount').value) || 0;
+            const count = parseInt(document.getElementById('itemCount').value) || 1;
+            const split = Math.max(1, parseInt(document.getElementById('itemSplit').value) || 1);
+            const fakeItem = {amount, count, freq: currentFreq, split};
+            const rawMonthly = monthlyTotalRaw(fakeItem);
+            const myShare = monthlyTotal(fakeItem);
+            document.getElementById('previewEmoji').innerText = selectedEmoji;
+            const typeIcon = currentType === 'investment' ? ' 📈' : currentType === 'savings' ? ' 🏦' : '';
+            const purposeIcon = (currentType === 'consumption' && PURPOSE_MAP[currentPurpose]) ? ' ' + PURPOSE_MAP[currentPurpose].icon : '';
+            document.getElementById('previewName').innerText = name + typeIcon + purposeIcon;
+            const baseStr = currentFreq === 'day' ? `$${amount} × ${count} 天`
+                : currentFreq === 'period' ? `$${amount} / 每 ${count} 月 → 月攤 $${rawMonthly.toFixed(0)}`
+                : `$${amount} / ${count} 次`;
+            document.getElementById('previewDetail').innerText = split > 1
+                ? `${baseStr} ÷ ${split} 人 → 我付 $${myShare.toLocaleString(undefined,{maximumFractionDigits:0})}`
+                : baseStr;
+            document.getElementById('previewTotal').innerText = `$${myShare.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+        }
+
+        // ============ 確認新增/儲存 ============
+        function confirmAdd() {
+            // 最後再跑一次完整驗證
+            for (let s = 1; s <= TOTAL_STEPS; s++) {
+                if (!validateStep(s)) { goToStep(s); return; }
+            }
+            const name = document.getElementById('itemName').value.trim();
+            const amount = parseFloat(document.getElementById('itemAmount').value);
+            const count = parseInt(document.getElementById('itemCount').value) || 0;
+            const split = Math.max(1, parseInt(document.getElementById('itemSplit').value) || 1);
+
+            if (editingId) {
+                const idx = state.items.findIndex(i => i.id === editingId);
+                if (idx >= 0) {
+                    state.items[idx] = {
+                        ...state.items[idx],
+                        name, amount, count, split,
+                        freq: currentFreq,
+                        type: currentType,
+                        purpose: currentType === 'consumption' ? currentPurpose : undefined,
+                        emoji: selectedEmoji
+                    };
+                }
+                showToast('已儲存變更');
+            } else {
+                state.items.push({
+                    id: Date.now(),
+                    name, amount, count, split,
+                    freq: currentFreq,
+                    type: currentType,
+                    purpose: currentType === 'consumption' ? currentPurpose : undefined,
+                    emoji: selectedEmoji,
+                    paused: false
+                });
+                showToast('已成功新增支出明細');
+            }
+
+            saveState();
+            renderAll();
+
+            const continuous = document.getElementById('continuousMode').checked;
+            if (continuous && !editingId) {
+                openAddForm();
+                document.getElementById('continuousMode').checked = true;
+            } else {
+                closeAddForm();
+            }
+        }
+
+        // ============ 項目操作 ============
+        function removeItem(id) {
+            state.items = state.items.filter(item => item.id !== id);
+            renderAll();
+            saveState();
+            showToast('支出明細已刪除');
+        }
+
+        function copyItem(id) {
+            const src = state.items.find(i => i.id === id);
+            if (!src) return;
+            state.items.push({...src, id: Date.now(), name: src.name + ' (副本)'});
+            renderAll();
+            saveState();
+            showToast('已複製為新項目');
+        }
+
+        function togglePauseItem(id) {
+            const item = state.items.find(i => i.id === id);
+            if (!item) return;
+            item.paused = !item.paused;
+            renderAll();
+            saveState();
+            showToast(item.paused ? '項目已暫停（不計入總計）' : '項目已恢復');
+        }
+
+        // ============ 計算與渲染 ============
+        function getActiveItems(items) {
+            return (items || state.items).filter(i => !i.paused);
+        }
+
+        function calculateAll() {
+            const els = {
+                daily: document.getElementById('dailySalaryText'),
+                total: document.getElementById('monthlyFixedTotalText'),
+                today: document.getElementById('todayTotalText'),
+                percent: document.getElementById('percentageText'),
+                detail: document.getElementById('amortizedDetailText'),
+                hours: document.getElementById('hoursText'),
+                bar: document.getElementById('progressFill')
+            };
+            if (!els.daily || !els.total || !els.today || !els.bar) return;
+
+            const dailySalary = state.salary / 30;
+            els.daily.innerText = dailySalary.toLocaleString(undefined, {maximumFractionDigits: 0});
+
+            const activeItems = getActiveItems();
+            // 只算「消費」類（投資/儲蓄不計入生存代償）
+            const consumeItems = activeItems.filter(i => itemType(i) === 'consumption');
+            const investItems = activeItems.filter(i => itemType(i) !== 'consumption');
+            const totalMonthly = consumeItems.reduce((sum, item) => sum + monthlyTotal(item), 0);
+            const investMonthly = investItems.reduce((sum, item) => sum + monthlyTotal(item), 0);
+            const dailyAmortized = totalMonthly / 30;
+            const dailyPercent = dailySalary > 0 ? (dailyAmortized / dailySalary) * 100 : 0;
+            const hourlyWage = state.monthlyHours > 0 ? state.salary / state.monthlyHours : 0;
+            const hoursNeeded = hourlyWage > 0 ? totalMonthly / hourlyWage : 0;
+
+            els.total.innerText = totalMonthly.toLocaleString(undefined, {maximumFractionDigits: 0});
+            els.today.innerText = `$${dailyAmortized.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            els.percent.innerText = `/ ${dailyPercent.toFixed(1)}%`;
+            if (els.detail) els.detail.innerText = `固定分攤: $${dailyAmortized.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            if (els.hours) els.hours.innerText = `≈ 每月 ${hoursNeeded.toFixed(1)} 小時工時（時薪 $${hourlyWage.toFixed(0)}）`;
+
+            els.bar.style.width = `${Math.min(dailyPercent, 100)}%`;
+            if (dailyPercent > 85) els.bar.className = 'bg-rose-500 h-full transition-all duration-1000 ease-out';
+            else if (dailyPercent > 60) els.bar.className = 'bg-amber-500 h-full transition-all duration-1000 ease-out';
+            else els.bar.className = 'bg-indigo-600 h-full transition-all duration-1000 ease-out';
+
+            // 投資/FIRE 小卡
+            renderInvestCards(totalMonthly, investMonthly);
+        }
+
+        // 投資/儲蓄 + FIRE 數據卡
+        function renderInvestCards(monthlyConsume, monthlyInvest) {
+            const wrap = document.getElementById('investCards');
+            if (!wrap) return;
+            const annualConsume = monthlyConsume * 12;
+            const fireTarget = annualConsume / 0.04; // 4% 法則
+            const emergency = monthlyConsume * 6;
+            const savingsRate = state.salary > 0 ? (monthlyInvest / state.salary) * 100 : 0;
+            const fireYears = monthlyInvest > 0 ? (fireTarget / (monthlyInvest * 12)).toFixed(1) : '∞';
+            document.getElementById('investAmount').innerText = monthlyInvest.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('savingsRate').innerText = savingsRate.toFixed(1);
+            document.getElementById('fireTarget').innerText = fireTarget.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('fireYears').innerText = fireYears;
+            document.getElementById('emergencyFund').innerText = emergency.toLocaleString(undefined, {maximumFractionDigits: 0});
+            // 投資為 0 就把投資卡淡化
+            wrap.classList.toggle('opacity-100', true);
+        }
+
+        // 比例橫條（兩條並列：依項目 / 依用途，只算消費類）
+        function renderBreakdown() {
+            const section = document.getElementById('breakdownSection');
+            const barItem = document.getElementById('breakdownBarItem');
+            const legendItem = document.getElementById('breakdownLegendItem');
+            const barPurpose = document.getElementById('breakdownBarPurpose');
+            const legendPurpose = document.getElementById('breakdownLegendPurpose');
+            const count = document.getElementById('breakdownCount');
+            const active = getActiveItems().filter(i => itemType(i) === 'consumption');
+            if (active.length === 0) { section.classList.add('hidden'); return; }
+            const total = active.reduce((s, i) => s + monthlyTotal(i), 0);
+            if (total === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+
+            count.innerText = `${active.length} 筆消費 / 月 $${total.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+
+            // === 依項目分色（保留原本邏輯） ===
+            const palette = ['#4f46e5','#7c3aed','#2563eb','#0891b2','#059669','#65a30d','#ca8a04','#ea580c','#dc2626','#db2777','#9333ea','#0d9488'];
+            const sortedByAmount = [...active].sort((a,b) => monthlyTotal(b) - monthlyTotal(a));
+            barItem.innerHTML = sortedByAmount.map((item, i) => {
+                const pct = (monthlyTotal(item) / total) * 100;
+                return `<div class="breakdown-segment" style="width:${pct}%;background:${palette[i % palette.length]}" title="${item.emoji} ${item.name} ${pct.toFixed(1)}%"></div>`;
+            }).join('');
+            legendItem.innerHTML = sortedByAmount.slice(0, 8).map((item, i) => {
+                const pct = (monthlyTotal(item) / total) * 100;
+                return `<span class="inline-flex items-center gap-1.5 text-slate-600">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background:${palette[i % palette.length]}"></span>
+                    ${item.emoji} ${item.name} <span class="text-slate-400">${pct.toFixed(1)}%</span>
+                </span>`;
+            }).join('') + (sortedByAmount.length > 8 ? `<span class="text-slate-400">... 其他 ${sortedByAmount.length - 8} 筆</span>` : '');
+
+            // === 依用途分色（同色塊聚集） ===
+            const grouped = {};
+            for (const it of active) {
+                const pid = it.purpose || 'essential';
+                if (!grouped[pid]) grouped[pid] = {items: [], total: 0};
+                grouped[pid].items.push(it);
+                grouped[pid].total += monthlyTotal(it);
+            }
+            const orderedGroups = PURPOSES
+                .filter(p => grouped[p.id])
+                .map(p => ({...p, ...grouped[p.id]}));
+
+            barPurpose.innerHTML = orderedGroups.map(g => {
+                const innerItems = [...g.items].sort((a,b) => monthlyTotal(b) - monthlyTotal(a));
+                return innerItems.map(item => {
+                    const pct = (monthlyTotal(item) / total) * 100;
+                    return `<div class="breakdown-segment" style="width:${pct}%;background:${g.color}" title="${item.emoji} ${item.name} (${g.label}) ${pct.toFixed(1)}%"></div>`;
+                }).join('');
+            }).join('');
+            legendPurpose.innerHTML = orderedGroups.map(g => {
+                const pct = (g.total / total) * 100;
+                return `<span class="inline-flex items-center gap-1.5 text-slate-600">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background:${g.color}"></span>
+                    ${g.icon} ${g.label} <span class="text-slate-400">${pct.toFixed(1)}% · $${g.total.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                </span>`;
+            }).join('');
+        }
+
+        // ============ 檢視模式 ============
+        function applyViewModeUI() {
+            const g = document.getElementById('viewGridBtn');
+            const l = document.getElementById('viewListBtn');
+            if (!g || !l) return;
+            g.className = 'view-btn ' + (state.viewMode === 'grid' ? 'view-btn-active' : 'view-btn-inactive');
+            l.className = 'view-btn ' + (state.viewMode === 'list' ? 'view-btn-active' : 'view-btn-inactive');
+        }
+        function setViewMode(mode) {
+            state.viewMode = mode;
+            applyViewModeUI();
+            renderAll();
+            saveState();
+        }
+
+        // ============ 拖曳排序 ============
+        function onDragStart(e, id) {
+            draggedId = id;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            // Firefox 需要設 data 才會觸發 drag
+            try { e.dataTransfer.setData('text/plain', String(id)); } catch(_) {}
+        }
+        function onDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
+                el.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+            draggedId = null;
+        }
+        function onDragOver(e, targetId) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (draggedId == null || draggedId === targetId) return;
+            // 顯示放置位置指示線（grid 模式用左/右側、list 模式用上/下）
+            const el = e.currentTarget;
+            el.classList.remove('drag-over-top', 'drag-over-bottom');
+            const rect = el.getBoundingClientRect();
+            const isGrid = state.viewMode === 'grid';
+            const before = isGrid ? (e.clientX < rect.left + rect.width / 2) : (e.clientY < rect.top + rect.height / 2);
+            el.classList.add(before ? 'drag-over-top' : 'drag-over-bottom');
+        }
+        function onDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+        function onDrop(e, targetId) {
+            e.preventDefault();
+            if (draggedId == null || draggedId === targetId) return;
+            const fromIdx = state.items.findIndex(i => i.id === draggedId);
+            let toIdx = state.items.findIndex(i => i.id === targetId);
+            if (fromIdx < 0 || toIdx < 0) return;
+            const el = e.currentTarget;
+            const rect = el.getBoundingClientRect();
+            const isGrid = state.viewMode === 'grid';
+            const before = isGrid ? (e.clientX < rect.left + rect.width / 2) : (e.clientY < rect.top + rect.height / 2);
+            const [moved] = state.items.splice(fromIdx, 1);
+            // splice 後 toIdx 可能要修正
+            toIdx = state.items.findIndex(i => i.id === targetId);
+            state.items.splice(before ? toIdx : toIdx + 1, 0, moved);
+            renderAll();
+            saveState();
+            showToast('順序已更新');
+        }
+
+        function renderAll() {
+            const listEl = document.getElementById('itemList');
+            const toolbar = document.getElementById('viewToolbar');
+            if (!listEl) return;
+            const hourlyWage = state.monthlyHours > 0 ? state.salary / state.monthlyHours : 0;
+            // 工具列只在有項目時顯示
+            if (toolbar) toolbar.classList.toggle('hidden', state.items.length === 0);
+
+            if (state.items.length === 0) {
+                listEl.className = '';
+                listEl.innerHTML = `<div class="text-center py-24 text-slate-300 font-black italic tracking-widest">目前尚無任何明細資料</div>`;
+            } else {
+                const isGrid = state.viewMode === 'grid';
+                listEl.className = isGrid
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-10'
+                    : 'space-y-4 pb-10';
+                listEl.innerHTML = state.items.map(item => renderItemCard(item, hourlyWage, isGrid)).join('');
+            }
+            calculateAll();
+            renderBreakdown();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // 單筆項目渲染（list 或 grid）
+        function renderItemCard(item, hourlyWage, isGrid) {
+            const split = item.split || 1;
+            const rawMonthly = monthlyTotalRaw(item);
+            const myShare = monthlyTotal(item);
+            const dailyAmort = myShare / 30;
+            const hours = hourlyWage > 0 ? (myShare / hourlyWage).toFixed(1) : '—';
+            const t = itemType(item);
+            const typeTag = t === 'investment'
+                ? `<span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">📈 投資</span>`
+                : t === 'savings'
+                ? `<span class="text-[9px] font-black text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full uppercase tracking-widest">🏦 儲蓄</span>`
+                : '';
+            // 用途 chip（只有消費類有）
+            const pid = item.purpose || 'essential';
+            const pInfo = PURPOSE_MAP[pid];
+            const purposeTag = (t === 'consumption' && pInfo)
+                ? `<span class="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${PURPOSE_CHIP_CLASS[pid] || ''}">${pInfo.icon} ${pInfo.label}</span>`
+                : '';
+            const splitTag = split > 1 ? `<span class="text-[9px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest">/${split}人分</span>` : '';
+            const pausedTag = item.paused ? `<span class="text-[9px] font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest">已暫停</span>` : '';
+            const baseStr = item.freq === 'day' ? `$${item.amount} × ${item.count}天`
+                : item.freq === 'period' ? `$${item.amount} / 每${item.count}月`
+                : `$${item.amount} / ${item.count}次`;
+            const splitDetail = split > 1 ? ` <span class="mx-1 text-slate-200">÷</span> ${split}人` : '';
+            const amountColor = t === 'consumption' ? 'text-slate-900' : t === 'investment' ? 'text-emerald-600' : 'text-sky-600';
+            const subAmount = split > 1
+                ? `<div class="text-[9px] font-black text-slate-300 uppercase tracking-widest">原 $${rawMonthly.toLocaleString(undefined,{maximumFractionDigits:0})} / ${split}人</div>`
+                : `<div class="text-[9px] font-black text-slate-300 uppercase tracking-widest">${t === 'consumption' ? '每月小計' : '每月投入'}</div>`;
+            const borderClass = t === 'investment' ? 'border-l-4 border-emerald-400' : t === 'savings' ? 'border-l-4 border-sky-400' : '';
+
+            const dragAttrs = `draggable="true"
+                ondragstart="onDragStart(event, ${item.id})"
+                ondragend="onDragEnd(event)"
+                ondragover="onDragOver(event, ${item.id})"
+                ondragleave="onDragLeave(event)"
+                ondrop="onDrop(event, ${item.id})"`;
+
+            const actionsHtml = `
+                <button onclick="openEditForm(${item.id})" class="item-action bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white" title="編輯">
+                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="copyItem(${item.id})" class="item-action bg-slate-50 text-slate-500 hover:bg-slate-700 hover:text-white" title="複製">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+                <button onclick="togglePauseItem(${item.id})" class="item-action bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white" title="${item.paused ? '恢復' : '暫停'}">
+                    <i data-lucide="${item.paused ? 'play' : 'pause'}" class="w-4 h-4"></i>
+                </button>
+                <button onclick="removeItem(${item.id})" class="item-action bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white" title="刪除">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>`;
+
+            const dragHandle = `<i data-lucide="grip-vertical" class="w-4 h-4 drag-handle"></i>`;
+
+            if (isGrid) {
+                // Grid 卡片：垂直排版，緊湊呈現
+                return `
+                <li class="grid-card ${t === 'investment' ? 'type-investment' : t === 'savings' ? 'type-savings' : ''} ${item.paused ? 'item-paused' : ''}" ${dragAttrs}>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">${item.emoji || '🍱'}</div>
+                        ${dragHandle}
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-lg tracking-tight truncate mb-1" title="${item.name}">${item.name}</div>
+                    <div class="flex flex-wrap gap-1 mb-2 min-h-[20px]">${typeTag}${purposeTag}${splitTag}${pausedTag}</div>
+                    <div class="text-2xl font-black ${amountColor} tracking-tighter leading-none">$${myShare.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                    ${subAmount}
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 pb-3 border-b border-slate-100">
+                        ${baseStr}${splitDetail}
+                        <br><span class="text-slate-300">日 $${dailyAmort.toFixed(0)} · ⏱ ${hours}h</span>
+                    </div>
+                    <div class="flex gap-2 mt-3 justify-end">${actionsHtml}</div>
+                </li>`;
+            }
+
+            // List 模式：水平排版（原本的）
+            return `
+            <li class="flex justify-between items-center p-6 bg-white rounded-[2.5rem] border border-slate-100 ${borderClass} hover:shadow-2xl transition-all animate-pop ${item.paused ? 'item-paused' : ''}" ${dragAttrs}>
+                <div class="flex items-center gap-3 min-w-0">
+                    ${dragHandle}
+                    <div class="w-16 h-16 rounded-[1.5rem] bg-slate-50 flex items-center justify-center text-4xl shadow-inner flex-shrink-0">${item.emoji || '🍱'}</div>
+                    <div class="min-w-0">
+                        <div class="font-extrabold text-slate-800 text-xl tracking-tight truncate flex items-center gap-2 flex-wrap">${item.name} ${typeTag} ${purposeTag} ${splitTag} ${pausedTag}</div>
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                            ${baseStr}${splitDetail}
+                            <span class="mx-2 text-slate-200">|</span> 日分攤 $${dailyAmort.toFixed(0)}
+                            <span class="mx-2 text-slate-200">|</span> ⏱ ${hours}h
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <div class="text-right hidden md:block">
+                        <div class="text-2xl font-black ${amountColor} tracking-tighter">$${myShare.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                        ${subAmount}
+                    </div>
+                    ${actionsHtml}
+                </div>
+            </li>`;
+        }
+
+        // ============ 匯出/匯入 ============
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const dl = document.createElement('a');
+            dl.setAttribute('href', dataStr);
+            dl.setAttribute('download', '生存成本備份.json');
+            dl.click();
+            showToast('備份資料已導出');
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    state = {
+                        salary: parsed.salary ?? 40000,
+                        monthlyHours: parsed.monthlyHours ?? 176,
+                        items: (parsed.items || []).map(i => ({
+                            ...i,
+                            paused: i.paused || false,
+                            split: i.split || 1,
+                            type: i.type || 'consumption',
+                            purpose: i.purpose || ((i.type || 'consumption') === 'consumption' ? 'essential' : undefined)
+                        })),
+                        viewMode: parsed.viewMode || 'grid'
+                    };
+                    document.getElementById('salaryInput').value = state.salary;
+                    document.getElementById('hoursInput').value = state.monthlyHours;
+                    applyViewModeUI();
+                    saveState();
+                    renderAll();
+                    showToast('備份資料已載入成功');
+                } catch(e) { showToast('錯誤的備份檔案格式'); }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============ Enter 鍵推進步驟 ============
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const form = document.getElementById('addForm');
+            if (!form || form.classList.contains('hidden')) return;
+            const tag = (e.target && e.target.tagName) || '';
+            const id = e.target && e.target.id;
+            // emoji 自由輸入欄不要觸發推進
+            if (tag !== 'INPUT' || id === 'emojiCustom' || id === 'emojiSearch') return;
+            e.preventDefault();
+            nextStep();
+        });
+
+        // 名稱變動時重新渲染（讓智慧建議即時更新）
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'itemName' && currentStep === TOTAL_STEPS) {
+                renderEmojiPicker();
+                updatePreview();
+            }
+        });
+
+        window.onload = () => { loadState(); lucide.createIcons(); };
+    </script>
+</body>
+</html>
